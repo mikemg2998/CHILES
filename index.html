@@ -440,7 +440,7 @@ const ACTIONS = [
   {t:'Frota tu cuerpo contra',s:'Frota',l:3,tool:'cuerpo',z:['espalda','gluteos','pecho','entrepierna'],tex:[],free:'frota tu cuerpo contra el de {B}'},
   {t:'Da nalgadas suaves en',s:'Nalgadas',l:4,tool:'mano',z:['gluteos'],tex:[],noFree:true},
   {t:'Usa un juguete en',s:'Juguete',l:4,tool:'juguete',z:['genitales','pezones','entrepierna','muslos','cuello'],tex:[],free:'usa un juguete con {B} donde quieras'},
-  {t:'Muerde con ganas',s:'Muerde',l:4,tool:'boca',z:['cuello','hombros','gluteos','muslos'],tex:[]}
+  {t:'Muerde con más fuerza',s:'Muerde',l:4,tool:'boca',z:['cuello','hombros','gluteos','muslos'],tex:[]}
 ];
 const TEX = {
   pluma:{t:'con una pluma',s:'Pluma',tool:'mano',l:1,dry:true}, hielo:{t:'con un cubito de hielo',s:'Hielo',tool:'mano',l:1},
@@ -450,7 +450,7 @@ const TEX = {
   soplidos:{t:'alternando con soplidos',s:'Soplidos',tool:'boca',l:1}, nata:{t:'con un poco de nata o chocolate',s:'Nata',tool:'boca',l:2,dry:true,nz:['orejas','labios','manos','nuca','espalda']}
 };
 const MODES = [
-  {t:'muy despacio',s:'Despacio',l:1}, {t:'rápido y con ganas',s:'Rápido',l:1},
+  {t:'muy despacio',s:'Despacio',l:1}, {t:'rápido',s:'Rápido',l:1},
   {t:'mientras {B} cierra los ojos',s:'Ojos cerrados',l:1}, {t:'con mucha suavidad, casi sin tocar',s:'Suave',l:1},
   {t:'con más presión',s:'Firme',l:1,only:['mano','cuerpo']}, {t:'haciendo círculos',s:'Círculos',l:1,only:['mano','boca','juguete']},
   {t:'alternando lento y rápido',s:'Lento y rápido',l:2}, {t:'sin usar las manos',s:'Sin manos',l:2,only:['boca','cuerpo']},
@@ -1126,7 +1126,7 @@ document.addEventListener('click', e=>{
       if(pos===30){ const ps=posPool(); const pp=pick(ps.length?ps:POS); msg=`¡Meta! Postura sorpresa: ${pp.n}. ${pp.t}`; g.win=true; }
       else if(SPECIAL[pos]==='Retrocede 3'){ pos=Math.max(1,pos-3); msg=`Retrocede 3 casillas. Mientras tanto, dale un beso largo a ${B()}.`; }
       else if(SPECIAL[pos]==='Cambio de turno'){ msg=`Cambio de turno: ahora ${B()} te hace a ti este reto: ${pick(lv(RETO,zoneLevel(pos)))}`; }
-      else if(SPECIAL[pos]==='Tú eliges el reto'){ msg=`Tú eliges: inventa un reto para ${B()} y cúmplelo con ganas.`; }
+      else if(SPECIAL[pos]==='Tú eliges el reto'){ msg=`Tú eliges: inventa un reto para ${B()} y cúmplelo.`; }
       else if(SPECIAL[pos]==='Prenda fuera'){ msg=`Prenda fuera. ${B()} elige cuál te quitas.`; }
       else { msg = pick(lv(RETO,zoneLevel(pos))); }
       g.pos[p]=pos; g.msg=msg; g.msgTitle=title; render(); break;
