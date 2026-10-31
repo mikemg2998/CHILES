@@ -142,8 +142,6 @@ p{margin:0}
 .sq .tok i.a{background:#e0457b}.sq .tok i.b{background:#8a5cf6}
 
 /* positions */
-.pos-fig{width:100%;max-width:100%;height:120px;border-radius:var(--r-sm);background:var(--bg-3);display:flex;align-items:center;justify-content:center}
-.pos-fig svg{height:90px;width:auto;max-width:100%}
 .stars{color:var(--chile-2);font-weight:700;font-size:14px}
 .toggles{display:flex;gap:8px;flex-wrap:wrap}
 .tg{padding:8px 13px;border-radius:999px;border:1px solid var(--line);background:var(--bg-2);font-weight:700;font-size:14px;color:var(--fg-2)}
@@ -232,7 +230,7 @@ label.lab{font-weight:700;font-size:14.5px;display:block;margin-bottom:6px}
 .cface.front .timer{background:#efe1cf}.cface.front .timer .t{color:#2a1320}.cface.front .timer .bar{background:#dcc6ad}
 .cface.front .btn.ghost{background:#efe1cf;border-color:#dcc6ad;color:#2a1320}
 .cface.front .secret{background:#f1e3d1;border-color:#c9573f;color:#2a1320}
-.cface.front .pos-fig{background:#efe1cf}
+.cface.front .pos-fig{background:radial-gradient(ellipse at 50% 45%,#f4e7d6,#e6d2b8)}
 .flip.on .cface.front > *:not(.idx){animation:rise .45s .32s both}
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .hint{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:16px;font-size:13.5px;color:var(--fg-3)}
@@ -240,24 +238,60 @@ label.lab{font-weight:700;font-size:14.5px;display:block;margin-bottom:6px}
 .hint i{font-style:normal;width:20px;height:20px;border-radius:50%;background:var(--bg-3);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--fg-2)}
 .hint .now i{background:var(--chile);color:#fff}
 
-/* dados 3D */
-.tray{border-radius:var(--r);padding:26px 14px 22px;background:radial-gradient(ellipse at 50% 35%,#4a1a2b 0%,#2a0f1b 75%);box-shadow:inset 0 4px 22px rgba(0,0,0,.6),inset 0 0 0 1px var(--line);display:flex;flex-wrap:wrap;gap:22px 18px;justify-content:center;min-height:150px;align-items:center;overflow:hidden}
-.dwrap{width:70px;height:70px;position:relative;perspective:520px}
-.dwrap .shadow{position:absolute;left:8px;right:8px;bottom:-12px;height:12px;border-radius:50%;background:rgba(0,0,0,.45);filter:blur(4px)}
-.dwrap.hop{animation:hop var(--dur) cubic-bezier(.25,.6,.35,1) both;animation-delay:var(--delay)}
-.dwrap.hop .shadow{animation:shad var(--dur) ease-out both;animation-delay:var(--delay)}
-@keyframes hop{0%{transform:translate(var(--fx),-150px)}45%{transform:translate(calc(var(--fx)*.2),0)}60%{transform:translate(calc(var(--fx)*.08),-22px)}75%{transform:translate(0,0)}86%{transform:translate(0,-6px)}100%{transform:none}}
-@keyframes shad{0%{opacity:0;transform:scale(.4)}45%{opacity:1;transform:scale(1)}60%{transform:scale(.8)}75%{transform:scale(1)}100%{opacity:1}}
+/* pantalla completa: mesa de dados y visor */
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.overlay{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;gap:12px;animation:fadein .25s ease;
+  padding-top:calc(env(safe-area-inset-top,0px) + 14px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 16px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ov-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.ov-x{width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.25);color:#fff;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.ov-x svg{width:20px;height:20px}
+.ov-x.light{background:#efe1cf;border-color:#dcc6ad;color:#2a1320}
+.stage{background:radial-gradient(ellipse 120% 80% at 50% 38%,#7a2240 0%,#4a1229 45%,#1c0c14 100%)}
+.stage::before{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-radial-gradient(circle at 50% 40%,rgba(255,255,255,.018) 0 2px,transparent 2px 5px)}
+.dfield{position:relative;flex:1;min-height:0}
+.sdie{position:absolute;width:var(--s);height:var(--s);perspective:800px;z-index:2}
+.sdie.throw{transition:left 1.1s cubic-bezier(.12,.75,.3,1),top 1.1s cubic-bezier(.3,1.45,.45,1)}
+.sdie.settle{transition:left .55s cubic-bezier(.5,0,.2,1),top .55s cubic-bezier(.5,0,.2,1)}
+.sdie .shadow{position:absolute;left:10%;right:10%;bottom:-14%;height:18%;border-radius:50%;background:rgba(0,0,0,.5);filter:blur(5px)}
 .cube{position:absolute;inset:0;transform-style:preserve-3d;-webkit-transform-style:preserve-3d}
-.dwrap.hop .cube{animation:tumble var(--dur) cubic-bezier(.2,.65,.3,1) both;animation-delay:var(--delay)}
-@keyframes tumble{0%{transform:rotateX(var(--rx)) rotateY(var(--ry)) rotateZ(var(--rz))}100%{transform:rotateX(0) rotateY(0) rotateZ(0)}}
-.cf{position:absolute;inset:0;border-radius:14px;background:radial-gradient(circle at 30% 25%,#fffaf3,#f1e2cf 70%,#e2ccb2);color:#a3201b;display:flex;align-items:center;justify-content:center;text-align:center;padding:5px;font-weight:800;font-size:12px;line-height:1.1;letter-spacing:-.01em;backface-visibility:hidden;-webkit-backface-visibility:hidden;box-shadow:inset 0 0 0 1px rgba(90,40,30,.12),inset 0 -5px 9px rgba(120,70,40,.14);overflow-wrap:anywhere}
-.cf.f1{transform:translateZ(35px)}.cf.f2{transform:rotateY(180deg) translateZ(35px)}.cf.f3{transform:rotateY(90deg) translateZ(35px)}
-.cf.f4{transform:rotateY(-90deg) translateZ(35px)}.cf.f5{transform:rotateX(90deg) translateZ(35px)}.cf.f6{transform:rotateX(-90deg) translateZ(35px)}
-.dname{position:absolute;top:-18px;left:0;right:0;text-align:center;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-3);font-weight:700}
-.result{font-family:var(--display);font-size:clamp(23px,5.8vw,28px);line-height:1.22}
+.sdie.throw .cube{animation:tumble var(--dur) cubic-bezier(.2,.65,.3,1) both}
+@keyframes tumble{0%{transform:rotateX(var(--rx)) rotateY(var(--ry)) rotateZ(var(--rz)) scale(1.25)}70%{transform:rotateX(-8deg) rotateY(6deg) rotateZ(4deg) scale(1)}100%{transform:none}}
+.cf{position:absolute;inset:0;border-radius:20%;display:flex;align-items:center;justify-content:center;text-align:center;padding:10%;
+  background:radial-gradient(circle at 30% 22%,#ffffff 0%,#fbf1e3 35%,#efd9bb 80%,#e0c098 100%);color:#8e1b1b;
+  font-family:var(--display);font-size:calc(var(--s) * .175);line-height:1.02;hyphens:auto;-webkit-hyphens:auto;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.75),inset 0 calc(var(--s) * -.08) calc(var(--s) * .14) rgba(140,80,40,.3),inset 0 calc(var(--s) * .05) calc(var(--s) * .08) rgba(255,255,255,.9);
+  text-shadow:0 1px 0 rgba(255,255,255,.9),0 -1px 0 rgba(90,20,20,.25)}
+.cf::after{content:"";position:absolute;inset:8%;border-radius:16%;border:1px solid rgba(142,27,27,.2)}
+.cf span{position:relative}
+.cf.f1{transform:translateZ(calc(var(--s) / 2))}.cf.f2{transform:rotateY(180deg) translateZ(calc(var(--s) / 2))}
+.cf.f3{transform:rotateY(90deg) translateZ(calc(var(--s) / 2));filter:brightness(.9)}.cf.f4{transform:rotateY(-90deg) translateZ(calc(var(--s) / 2));filter:brightness(.9)}
+.cf.f5{transform:rotateX(90deg) translateZ(calc(var(--s) / 2));filter:brightness(.95)}.cf.f6{transform:rotateX(-90deg) translateZ(calc(var(--s) / 2));filter:brightness(.85)}
+.lbl{position:absolute;transform:translateY(-50%);opacity:0;transition:opacity .35s ease, transform .35s ease;color:#fff;min-width:0}
+.lbl.on{opacity:1}
+.lbl small{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.6);font-weight:700}
+.lbl b{font-family:var(--display);font-weight:400;font-size:21px;line-height:1.1}
+.panel{background:rgba(20,6,12,.72);border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:16px;display:flex;flex-direction:column;gap:12px;opacity:0;transform:translateY(16px);transition:opacity .4s ease,transform .4s ease;pointer-events:none}
+.panel.on{opacity:1;transform:none;pointer-events:auto}
+.result{font-family:var(--display);font-size:clamp(21px,5.4vw,26px);line-height:1.22}
 .result em{font-style:normal;color:var(--chile-2)}
 .dp.lock{cursor:default}
+.viewer{background:radial-gradient(circle at 30% 15%,#fffaf2,#f3e6d6 70%,#e8d4bc);color:#2a1320;overflow:auto}
+.vfig{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+.vfig{background:radial-gradient(ellipse 70% 45% at 50% 50%,rgba(255,255,255,.75),transparent 70%)}
+.vfig svg{width:100%;height:100%;max-height:60vh}
+.viewer .btn svg{width:20px;height:20px;flex:none}
+.pos-fig svg{max-height:260px}
+.vtext{display:flex;flex-direction:column;gap:8px;max-width:60ch}
+.vtext p{font-size:17px;color:#4f3a3c}
+.viewer .btn.ghost{background:#efe1cf;border-color:#dcc6ad;color:#2a1320}
+.pos-fig{display:block;position:relative;width:100%;height:auto;padding:4px;border:0;cursor:zoom-in;border-radius:14px}
+.pos-fig svg{width:100%;height:auto;display:block}
+.pos-fig .zoom{position:absolute;right:8px;bottom:8px;display:inline-flex;gap:5px;align-items:center;font-size:12px;font-weight:700;background:#2a1320;color:#f7e9df;padding:5px 10px;border-radius:999px}
+.thumb{width:64px;height:58px;flex:none;border-radius:10px;background:#f3e6d6;display:flex;overflow:hidden}
+.thumb svg{width:100%;height:100%}
+.li{gap:12px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -335,6 +369,7 @@ const I = {
   q:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17v.3"/>',
   flame:'<path d="M12 2c1 3.6 5.5 5.6 5.5 11a5.5 5.5 0 0 1-11 0c0-2.3 1.1-4 2.3-5.1.1 2.1 1.1 3.2 2.2 3.2C11 8 10 5 12 2z"/>',
   left:'<path d="M19 12H5M11 6l-6 6 6 6"/>',
+  x:'<path d="M6 6l12 12M18 6 6 18"/>',
   moon:'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>'
 };
 const ic = (n,extra='') => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ${extra}>${I[n]||''}</svg>`;
@@ -415,13 +450,15 @@ const TEX = {
   soplidos:{t:'alternando con soplidos',s:'Soplidos',tool:'boca',l:1}, nata:{t:'con un poco de nata o chocolate',s:'Nata',tool:'boca',l:2,dry:true,nz:['orejas','labios','manos','nuca','espalda']}
 };
 const MODES = [
-  {t:'muy lento',s:'Lento',l:1}, {t:'mirándose a los ojos',s:'Mirada',l:1}, {t:'en silencio total',s:'Silencio',l:1},
-  {t:'mientras {B} tiene los ojos cerrados',s:'Ojos cerrados',l:1}, {t:'como si fuera la primera vez',s:'1ª vez',l:1},
-  {t:'sin usar las manos',s:'Sin manos',l:2,only:['boca','cuerpo']}, {t:'alternando lento y rápido',s:'Lento-rápido',l:2},
-  {t:'susurrando entre medias lo que vas a hacer',s:'Susurros',l:2},
-  {t:'hasta que {B} pida más',s:'Hasta pedir más',l:3}, {t:'parando justo cuando más le guste',s:'Parar',l:3},
+  {t:'muy despacio',s:'Despacio',l:1}, {t:'rápido y con ganas',s:'Rápido',l:1},
+  {t:'mientras {B} cierra los ojos',s:'Ojos cerrados',l:1}, {t:'con mucha suavidad, casi sin tocar',s:'Suave',l:1},
+  {t:'con más presión',s:'Firme',l:1,only:['mano','cuerpo']}, {t:'haciendo círculos',s:'Círculos',l:1,only:['mano','boca','juguete']},
+  {t:'alternando lento y rápido',s:'Lento y rápido',l:2}, {t:'sin usar las manos',s:'Sin manos',l:2,only:['boca','cuerpo']},
+  {t:'acercándote y alejándote para provocar',s:'Provocar',l:2}, {t:'de abajo arriba, poco a poco',s:'Subiendo',l:2,only:['boca','mano']},
+  {t:'con pasión, sin frenos',s:'Pasión',l:3}, {t:'hasta que {B} pida más',s:'Hasta pedir más',l:3},
+  {t:'parando justo cuando más le guste',s:'Parar',l:3},
   {t:'mientras {B} tiene los ojos vendados',s:'Venda',l:4}, {t:'mientras {B} tiene las manos atadas',s:'Atadas',l:4},
-  {t:'mientras {B} se queda sin moverse',s:'Quieto/a',l:4}, {t:'dando órdenes en voz baja',s:'Órdenes',l:4,only:['mano','juguete','cuerpo']}
+  {t:'mientras {B} se queda sin moverse',s:'Quieto/a',l:4}
 ];
 const TIMES = {1:['30 s','1 min','1 min','2 min'],2:['1 min','2 min','2 min','3 min'],3:['2 min','3 min','5 min','hasta que pida más'],4:['3 min','5 min','hasta que pida más','10 min']};
 const PLACES = [
@@ -429,7 +466,7 @@ const PLACES = [
   {t:'frente al espejo',s:'Espejo',l:1},{t:'en la ducha',s:'Ducha',l:2,wet:true},{t:'contra la pared',s:'Pared',l:2},{t:'sobre la mesa',s:'Mesa',l:3},
   {t:'en el balcón, con la luz apagada',s:'Balcón',l:4}
 ];
-const DICE = {accion:'Acción',zona:'Zona',textura:'Textura',modo:'Modo',tiempo:'Tiempo',lugar:'Lugar'};
+const DICE = {accion:'Acción',zona:'Zona',textura:'Textura',modo:'Estilo',tiempo:'Tiempo',lugar:'Lugar'};
 const DICE_ORDER = ['accion','zona','textura','modo','tiempo','lugar'];
 const weighted = (arr,lvl) => { const pool=[]; arr.forEach(x=>{ const w = x.l===lvl?3:x.l===lvl-1?2:1; for(let i=0;i<w;i++) pool.push(x); }); return pick(pool); };
 function rollDice(sel){
@@ -719,22 +756,75 @@ V.noche = () => {
 /* dados */
 V.dados = () => {
   const g=S.g; g.sel = g.sel || ['accion','zona','modo'];
-  const r = g.res, anim = g.anim; g.anim=false;
-  const dice = r ? g.used.map((k,i)=>{
-    const f = dieFaces(k,r);
-    const rx = 360*(2+Math.floor(Math.random()*2)) + (Math.random()<.5?90:0), ry = 360*(1+Math.floor(Math.random()*2)) + 90*Math.floor(Math.random()*4), rz = Math.floor(Math.random()*90)-45;
-    const fx = (Math.random()<.5?-1:1)*(60+Math.random()*80);
-    return `<div class="dwrap ${anim?'hop':''}" style="--rx:${rx}deg;--ry:${ry}deg;--rz:${rz}deg;--fx:${fx}px;--dur:${1.05+Math.random()*.3}s;--delay:${i*0.07}s"><span class="dname">${DICE[k]}</span><span class="shadow"></span><div class="cube">${f.map((v,j)=>`<div class="cf f${j+1}">${esc(v)}</div>`).join('')}</div></div>`;
-  }).join('') : `<p class="muted" style="text-align:center">Elige los dados y pulsa <b>Lanzar</b>.</p>`;
-  return head('Dados calientes','Quien lanza, se lo hace a la otra persona. Las combinaciones siempre tienen sentido: la textura solo sale si la acción la admite.') + `
+  const r = g.res;
+  return head('Dados calientes','Quien lanza, se lo hace a la otra persona. Las combinaciones tienen sentido: cada dado solo saca lo que encaja con la acción.') + `
   <div class="dice-pick" role="group" aria-label="Dados">${DICE_ORDER.map(k=>`<button class="dp ${g.sel.includes(k)?'on':''} ${k==='accion'?'lock':''}" data-act="dtoggle" data-k="${k}" aria-pressed="${g.sel.includes(k)}">${ic('dice')}${DICE[k]}</button>`).join('')}</div>
-  <div class="stack" style="margin-top:14px">
+  <div class="stack" style="margin-top:16px">
     <div>${turnPill()}</div>
-    <div class="tray" id="tray">${dice}</div>
-    ${r?`<p class="result">${sentence(r)}</p>${timerHTML(parseSecs(r.time||''))}`:''}
+    ${r?`<div class="table" style="min-height:0"><span class="eyebrow">Última tirada</span><p class="result">${sentence(r)}</p></div>`:`<p class="muted">Los dados se lanzan a pantalla completa. Elige cuáles quieres usar y pulsa el botón.</p>`}
   </div>
-  <div class="act"><button class="btn hot" data-act="roll">${r?'Lanzar otra vez':'Lanzar los dados'}</button></div>`;
+  <div class="act"><button class="btn hot" data-act="roll">${ic('dice','style="width:20px;height:20px"')} Lanzar los dados</button></div>`;
 };
+
+/* mesa de dados a pantalla completa */
+function openStage(){
+  const g=S.g, r=g.res; closeOverlay();
+  const n=g.used.length;
+  const ov=document.createElement('div'); ov.className='overlay stage'; ov.id='overlay';
+  ov.innerHTML=`<div class="ov-top">${turnPill()}<button class="ov-x" data-act="ovclose" aria-label="Cerrar">${ic('x')}</button></div>
+    <div class="dfield" id="field"></div>
+    <div class="panel" id="panel"><p class="result">${sentence(r)}</p>${timerHTML(parseSecs(r.time||''))}
+      <div class="act" style="margin-top:0"><button class="btn ghost" data-act="ovclose">Listo</button><button class="btn hot" data-act="reroll">Lanzar otra vez</button></div></div>`;
+  document.body.appendChild(ov); document.body.style.overflow='hidden';
+  const field=ov.querySelector('#field'); const W=field.clientWidth, H=field.clientHeight;
+  const sz=Math.max(58, Math.min(86, Math.floor((H-8)/n)-14));
+  const cols=n>3?3:n, rows=Math.ceil(n/cols);
+  const top0=Math.max(4,(H-(n*(sz+14)-14))/2);
+  const dice=g.used.map((k,i)=>{
+    const f=dieFaces(k,r);
+    const d=document.createElement('div'); d.className='sdie'; d.style.setProperty('--s',sz+'px');
+    const rx=360*(2+Math.floor(Math.random()*2)), ry=360*(1+Math.floor(Math.random()*2)), rz=Math.floor(Math.random()*120)-60;
+    d.style.setProperty('--rx',rx+'deg'); d.style.setProperty('--ry',ry+'deg'); d.style.setProperty('--rz',rz+'deg');
+    d.style.setProperty('--dur',(1.0+Math.random()*.35)+'s');
+    d.innerHTML=`<span class="shadow"></span><div class="cube">${f.map((v,j)=>`<div class="cf f${j+1}"><span>${esc(v)}</span></div>`).join('')}</div>`;
+    d.style.left=(W/2-sz/2+(Math.random()*80-40))+'px'; d.style.top=(H+80)+'px';
+    field.appendChild(d);
+    const lb=document.createElement('div'); lb.className='lbl';
+    const full = k==='accion'?r.a.t : k==='zona'?(r.z?ZONES[r.z][0]:'donde quieras') : k==='textura'?(r.tex?TEX[r.tex].t:'sin nada') : k==='modo'?(r.m?r.m.t.replace('{B}',B()):'como quieras') : k==='tiempo'?r.time : (r.p?r.p.t:'donde queráis');
+    lb.innerHTML=`<small>${DICE[k]}</small><b>${esc(full)}</b>`;
+    lb.style.left=(sz+22)+'px'; lb.style.top=(top0+i*(sz+14)+sz/2)+'px'; lb.style.width=(W-sz-30)+'px';
+    field.appendChild(lb);
+    return {d,lb,i};
+  });
+  // posiciones de caída, repartidas por la mesa
+  const cells=shuffle([...Array(cols*rows).keys()]);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    dice.forEach(({d,i})=>{
+      const c=cells[i], cx=c%cols, cy=Math.floor(c/cols);
+      const cw=W/cols, ch=Math.min(H/rows, 220);
+      d.style.left=Math.max(0,Math.min(W-sz, cx*cw + cw/2 - sz/2 + (Math.random()*cw*.4-cw*.2)))+'px';
+      d.style.top=Math.max(0, (H-ch*rows)/2 + cy*ch + ch/2 - sz/2 + (Math.random()*ch*.3-ch*.15))+'px';
+      d.classList.add('throw');
+    });
+  }));
+  try{navigator.vibrate&&navigator.vibrate([20,40,30,60,20]);}catch(e){}
+  clearTimeout(openStage.t1); clearTimeout(openStage.t2);
+  openStage.t1=setTimeout(()=>{ dice.forEach(({d,i})=>{ d.classList.add('settle'); d.style.left='6px'; d.style.top=(top0+i*(sz+14))+'px'; }); }, 1450);
+  openStage.t2=setTimeout(()=>{ dice.forEach(({lb})=>lb.classList.add('on')); ov.querySelector('#panel').classList.add('on'); }, 1950);
+}
+function closeOverlay(){ const o=document.getElementById('overlay'); if(o){ o.remove(); document.body.style.overflow=''; stopTimer(); } }
+
+/* visor de posturas a pantalla completa */
+function openViewer(){
+  const g=S.g; closeOverlay();
+  const p=POS[g.i];
+  const ov=document.createElement('div'); ov.className='overlay viewer'; ov.id='overlay';
+  ov.innerHTML=`<div class="ov-top"><span class="eyebrow" style="color:#a2402f">${DIF[p.d]} · ${LEVELS[Math.min(p.l,4)]}</span><button class="ov-x light" data-act="ovclose" aria-label="Cerrar">${ic('x')}</button></div>
+    <div class="vfig">${poseSVG(g.i)}</div>
+    <div class="vtext"><h2>${esc(p.n)}</h2><p>${esc(p.t)}</p></div>
+    <div class="act" style="margin-top:6px"><button class="btn ghost" data-act="vprev">${ic('left')} Anterior</button><button class="btn hot" data-act="vnext">Siguiente</button></div>`;
+  document.body.appendChild(ov); document.body.style.overflow='hidden'; fitPoses(ov);
+}
 
 /* charlas */
 V.charlas = () => {
@@ -789,26 +879,96 @@ V.tablero = () => {
 };
 
 /* posturas */
-function posFig(p){
-  // siluetas abstractas propias: dos formas redondeadas que cambian de inclinación según la postura
-  const h = [...p.n].reduce((a,c)=>a+c.charCodeAt(0),0);
-  const r1 = (h%60)-30, r2 = ((h*7)%80)-40, dx = 16 + (h%20);
-  return `<svg viewBox="0 0 160 100" aria-hidden="true"><g transform="translate(${80-dx},50) rotate(${r1})"><rect x="-10" y="-34" width="20" height="62" rx="10" fill="var(--chile)"/><circle cx="0" cy="-44" r="9" fill="var(--chile)"/></g><g transform="translate(${80+dx},52) rotate(${r2})"><rect x="-10" y="-34" width="20" height="62" rx="10" fill="var(--chile-2)" opacity=".9"/><circle cx="0" cy="-44" r="9" fill="var(--chile-2)" opacity=".9"/></g></svg>`;
+/* Ilustraciones propias de posturas: dos figuras planas dibujadas con un "esqueleto" (cabeza, cuello, pelvis, codos, manos, rodillas, pies).
+   Orden de puntos: H,N,P, E1,W1,K1,F1 (lado lejano), E2,W2,K2,F2 (lado cercano). f = hacia dónde mira (1 derecha, -1 izquierda). */
+const FIG = (h,n,p,e1,w1,k1,f1,e2,w2,k2,f2,hair,f)=>({h,n,p,e1,w1,k1,f1,e2,w2,k2,f2,hair,f});
+const POSE = [
+ /* El sillón */ {props:'chair',A:FIG([98,46],[98,62],[96,118],[110,92],[124,100],[136,118],[138,164],[112,92],[128,100],[138,120],[142,166],'s',1),B:FIG([122,40],[120,56],[114,112],[104,68],[94,58],[86,124],[84,164],[102,70],[92,62],[90,126],[90,166],'l',-1)},
+ /* La cuchara lenta */ {props:'bed',A:FIG([48,108],[60,114],[114,124],[80,130],[106,126],[150,112],[172,138],[84,128],[118,122],[152,116],[176,140],'s',1),B:FIG([72,100],[82,108],[132,118],[96,126],[110,132],[160,106],[182,130],[94,128],[112,134],[162,110],[186,134],'l',1),order:'AB'},
+ /* Cara a cara */ {props:'bed',B:FIG([46,128],[60,130],[112,132],[70,116],[86,102],[138,108],[160,132],[72,118],[90,104],[140,112],[164,134],'l',1),A:FIG([62,102],[74,110],[124,122],[68,124],[56,132],[150,134],[186,136],[70,126],[58,134],[152,136],[188,138],'s',-1),order:'BA'},
+ /* El puente */ {props:'bed-pillow',B:FIG([38,140],[52,140],[104,126],[56,150],[72,152],[128,104],[150,92],[60,152],[74,154],[130,108],[154,96],'l',1),A:FIG([128,56],[126,70],[122,120],[116,94],[108,118],[116,148],[150,150],[118,96],[110,120],[120,150],[154,152],'s',-1),order:'BA'},
+ /* La escalera */ {props:'step',A:FIG([86,36],[86,52],[90,106],[98,78],[106,96],[92,138],[94,170],[100,80],[108,100],[84,138],[80,170],'s',1),B:FIG([110,38],[108,54],[104,106],[118,76],[132,92],[110,136],[112,170],[120,78],[134,96],[130,104],[134,128],'l',1),order:'AB'},
+ /* El columpio */ {props:'wall',A:FIG([96,34],[98,50],[100,104],[116,72],[130,104],[102,136],[104,170],[118,74],[132,106],[96,138],[92,170],'s',1),B:FIG([142,42],[140,58],[132,104],[122,66],[104,56],[108,112],[88,104],[120,68],[102,58],[112,116],[90,108],'l',-1),order:'AB'},
+ /* El espejo */ {props:'bed-mirror',A:FIG([68,68],[74,82],[92,130],[100,104],[120,112],[130,124],[166,136],[102,106],[122,116],[132,126],[168,138],'s',1),B:FIG([100,56],[102,72],[104,124],[114,96],[122,118],[138,112],[146,148],[116,98],[124,120],[140,116],[150,150],'l',1),order:'AB'},
+ /* La jinete */ {props:'bed',A:FIG([38,128],[52,130],[104,130],[64,116],[92,108],[140,124],[178,132],[66,118],[94,110],[142,126],[180,134],'s',1),B:FIG([108,54],[108,70],[106,120],[96,96],[94,112],[82,134],[118,136],[98,98],[96,114],[86,136],[122,138],'l',-1),order:'AB'},
+ /* La ola */ {props:'bed',A:FIG([38,128],[52,130],[104,130],[64,118],[90,96],[140,124],[178,132],[66,120],[92,98],[142,126],[180,134],'s',1),B:FIG([88,62],[96,74],[108,120],[84,98],[76,122],[84,134],[120,136],[86,100],[78,124],[88,136],[124,138],'l',-1),order:'AB'},
+ /* La mesa */ {props:'table',A:FIG([134,40],[132,56],[128,110],[114,78],[98,96],[126,140],[126,170],[112,80],[96,98],[132,140],[136,170],'s',-1),B:FIG([82,50],[86,66],[92,116],[78,92],[70,114],[122,108],[142,128],[76,94],[68,116],[124,112],[146,132],'l',1),order:'AB'},
+ /* El abrazo de loto */ {props:'floor',A:FIG([88,60],[90,76],[94,128],[104,96],[122,96],[124,136],[100,142],[106,98],[124,98],[66,134],[90,144],'s',1),B:FIG([116,54],[112,70],[108,122],[98,80],[84,74],[80,126],[66,140],[96,82],[82,76],[84,128],[70,142],'l',-1),order:'AB'},
+ /* Tumbados en tijera */ {props:'bed',A:FIG([28,120],[42,122],[92,126],[54,110],[70,104],[120,112],[150,128],[56,112],[72,106],[122,116],[152,130],'s',1),B:FIG([174,112],[160,116],[110,124],[148,104],[132,98],[80,112],[54,128],[146,106],[130,100],[84,114],[58,130],'l',-1),order:'AB'},
+ /* La rendición */ {props:'bed-pillow2',B:FIG([38,132],[52,134],[108,132],[46,146],[30,140],[150,140],[190,144],[50,148],[34,142],[152,142],[192,146],'l',-1),A:FIG([50,114],[64,120],[118,122],[60,132],[54,140],[156,128],[192,134],[62,134],[56,142],[158,130],[194,136],'s',-1),order:'BA'},
+ /* Desde atrás, de rodillas */ {props:'bed',B:FIG([46,86],[60,92],[112,98],[58,116],[56,142],[116,140],[150,144],[62,118],[60,144],[120,142],[154,146],'l',-1),A:FIG([134,44],[132,60],[126,108],[122,82],[116,96],[122,142],[160,146],[124,84],[118,98],[128,142],[164,146],'s',-1),order:'BA'},
+ /* El borde de la cama */ {props:'bededge',B:FIG([28,108],[42,108],[92,104],[48,94],[60,88],[112,78],[118,52],[50,96],[62,90],[114,80],[122,54],'l',1),A:FIG([126,38],[124,54],[116,106],[110,80],[100,96],[118,138],[118,170],[112,82],[102,98],[124,138],[128,170],'s',-1),order:'BA'},
+ /* La silla giratoria */ {props:'chair',A:FIG([80,46],[82,62],[84,116],[96,90],[110,102],[122,116],[124,162],[98,92],[112,104],[124,118],[128,164],'s',1),B:FIG([104,42],[104,58],[98,110],[114,84],[122,112],[134,120],[132,164],[116,86],[124,114],[136,122],[138,166],'l',1),order:'AB'},
+ /* El 69 de lado */ {props:'bed',A:FIG([30,112],[42,114],[96,118],[52,126],[70,124],[130,108],[166,118],[54,128],[72,126],[132,112],[168,122],'s',1),B:FIG([110,102],[98,104],[50,100],[84,92],[70,90],[30,88],[12,98],[82,94],[68,92],[28,92],[10,100],'l',-1),order:'AB'},
+ /* El trono */ {props:'bedside',A:FIG([70,50],[72,66],[78,118],[70,96],[66,120],[116,116],[124,160],[68,98],[64,122],[118,120],[128,162],'s',1),B:FIG([116,84],[124,96],[150,128],[112,112],[102,116],[136,156],[176,160],[114,114],[104,118],[140,156],[178,160],'l',-1),order:'AB'},
+ /* El arco */ {props:'bed',A:FIG([38,128],[52,130],[104,130],[64,116],[92,108],[140,124],[178,132],[66,118],[94,110],[142,126],[180,134],'s',1),B:FIG([132,60],[124,74],[106,120],[132,100],[140,126],[82,134],[118,136],[134,102],[142,128],[86,136],[122,138],'l',1),order:'AB'},
+ /* La carretilla suave */ {props:'floor',B:FIG([38,138],[52,134],[108,104],[52,152],[46,168],[132,96],[156,86],[56,154],[50,170],[134,100],[160,90],'l',-1),A:FIG([152,38],[150,54],[140,108],[134,80],[126,98],[144,140],[142,170],[136,82],[128,100],[150,140],[154,170],'s',-1),order:'BA'},
+ /* El nudo */ {props:'bed',B:FIG([46,128],[60,130],[112,132],[44,116],[24,118],[138,108],[160,132],[46,118],[26,120],[140,112],[164,134],'l',1),A:FIG([62,102],[74,110],[124,122],[52,112],[30,116],[150,134],[186,136],[54,114],[32,118],[152,136],[188,138],'s',-1),order:'BA'},
+ /* La ducha */ {props:'shower',B:FIG([58,48],[64,62],[92,108],[48,72],[34,64],[90,138],[92,170],[50,74],[36,66],[84,138],[80,170],'l',-1),A:FIG([112,40],[110,56],[104,108],[96,82],[90,98],[108,138],[112,170],[98,84],[92,100],[102,140],[100,170],'s',-1),order:'BA'}
+];
+const SKIN = {A:['#d4743a','#b65e2b'], B:['#ecb38a','#cf9670']}, HAIR='#1f2240';
+function figSVG(F, who){
+  const [c, cf] = SKIN[who]; const P=pt=>pt.join(' ');
+  const limb=(a,b,c2,w,col)=>`<path d="M${P(a)} L${P(b)} L${P(c2)}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  const dx=F.h[0]-F.n[0], dy=F.h[1]-F.n[1]; const len=Math.hypot(dx,dy)||1; const ux=dx/len, uy=dy/len;
+  // pelo detrás de la cabeza (lado contrario a la cara)
+  const bx = F.h[0]-F.f*5 - ux*1.5, by=F.h[1]-3 - uy*1.5;
+  const hair = F.hair==='l'
+    ? `<path d="M${bx} ${by} L${(F.h[0]-F.f*9 - ux*14).toFixed(1)} ${(F.h[1]-uy*20+4).toFixed(1)}" stroke="${HAIR}" stroke-width="15" stroke-linecap="round"/><circle cx="${bx}" cy="${by}" r="11" fill="${HAIR}"/>`
+    : `<circle cx="${bx}" cy="${by}" r="10.8" fill="${HAIR}"/>`;
+  return `<g>${limb(F.n,F.e1,F.w1,9,cf)}${limb(F.p,F.k1,F.f1,13,cf)}
+    ${hair}
+    <path d="M${P(F.n)} L${P(F.p)}" stroke="${c}" stroke-width="${who==='A'?25:23}" stroke-linecap="round"/>
+    <circle cx="${F.p[0]}" cy="${F.p[1]}" r="${who==='A'?13:14}" fill="${c}"/>
+    <circle cx="${F.h[0]}" cy="${F.h[1]}" r="10.5" fill="${c}"/>
+    ${limb(F.p,F.k2,F.f2,14,c)}${limb(F.n,F.e2,F.w2,9.5,c)}</g>`;
 }
+const PROPS = {
+  bed:'<rect x="6" y="140" width="188" height="16" rx="6" fill="#cdb69a"/><rect x="6" y="152" width="188" height="10" rx="4" fill="#b99d7e"/>',
+  'bed-pillow':'<rect x="6" y="152" width="188" height="14" rx="6" fill="#cdb69a"/><ellipse cx="104" cy="140" rx="22" ry="9" fill="#efe3d3"/>',
+  'bed-pillow2':'<rect x="6" y="150" width="188" height="14" rx="6" fill="#cdb69a"/><ellipse cx="108" cy="146" rx="22" ry="7" fill="#efe3d3"/>',
+  'bed-mirror':'<rect x="6" y="138" width="170" height="14" rx="6" fill="#cdb69a"/><rect x="176" y="40" width="16" height="120" rx="4" fill="#bfd3dc"/><path d="M180 50 l8 20 M180 64 l6 14" stroke="#fff" stroke-width="2" opacity=".7"/>',
+  chair:'<rect x="62" y="118" width="62" height="9" rx="4" fill="#b99d7e"/><rect x="66" y="126" width="6" height="44" fill="#b99d7e"/><rect x="114" y="126" width="6" height="44" fill="#b99d7e"/>',
+  step:'<rect x="122" y="128" width="54" height="42" rx="4" fill="#cdb69a"/><rect x="0" y="170" width="200" height="4" fill="#cdb69a"/>',
+  wall:'<rect x="158" y="10" width="14" height="164" rx="3" fill="#cdb69a"/><rect x="0" y="170" width="200" height="4" fill="#cdb69a"/>',
+  table:'<rect x="36" y="116" width="74" height="9" rx="3" fill="#b99d7e"/><rect x="42" y="124" width="6" height="48" fill="#b99d7e"/><rect x="98" y="124" width="6" height="48" fill="#b99d7e"/>',
+  floor:'<rect x="0" y="168" width="200" height="6" rx="3" fill="#cdb69a"/>',
+  bededge:'<rect x="4" y="110" width="98" height="18" rx="6" fill="#cdb69a"/><rect x="8" y="126" width="6" height="46" fill="#b99d7e"/><rect x="92" y="126" width="6" height="46" fill="#b99d7e"/>',
+  bedside:'<rect x="24" y="118" width="70" height="20" rx="6" fill="#cdb69a"/><rect x="24" y="136" width="70" height="34" rx="4" fill="#b99d7e"/><ellipse cx="150" cy="160" rx="26" ry="6" fill="#efe3d3"/>',
+  shower:'<rect x="16" y="10" width="14" height="164" rx="3" fill="#bfd3dc"/><g stroke="#9cc3d6" stroke-width="2" stroke-linecap="round" opacity=".8"><path d="M70 14 l-4 14 M86 10 l-4 16 M102 14 l-4 14 M118 10 l-4 16 M134 14 l-4 14"/></g><rect x="0" y="170" width="200" height="4" fill="#bfd3dc"/>'
+};
+function poseSVG(i, cls=''){
+  const d = POSE[i]; if(!d) return '';
+  const order = (d.order||'AB').split('');
+  return `<svg class="${cls}" viewBox="0 0 200 180" role="img" aria-label="Ilustración de ${esc(POS[i].n)}">
+    <g class="pz">${PROPS[d.props]||''}${order.map(w=>figSVG(d[w],w)).join('')}</g></svg>`;
+}
+/* recorta cada ilustración a las figuras para que se vean grandes */
+function fitPoses(root){
+  (root||document).querySelectorAll('svg[aria-label^="Ilustración"]').forEach(sv=>{
+    if(sv.dataset.fit) return; const g=sv.querySelector('.pz'); if(!g) return;
+    let b; try{ b=g.getBBox(); }catch(e){ return; } if(!b||!b.width) return;
+    const pad=8, w=Math.max(b.width+pad*2, 110), h=Math.max(b.height+pad*2, 90);
+    const cx=b.x+b.width/2, cy=b.y+b.height/2;
+    sv.setAttribute('viewBox',`${(cx-w/2).toFixed(1)} ${(cy-h/2).toFixed(1)} ${w.toFixed(1)} ${h.toFixed(1)}`);
+    sv.dataset.fit=1;
+  });
+}
+
 function posPool(){ const max = S.level>=3? (S.volcan&&S.level===4?4:3) : 2; return POS.filter(p=>p.l<=Math.max(2,max)).filter(p=>ok(p.n+' '+p.t)); }
 V.posturas = () => {
   const g=S.g; g.mode=g.mode||'azar';
   const tabs = `<div class="toggles" style="margin-bottom:14px">${[['azar','Carta al azar'],['ruleta','Ruleta con tiempo'],['coleccion','Colección']].map(([k,n])=>`<button class="tg ${g.mode===k?'on':''}" data-act="pmode" data-m="${k}">${n}</button>`).join('')}</div>`;
   if(g.mode==='coleccion'){
     const tried = Object.keys(S.tried).length;
-    return head('Posturas',`Habéis probado ${tried} de ${POS.length}. Toca una para verla.`)+tabs+`<div class="list">${POS.map((p,i)=>`<button class="li" data-act="pshow" data-i="${i}"><div><b>${esc(p.n)}</b><br><span>${DIF[p.d]} · ${chiles(p.l)}</span></div><span>${S.fav[i]?'♥':''} ${S.tried[i]?'✓':''}</span></button>`).join('')}</div>`;
+    return head('Posturas',`Habéis probado ${tried} de ${POS.length}. Toca una para verla.`)+tabs+`<div class="list">${POS.map((p,i)=>`<button class="li" data-act="pshow" data-i="${i}"><span class="thumb">${poseSVG(i)}</span><div style="flex:1;min-width:0"><b>${esc(p.n)}</b><br><span>${DIF[p.d]} · ${chiles(p.l)}</span></div><span>${S.fav[i]?'♥':''} ${S.tried[i]?'✓':''}</span></button>`).join('')}</div>`;
   }
   if(g.i==null){ const pool=posPool(); g.i = POS.indexOf(pick(pool)); }
   const p = POS[g.i];
   return head('Posturas', g.mode==='ruleta'?'Suena una señal y cambia la postura. Elige cada cuánto.':'Descripciones propias. Si no os convence, pasad a la siguiente.')+tabs+`
   ${g.mode==='ruleta'?`<div class="toggles" style="margin-bottom:12px">${[120,180,300].map(s=>`<button class="tg ${ (g.every||180)===s?'on':''}" data-act="pevery" data-s="${s}">Cada ${s/60} min</button>`).join('')}</div>`:''}
   ${deck('p'+g.i, `
-    <div class="pos-fig">${posFig(p)}</div>
+    <button class="pos-fig" data-act="pfull" aria-label="Ver la ilustración en grande">${poseSVG(g.i)}<span class="zoom">${ic('body','style="width:14px;height:14px"')} Ver en grande</span></button>
     <div class="row" style="justify-content:space-between"><h3>${esc(p.n)}</h3><span class="stars">${DIF[p.d]}</span></div>
     <p class="muted" style="font-size:17px">${esc(p.t)}</p>
     <div class="row"><button class="tg ${S.fav[g.i]?'on':''}" data-act="pfav">♥ Favorita</button><button class="tg ${S.tried[g.i]?'on':''}" data-act="ptried">✓ Probada</button></div>
@@ -906,7 +1066,7 @@ V.ajustes = () => `<button class="back" data-go="home">${ic('left')}Juegos</butt
 function render(){
   renderHeat();
   const fn = V[S.view] || V.home;
-  $('#main').innerHTML = fn();
+  $('#main').innerHTML = fn(); fitPoses($('#main'));
 }
 function go(view, arg){
   stopTimer();
@@ -943,7 +1103,10 @@ document.addEventListener('click', e=>{
     case 'timerstop': stopTimer(); { const b=$('#tbtn'); if(b){ b.textContent='Seguir'; b.dataset.act='timer'; b.dataset.s=parseSecs('0s')||b.dataset.s; } } break;
     /* dados */
     case 'dtoggle': { const k=el.dataset.k; if(k==='accion') return; g.sel = g.sel.includes(k)? g.sel.filter(x=>x!==k) : [...g.sel,k]; if(!g.sel.includes('accion')) g.sel.push('accion'); g.sel = DICE_ORDER.filter(x=>g.sel.includes(x)); render(); break; }
-    case 'roll': { stopTimer(); if(g.res) nextTurn(); g.res = rollDice(g.sel); g.used=[...g.sel]; if(g.res.z && !g.used.includes('zona')) g.used.splice(1,0,'zona'); g.anim=true; render(); try{navigator.vibrate&&navigator.vibrate([30,60,30,90,20]);}catch(e){} break; }
+    case 'roll': case 'reroll': { stopTimer(); if(g.res) nextTurn(); g.res = rollDice(g.sel); g.used=[...g.sel]; if(g.res.z && !g.used.includes('zona')) g.used.splice(1,0,'zona'); render(); openStage(); break; }
+    case 'ovclose': closeOverlay(); render(); break;
+    case 'pfull': openViewer(); break;
+    case 'vprev': case 'vnext': { const list = g.mode==='coleccion'||!posPool().length ? POS.map((_,i)=>i) : posPool().map(p=>POS.indexOf(p)); let k=list.indexOf(g.i); if(k<0) k=0; g.i = list[(k + (a==='vnext'?1:-1) + list.length) % list.length]; openViewer(); break; }
     /* charlas */
     case 'cmode': g.mode=el.dataset.m; g.draw=null; render(); break;
     case 'cnext': g.i++; if(el.dataset.swap==='1') nextTurn(); render(); break;
@@ -1020,7 +1183,7 @@ document.addEventListener('click', e=>{
 /* volver a la noche guiada desde un juego marca el paso como hecho */
 const _go = go;
 go = function(view,arg){ if(view==='noche' && S.night!=null){ const d=(S.night??0)+1; stopTimer(); S.view='noche'; S.g={nightDone:Math.max(d,S._nightDone||0)}; render(); window.scrollTo(0,0); return; } _go(view,arg); };
-document.addEventListener('keydown', e=>{ if((e.key==='Enter'||e.key===' ') && e.target.id==='flip' && e.target.dataset.act==='flip'){ e.preventDefault(); e.target.click(); } });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && document.getElementById('overlay')){ closeOverlay(); render(); return; } if((e.key==='Enter'||e.key===' ') && e.target.id==='flip' && e.target.dataset.act==='flip'){ e.preventDefault(); e.target.click(); } });
 render();
 </script>
 
