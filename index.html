@@ -415,7 +415,7 @@ function deck(key, front, {label='Carta', kind='charla', auto=false, cool=false}
 }
 
 /* ================= contenido ================= */
-/* Dados con sentido: cada acción dice qué zonas admite y con qué se hace (boca, mano, cuerpo, juguete).
+/* Dados con sentido: cada acción dice qué zonas, texturas y estilos admite (ACT_MODES).
    Las texturas solo salen con acciones que las admiten, los modos se filtran por herramienta
    y los lugares por textura. Así nunca sale "nalgadas con las manos atadas" ni "besar con una pluma". */
 const ZONES = {
@@ -432,7 +432,7 @@ const ACTIONS = [
   {t:'Masajea',s:'Masajea',l:1,tool:'mano',z:['espalda','hombros','nuca','manos','muslos','gluteos','cintura','pecho'],tex:['aceite','calor']},
   {t:'Sopla suave sobre',s:'Sopla',l:1,tool:'boca',z:['cuello','orejas','nuca','pecho','abdomen','muslos','pezones','genitales'],tex:[],free:'sopla suave sobre la piel de {B}'},
   {t:'Mordisquea suave',s:'Mordisquea',l:1,tool:'boca',z:['cuello','orejas','labios','hombros','nuca','gluteos','muslos'],tex:[]},
-  {t:'Roza con los labios',s:'Roza',l:1,tool:'boca',z:ALLZ.filter(z=>z!=='labios')},
+  {t:'Roza con los labios',s:'Roza',l:1,tool:'boca',z:ALLZ.filter(z=>z!=='labios'),tex:['hieloboca','caliente','soplidos']},
   {t:'Lame',s:'Lame',l:2,tool:'boca',z:['cuello','orejas','pecho','abdomen','pezones','muslos','genitales','entrepierna']},
   {t:'Recorre con la punta de la lengua',s:'Lengua',l:2,tool:'boca',z:['cuello','espalda','abdomen','muslos','pezones','entrepierna','genitales']},
   {t:'Chupa',s:'Chupa',l:3,tool:'boca',z:['pezones','genitales']},
@@ -449,17 +449,42 @@ const TEX = {
   hieloboca:{t:'con un cubito de hielo en la boca',s:'Hielo',tool:'boca',l:1}, caliente:{t:'después de un sorbo de algo caliente',s:'Calor',tool:'boca',l:1},
   soplidos:{t:'alternando con soplidos',s:'Soplidos',tool:'boca',l:1}, nata:{t:'con un poco de nata o chocolate',s:'Nata',tool:'boca',l:2,dry:true,nz:['orejas','labios','manos','nuca','espalda']}
 };
+const VERT = ['espalda','muslos','abdomen','cuello','pecho','cintura','entrepierna'];
 const MODES = [
-  {t:'muy despacio',s:'Despacio',l:1}, {t:'rápido',s:'Rápido',l:1},
-  {t:'mientras {B} cierra los ojos',s:'Ojos cerrados',l:1}, {t:'con mucha suavidad, casi sin tocar',s:'Suave',l:1},
-  {t:'con más presión',s:'Firme',l:1,only:['mano','cuerpo']}, {t:'haciendo círculos',s:'Círculos',l:1,only:['mano','boca','juguete']},
-  {t:'alternando lento y rápido',s:'Lento y rápido',l:2}, {t:'sin usar las manos',s:'Sin manos',l:2,only:['boca','cuerpo']},
-  {t:'acercándote y alejándote para provocar',s:'Provocar',l:2}, {t:'de abajo arriba, poco a poco',s:'Subiendo',l:2,only:['boca','mano']},
-  {t:'con pasión, sin frenos',s:'Pasión',l:3}, {t:'hasta que {B} pida más',s:'Hasta pedir más',l:3},
-  {t:'parando justo cuando más le guste',s:'Parar',l:3},
-  {t:'mientras {B} tiene los ojos vendados',s:'Venda',l:4}, {t:'mientras {B} tiene las manos atadas',s:'Atadas',l:4},
-  {t:'mientras {B} se queda sin moverse',s:'Quieto/a',l:4}
+  {id:'desp',t:'muy despacio',s:'Despacio',l:1}, {id:'rap',t:'rápido',s:'Rápido',l:1},
+  {id:'ojos',t:'mientras {B} cierra los ojos',s:'Ojos cerrados',l:1}, {id:'suave',t:'con mucha suavidad, casi sin tocar',s:'Suave',l:1,ntex:['unas']},
+  {id:'firme',t:'con más presión',s:'Firme',l:1,ntex:['pluma','tela','unas','hielo']}, {id:'circ',t:'haciendo círculos',s:'Círculos',l:1,nz:['labios','manos']},
+  {id:'alt',t:'alternando lento y rápido',s:'Lento y rápido',l:2}, {id:'sinm',t:'sin usar las manos',s:'Sin manos',l:2},
+  {id:'prov',t:'acercándote y alejándote para provocar',s:'Provocar',l:2}, {id:'sube',t:'de abajo arriba, poco a poco',s:'Subiendo',l:2,zones:VERT},
+  {id:'pasion',t:'con pasión, sin frenos',s:'Pasión',l:3}, {id:'mas',t:'hasta que {B} pida más',s:'Hasta pedir más',l:3},
+  {id:'parar',t:'parando justo cuando más le guste',s:'Parar',l:3},
+  {id:'venda',t:'mientras {B} tiene los ojos vendados',s:'Venda',l:4}, {id:'atadas',t:'mientras {B} tiene las manos atadas',s:'Atadas',l:4},
+  {id:'quieto',t:'mientras {B} se queda sin moverse',s:'Quieto/a',l:4}
 ];
+/* qué estilos tienen sentido con cada acción (si no está aquí, no puede salir junto) */
+const ACT_MODES = {
+  'Besa':['desp','rap','ojos','suave','prov','sube','pasion','mas','parar','venda','atadas','quieto'],
+  'Acaricia':['desp','ojos','suave','firme','circ','prov','sube','mas','parar','venda','atadas','quieto'],
+  'Masajea':['desp','ojos','firme','circ','sube','mas','venda','quieto'],
+  'Sopla':['desp','ojos','prov','sube','venda','atadas','quieto'],
+  'Mordisquea':['desp','ojos','prov','mas','parar','venda','atadas','quieto'],
+  'Roza':['desp','ojos','prov','sube','parar','venda','atadas','quieto'],
+  'Lame':['desp','ojos','circ','alt','prov','sube','mas','parar','venda','atadas','quieto'],
+  'Lengua':['desp','ojos','circ','prov','sube','parar','venda','atadas','quieto'],
+  'Chupa':['desp','rap','alt','ojos','suave','prov','pasion','mas','parar','venda','atadas','quieto'],
+  'Mano':['desp','rap','alt','ojos','suave','firme','circ','prov','pasion','mas','parar','venda','atadas','quieto'],
+  'Frota':['desp','rap','alt','ojos','firme','sinm','prov','pasion','mas','parar','venda','atadas','quieto'],
+  'Nalgadas':['ojos','mas','venda','quieto'],
+  'Juguete':['desp','rap','alt','ojos','suave','circ','prov','mas','parar','venda','atadas','quieto'],
+  'Muerde':['desp','ojos','prov','pasion','venda','atadas','quieto']
+};
+function modeFits(m, a, r){
+  const allow = ACT_MODES[a.s]; if(allow && !allow.includes(m.id)) return false;
+  if(m.zones && !(r.z && m.zones.includes(r.z))) return false;
+  if(m.nz && r.z && m.nz.includes(r.z)) return false;
+  if(m.ntex && r.tex && m.ntex.includes(r.tex)) return false;
+  return true;
+}
 const TIMES = {1:['30 s','1 min','1 min','2 min'],2:['1 min','2 min','2 min','3 min'],3:['2 min','3 min','5 min','hasta que pida más'],4:['3 min','5 min','hasta que pida más','10 min']};
 const PLACES = [
   {t:'en el sofá',s:'Sofá',l:1},{t:'en la cama',s:'Cama',l:1},{t:'de pie, en la cocina',s:'Cocina',l:1},{t:'sobre cojines en el suelo',s:'Suelo',l:1},
@@ -482,7 +507,7 @@ function rollDice(sel){
       const tk = (a.tex ?? Object.keys(TEX).filter(k=>TEX[k].tool===a.tool)).filter(k=>TEX[k] && TEX[k].l<=L && ok(TEX[k].t) && !(r.z && (TEX[k].nz||[]).includes(r.z)));
       if(tk.length) r.tex = pick(tk);
     }
-    if(sel.includes('modo')){ const ms = MODES.filter(okL).filter(m=>!m.only||m.only.includes(a.tool)).filter(m=>ok(m.t)); r.m = weighted(ms,L); }
+    if(sel.includes('modo')){ const ms = MODES.filter(okL).filter(m=>modeFits(m,a,r)).filter(m=>ok(m.t)); if(ms.length) r.m = weighted(ms,L); }
     if(sel.includes('tiempo')){ const ts = TIMES[L].filter(t=>!(r.m && /pida más|parando/.test(r.m.t) && /pida/.test(t))); r.time = pick(ts.length?ts:['3 min']); }
     if(sel.includes('lugar')){ const ps = PLACES.filter(okL).filter(p=>!(p.wet && r.tex && TEX[r.tex].dry)).filter(p=>ok(p.t)); r.p = pick(ps); }
     return r;
