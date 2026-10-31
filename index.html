@@ -187,37 +187,77 @@ label.lab{font-weight:700;font-size:14.5px;display:block;margin-bottom:6px}
 .step.next{border-color:var(--chile-2)}
 .step div{flex:1;min-width:0}
 .step span{font-size:13px;color:var(--fg-3);display:block}
-/* cartas: mazo, reparto y giro */
-.deal{position:relative;perspective:1400px;margin-top:4px}
-.deal.enter{animation:deal .55s cubic-bezier(.2,.9,.25,1.15) both}
-.deal.out{animation:toss .32s ease-in forwards}
-@keyframes deal{0%{transform:translate(-30px,-60px) rotate(-14deg) scale(.82);opacity:0}100%{transform:none;opacity:1}}
-@keyframes toss{to{transform:translate(115%,-10px) rotate(16deg);opacity:0}}
-.stackfx{position:absolute;inset:0;border-radius:var(--r);background:var(--bg-3);border:1px solid var(--line);transform:rotate(3deg) translate(6px,6px);z-index:0}
-.stackfx.two{transform:rotate(-2.5deg) translate(-5px,9px);opacity:.6}
-.flip{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr);width:100%;transform-style:preserve-3d;transition:transform .75s cubic-bezier(.3,1.35,.45,1);border-radius:var(--r)}
+/* cartas: baraja real, reparto y giro */
+.deal{position:relative;perspective:1600px;width:min(100%,360px);margin:8px auto 0}
+.deal.enter{animation:deal .62s cubic-bezier(.2,.8,.25,1) both}
+.deal.out{animation:toss .34s ease-in forwards}
+@keyframes deal{0%{transform:translate(45%,-80%) rotate(28deg) scale(.7);opacity:0}60%{opacity:1}100%{transform:none}}
+@keyframes toss{to{transform:translate(-125%,30px) rotate(-24deg);opacity:0}}
+.pile{position:absolute;inset:0;border-radius:16px;background:#f3e6d6;transform:translate(6px,8px) rotate(2.2deg);box-shadow:0 1px 0 #f6ecdf,0 2px 0 #cbb8a2,0 3px 0 #f6ecdf,0 4px 0 #cbb8a2,0 5px 0 #f6ecdf,0 6px 0 #cbb8a2,0 18px 32px -12px rgba(0,0,0,.75)}
+.flip{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr);width:100%;aspect-ratio:5/7;transform-style:preserve-3d;-webkit-transform-style:preserve-3d;transition:transform .7s cubic-bezier(.45,.05,.25,1);border-radius:16px}
 .flip.on{transform:rotateY(180deg)}
 .flip:not(.on){cursor:pointer}
-.flip:not(.on):hover{transform:translateY(-4px) rotate(-1deg)}
-.cface{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:var(--r);padding:22px;display:flex;flex-direction:column;gap:14px;min-height:300px}
-.cface.front{transform:rotateY(180deg);background:var(--bg-2);border:1px solid var(--line);justify-content:center}
-.cface.back{background:var(--grad);color:#fff;align-items:center;justify-content:center;text-align:center;overflow:hidden;position:relative;box-shadow:0 18px 40px -18px rgba(255,74,46,.55)}
-.cface.back.cool{background:linear-gradient(150deg,#3b6f8f 0%,#284a6b 55%,#1f2f52 100%);box-shadow:0 18px 40px -18px rgba(59,111,143,.6)}
-.cface.back::before{content:"";position:absolute;inset:12px;border:1.5px solid rgba(255,255,255,.45);border-radius:calc(var(--r) - 8px)}
-.cface.back::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(255,255,255,.07) 0 10px,transparent 10px 20px)}
-.cface.back > *{position:relative;z-index:1}
-.cface.back .bk-ic{width:62px;height:62px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center}
-.cface.back .bk-ic svg{width:34px;height:34px}
-.cface.back b{font-family:var(--display);font-weight:400;font-size:32px;line-height:1.05}
-.cface.back .tap{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:700;background:rgba(0,0,0,.22);padding:7px 14px;border-radius:999px;animation:pulse 1.8s ease-in-out infinite}
+.flip:not(.on):hover{transform:translateY(-5px) rotate(-1.5deg)}
+.cface{grid-area:1/1;border-radius:16px;backface-visibility:hidden;-webkit-backface-visibility:hidden;position:relative;display:flex;flex-direction:column;min-width:0}
+/* además del backface, se oculta cada cara a mitad del giro: así nunca se ve el reverso en espejo (Safari) */
+.cface.cback{transition:visibility 0s .3s;background:#f6ecdf;padding:9px;box-shadow:0 18px 40px -16px rgba(0,0,0,.75)}
+.flip.on .cface.cback{visibility:hidden}
+.cface.front{transform:rotateY(180deg);visibility:hidden;transition:visibility 0s .3s;
+  background:radial-gradient(circle at 28% 18%,#fffaf2 0%,#f5e9da 62%,#ead8c2 100%);color:#2a1320;padding:46px 26px 46px;justify-content:center;gap:14px;
+  box-shadow:0 18px 40px -16px rgba(0,0,0,.75),inset 0 0 0 1px rgba(80,30,30,.12)}
+.flip.on .cface.front{visibility:visible}
+.cface.front::before{content:"";position:absolute;inset:8px;border:1px solid rgba(184,38,26,.28);border-radius:11px;pointer-events:none}
+.cface.front.cool::before{border-color:rgba(40,74,107,.3)}
+.bk{flex:1;border-radius:10px;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#fff;text-align:center;padding:18px;
+  background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.13) 0 1.5px,transparent 1.5px 13px),repeating-linear-gradient(-45deg,rgba(255,255,255,.13) 0 1.5px,transparent 1.5px 13px),linear-gradient(155deg,#d23a2a 0%,#9c1733 60%,#5e0f2a 100%)}
+.cool .bk{background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.12) 0 1.5px,transparent 1.5px 13px),repeating-linear-gradient(-45deg,rgba(255,255,255,.12) 0 1.5px,transparent 1.5px 13px),linear-gradient(155deg,#3f7a9a 0%,#284a6b 60%,#1b2c4d 100%)}
+.bk::before{content:"";position:absolute;inset:8px;border:1.5px solid rgba(255,255,255,.55);border-radius:6px;pointer-events:none}
+.bk > *{position:relative}
+.medal{width:96px;height:96px;border-radius:50%;background:#f6ecdf;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 5px rgba(255,255,255,.22),0 8px 18px rgba(0,0,0,.3);overflow:hidden}
+.medal svg{width:84px;height:84px;border-radius:50%}
+.bk b{font-family:var(--display);font-weight:400;font-size:28px;line-height:1.05;text-shadow:0 2px 8px rgba(0,0,0,.25)}
+.bk .tap{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:700;background:rgba(0,0,0,.25);padding:7px 14px;border-radius:999px;animation:pulse 1.8s ease-in-out infinite}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
-.front .card-text{animation:none}
-.flip.on .cface.front > *{animation:rise .5s .35s both}
+.idx{position:absolute;display:flex;flex-direction:column;align-items:center;gap:3px;color:#b8261a;font-family:var(--display);font-size:13px;line-height:1;max-width:64px;text-align:center}
+.idx svg{width:17px;height:17px}
+.idx.tl{top:16px;left:16px}.idx.br{bottom:16px;right:16px;transform:rotate(180deg)}
+.cool .idx{color:#284a6b}
+.cface.front .card-text{color:#2a1320}
+.cface.front .eyebrow{color:#a2402f}.cool.cface.front .eyebrow{color:#2f5878}
+.cface.front .small{color:#7d6260}.cface.front .muted{color:#4f3a3c}
+.cface.front h3{color:#2a1320}.cface.front .stars{color:#b8261a}
+.cface.front .turn{background:#efe1cf;border-color:#dfcab2;color:#2a1320}
+.cface.front .tg{background:#efe1cf;border-color:#dcc6ad;color:#3a2028}
+.cface.front .tg.on{background:#2a1320;color:#f7e9df;border-color:#2a1320}
+.cface.front .timer{background:#efe1cf}.cface.front .timer .t{color:#2a1320}.cface.front .timer .bar{background:#dcc6ad}
+.cface.front .btn.ghost{background:#efe1cf;border-color:#dcc6ad;color:#2a1320}
+.cface.front .secret{background:#f1e3d1;border-color:#c9573f;color:#2a1320}
+.cface.front .pos-fig{background:#efe1cf}
+.flip.on .cface.front > *:not(.idx){animation:rise .45s .32s both}
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.hint{display:flex;gap:8px;justify-content:center;margin-top:14px;font-size:13.5px;color:var(--fg-3)}
+.hint{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:16px;font-size:13.5px;color:var(--fg-3)}
 .hint span{display:inline-flex;align-items:center;gap:6px}
 .hint i{font-style:normal;width:20px;height:20px;border-radius:50%;background:var(--bg-3);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--fg-2)}
 .hint .now i{background:var(--chile);color:#fff}
+
+/* dados 3D */
+.tray{border-radius:var(--r);padding:26px 14px 22px;background:radial-gradient(ellipse at 50% 35%,#4a1a2b 0%,#2a0f1b 75%);box-shadow:inset 0 4px 22px rgba(0,0,0,.6),inset 0 0 0 1px var(--line);display:flex;flex-wrap:wrap;gap:22px 18px;justify-content:center;min-height:150px;align-items:center;overflow:hidden}
+.dwrap{width:70px;height:70px;position:relative;perspective:520px}
+.dwrap .shadow{position:absolute;left:8px;right:8px;bottom:-12px;height:12px;border-radius:50%;background:rgba(0,0,0,.45);filter:blur(4px)}
+.dwrap.hop{animation:hop var(--dur) cubic-bezier(.25,.6,.35,1) both;animation-delay:var(--delay)}
+.dwrap.hop .shadow{animation:shad var(--dur) ease-out both;animation-delay:var(--delay)}
+@keyframes hop{0%{transform:translate(var(--fx),-150px)}45%{transform:translate(calc(var(--fx)*.2),0)}60%{transform:translate(calc(var(--fx)*.08),-22px)}75%{transform:translate(0,0)}86%{transform:translate(0,-6px)}100%{transform:none}}
+@keyframes shad{0%{opacity:0;transform:scale(.4)}45%{opacity:1;transform:scale(1)}60%{transform:scale(.8)}75%{transform:scale(1)}100%{opacity:1}}
+.cube{position:absolute;inset:0;transform-style:preserve-3d;-webkit-transform-style:preserve-3d}
+.dwrap.hop .cube{animation:tumble var(--dur) cubic-bezier(.2,.65,.3,1) both;animation-delay:var(--delay)}
+@keyframes tumble{0%{transform:rotateX(var(--rx)) rotateY(var(--ry)) rotateZ(var(--rz))}100%{transform:rotateX(0) rotateY(0) rotateZ(0)}}
+.cf{position:absolute;inset:0;border-radius:14px;background:radial-gradient(circle at 30% 25%,#fffaf3,#f1e2cf 70%,#e2ccb2);color:#a3201b;display:flex;align-items:center;justify-content:center;text-align:center;padding:5px;font-weight:800;font-size:12px;line-height:1.1;letter-spacing:-.01em;backface-visibility:hidden;-webkit-backface-visibility:hidden;box-shadow:inset 0 0 0 1px rgba(90,40,30,.12),inset 0 -5px 9px rgba(120,70,40,.14);overflow-wrap:anywhere}
+.cf.f1{transform:translateZ(35px)}.cf.f2{transform:rotateY(180deg) translateZ(35px)}.cf.f3{transform:rotateY(90deg) translateZ(35px)}
+.cf.f4{transform:rotateY(-90deg) translateZ(35px)}.cf.f5{transform:rotateX(90deg) translateZ(35px)}.cf.f6{transform:rotateX(-90deg) translateZ(35px)}
+.dname{position:absolute;top:-18px;left:0;right:0;text-align:center;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-3);font-weight:700}
+.result{font-family:var(--display);font-size:clamp(23px,5.8vw,28px);line-height:1.22}
+.result em{font-style:normal;color:var(--chile-2)}
+.dp.lock{cursor:default}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -319,55 +359,120 @@ const ok = t => { const l=avoidList(); const s=String(t).toLowerCase(); return !
 function lv(obj, level=S.level){ let out=[]; for(let l=level;l>=1&&out.length<4;l--){ out=out.concat((obj[l]||[]).filter(ok)); } return out.length?out:(obj[1]||[]); }
 function turnPill(){ const a=S.turn, b=1-S.turn; return `<span class="turn"><span class="dot ${a?'b':'a'}">${esc(S.names[a][0]||'?')}</span>${esc(S.names[a])}<span class="arrow">›</span><span class="dot ${b?'b':'a'}">${esc(S.names[b][0]||'?')}</span>${esc(S.names[b])}</span>`; }
 
-/* carta: se reparte boca abajo, se toca para darle la vuelta */
+/* carta: se reparte boca abajo desde el mazo, se toca para darle la vuelta */
 const BACK_IC = {verdad:'q',reto:'flame',charla:'chat',mente:'q',reloj:'clock',postura:'body',rol:'mask',quiz:'heart',buzon:'heart'};
+let POLLO='';
 function deck(key, front, {label='Carta', kind='charla', auto=false, cool=false}={}){
   const g=S.g; let enter=false;
   if(g.key!==key){ g.key=key; g.revealed=!!auto; enter=true; }
   const rev = g.revealed;
+  if(!POLLO){ const b=document.querySelector('.brand svg'); POLLO=b?b.outerHTML:''; }
+  const corner = c => `<span class="idx ${c}" aria-hidden="true">${ic(BACK_IC[kind]||'card')}${esc(label.split(' ')[0])}</span>`;
   return `<div class="deal ${enter?'enter':''}" id="deal">
-    <div class="stackfx two" aria-hidden="true"></div><div class="stackfx" aria-hidden="true"></div>
+    <div class="pile" aria-hidden="true"></div>
     <div class="flip ${rev?'on':''}" id="flip" ${rev?'':'data-act="flip" role="button" tabindex="0" aria-label="Destapar la carta"'}>
-      <div class="cface back ${cool?'cool':''}" aria-hidden="${rev}"><span class="bk-ic">${ic(BACK_IC[kind]||'card')}</span><b>${esc(label)}</b><span class="tap">${ic('hand','style="width:16px;height:16px"')}Toca para destapar</span></div>
-      <div class="cface front" aria-hidden="${!rev}">${front}</div>
+      <div class="cface cback ${cool?'cool':''}" aria-hidden="${rev}"><div class="bk"><span class="medal">${POLLO}</span><b>${esc(label)}</b><span class="tap">${ic('hand','style="width:16px;height:16px"')}Toca para destapar</span></div></div>
+      <div class="cface front ${cool?'cool':''}" aria-hidden="${!rev}">${corner('tl')}${front}${corner('br')}</div>
     </div></div>
   <div class="hint" aria-hidden="true"><span class="${rev?'':'now'}"><i>1</i>Destapa</span><span class="${rev?'now':''}"><i>2</i>Haz o responde</span><span><i>3</i>Siguiente carta</span></div>`;
 }
 
 /* ================= contenido ================= */
-const DICE = {
-  accion:{name:'Acción', faces:{
-    1:['Besa','Acaricia','Sopla suave en','Masajea','Roza con los labios','Mordisquea suave'],
-    2:['Lame','Besa despacio','Desnuda','Masajea con aceite','Mordisquea','Recorre con la lengua'],
-    3:['Lame','Chupa','Acaricia con la mano','Besa con hambre','Frota tu cuerpo contra','Estimula con la boca'],
-    4:['Venda los ojos y lame','Ata las manos y besa','Usa un juguete en','Da nalgadas en','Muerde','Ordena y luego besa']}},
-  zona:{name:'Zona', faces:{
-    1:['el cuello','las orejas','los labios','la espalda','la nuca','las manos'],
-    2:['el pecho','el abdomen','los muslos internos','los glúteos','los pezones','la cintura'],
-    3:['los genitales','los pezones','los muslos internos','los glúteos','la entrepierna','donde quieras'],
-    4:['los genitales','todo el cuerpo','los glúteos','los pezones','la entrepierna','donde te pida']}},
-  modo:{name:'Modo', faces:{
-    1:['muy lento','con los ojos cerrados','mirándose a los ojos','con la punta de los dedos','en silencio','como quieras'],
-    2:['sin usar las manos','susurrando lo que harás','con hielo','muy lento','de rodillas','con aceite'],
-    3:['hasta que pida más','sin parar','alternando lento y rápido','sin usar las manos','mirándose a los ojos','sin dejar que te toque'],
-    4:['con los ojos vendados','con las manos atadas','dando órdenes','con un juguete','hasta el borde y parar','sin permiso para tocar']}},
-  tiempo:{name:'Tiempo', faces:{
-    1:['30 s','1 min','1 min','2 min','2 min','3 min'],
-    2:['1 min','2 min','2 min','3 min','3 min','5 min'],
-    3:['2 min','3 min','3 min','5 min','5 min','hasta que pida más'],
-    4:['3 min','5 min','5 min','hasta que pida más','hasta que pida más','10 min']}},
-  lugar:{name:'Lugar', faces:{
-    1:['el sofá','la cama','la cocina','de pie','el suelo con cojines','frente al espejo'],
-    2:['la ducha','contra la pared','la cama','el sofá','frente al espejo','la mesa'],
-    3:['la ducha','contra la pared','la mesa','el suelo','el borde de la cama','frente al espejo'],
-    4:['la ducha','la mesa','el balcón con la luz apagada','contra la pared','el coche aparcado en casa','donde elija quien recibe']}},
-  textura:{name:'Textura', faces:{
-    1:['una pluma','un cubito de hielo','aceite tibio','una tela suave','solo el aliento','las uñas suaves'],
-    2:['una pluma','un cubito de hielo','aceite tibio','una tela suave','solo el aliento','las uñas suaves'],
-    3:['un cubito de hielo','aceite tibio','la lengua','solo el aliento','las uñas','una tela suave'],
-    4:['un cubito de hielo','un juguete','la lengua','una corbata o pañuelo','las uñas','cera tibia de masaje']}}
+/* Dados con sentido: cada acción dice qué zonas admite y con qué se hace (boca, mano, cuerpo, juguete).
+   Las texturas solo salen con acciones que las admiten, los modos se filtran por herramienta
+   y los lugares por textura. Así nunca sale "nalgadas con las manos atadas" ni "besar con una pluma". */
+const ZONES = {
+  cuello:['el cuello','Cuello',1], orejas:['las orejas','Orejas',1], labios:['los labios','Labios',1], nuca:['la nuca','Nuca',1],
+  hombros:['los hombros','Hombros',1], espalda:['la espalda','Espalda',1], manos:['las manos','Manos',1],
+  pecho:['el pecho','Pecho',2], abdomen:['el abdomen','Abdomen',2], muslos:['los muslos internos','Muslos',2],
+  gluteos:['los glúteos','Glúteos',2], pezones:['los pezones','Pezones',2], cintura:['la cintura','Cintura',2],
+  genitales:['los genitales','Genitales',3], entrepierna:['la entrepierna','Entre-pierna',3]
 };
-const DICE_ORDER = ['accion','zona','modo','tiempo','lugar','textura'];
+const ALLZ = Object.keys(ZONES);
+const ACTIONS = [
+  {t:'Besa',s:'Besa',l:1,tool:'boca',z:ALLZ},
+  {t:'Acaricia',s:'Acaricia',l:1,tool:'mano',z:ALLZ.filter(z=>z!=='labios')},
+  {t:'Masajea',s:'Masajea',l:1,tool:'mano',z:['espalda','hombros','nuca','manos','muslos','gluteos','cintura','pecho'],tex:['aceite','calor']},
+  {t:'Sopla suave sobre',s:'Sopla',l:1,tool:'boca',z:['cuello','orejas','nuca','pecho','abdomen','muslos','pezones','genitales'],tex:[],free:'sopla suave sobre la piel de {B}'},
+  {t:'Mordisquea suave',s:'Mordisquea',l:1,tool:'boca',z:['cuello','orejas','labios','hombros','nuca','gluteos','muslos'],tex:[]},
+  {t:'Roza con los labios',s:'Roza',l:1,tool:'boca',z:ALLZ.filter(z=>z!=='labios')},
+  {t:'Lame',s:'Lame',l:2,tool:'boca',z:['cuello','orejas','pecho','abdomen','pezones','muslos','genitales','entrepierna']},
+  {t:'Recorre con la punta de la lengua',s:'Lengua',l:2,tool:'boca',z:['cuello','espalda','abdomen','muslos','pezones','entrepierna','genitales']},
+  {t:'Chupa',s:'Chupa',l:3,tool:'boca',z:['pezones','genitales']},
+  {t:'Estimula con la mano',s:'Mano',l:3,tool:'mano',z:['genitales'],tex:['aceite','calor']},
+  {t:'Frota tu cuerpo contra',s:'Frota',l:3,tool:'cuerpo',z:['espalda','gluteos','pecho','entrepierna'],tex:[],free:'frota tu cuerpo contra el de {B}'},
+  {t:'Da nalgadas suaves en',s:'Nalgadas',l:4,tool:'mano',z:['gluteos'],tex:[],noFree:true},
+  {t:'Usa un juguete en',s:'Juguete',l:4,tool:'juguete',z:['genitales','pezones','entrepierna','muslos','cuello'],tex:[],free:'usa un juguete con {B} donde quieras'},
+  {t:'Muerde con ganas',s:'Muerde',l:4,tool:'boca',z:['cuello','hombros','gluteos','muslos'],tex:[]}
+];
+const TEX = {
+  pluma:{t:'con una pluma',s:'Pluma',tool:'mano',l:1,dry:true}, hielo:{t:'con un cubito de hielo',s:'Hielo',tool:'mano',l:1},
+  aceite:{t:'con aceite tibio',s:'Aceite',tool:'mano',l:1,nz:['orejas','labios','nuca','manos']}, tela:{t:'con una tela suave',s:'Tela',tool:'mano',l:1,dry:true},
+  unas:{t:'con las uñas, muy suave',s:'Uñas',tool:'mano',l:1,nz:['labios','genitales','pezones','entrepierna']}, calor:{t:'con las manos bien calientes',s:'Manos calientes',tool:'mano',l:1},
+  hieloboca:{t:'con un cubito de hielo en la boca',s:'Hielo',tool:'boca',l:1}, caliente:{t:'después de un sorbo de algo caliente',s:'Calor',tool:'boca',l:1},
+  soplidos:{t:'alternando con soplidos',s:'Soplidos',tool:'boca',l:1}, nata:{t:'con un poco de nata o chocolate',s:'Nata',tool:'boca',l:2,dry:true,nz:['orejas','labios','manos','nuca','espalda']}
+};
+const MODES = [
+  {t:'muy lento',s:'Lento',l:1}, {t:'mirándose a los ojos',s:'Mirada',l:1}, {t:'en silencio total',s:'Silencio',l:1},
+  {t:'mientras {B} tiene los ojos cerrados',s:'Ojos cerrados',l:1}, {t:'como si fuera la primera vez',s:'1ª vez',l:1},
+  {t:'sin usar las manos',s:'Sin manos',l:2,only:['boca','cuerpo']}, {t:'alternando lento y rápido',s:'Lento-rápido',l:2},
+  {t:'susurrando entre medias lo que vas a hacer',s:'Susurros',l:2},
+  {t:'hasta que {B} pida más',s:'Hasta pedir más',l:3}, {t:'parando justo cuando más le guste',s:'Parar',l:3},
+  {t:'mientras {B} tiene los ojos vendados',s:'Venda',l:4}, {t:'mientras {B} tiene las manos atadas',s:'Atadas',l:4},
+  {t:'mientras {B} se queda sin moverse',s:'Quieto/a',l:4}, {t:'dando órdenes en voz baja',s:'Órdenes',l:4,only:['mano','juguete','cuerpo']}
+];
+const TIMES = {1:['30 s','1 min','1 min','2 min'],2:['1 min','2 min','2 min','3 min'],3:['2 min','3 min','5 min','hasta que pida más'],4:['3 min','5 min','hasta que pida más','10 min']};
+const PLACES = [
+  {t:'en el sofá',s:'Sofá',l:1},{t:'en la cama',s:'Cama',l:1},{t:'de pie, en la cocina',s:'Cocina',l:1},{t:'sobre cojines en el suelo',s:'Suelo',l:1},
+  {t:'frente al espejo',s:'Espejo',l:1},{t:'en la ducha',s:'Ducha',l:2,wet:true},{t:'contra la pared',s:'Pared',l:2},{t:'sobre la mesa',s:'Mesa',l:3},
+  {t:'en el balcón, con la luz apagada',s:'Balcón',l:4}
+];
+const DICE = {accion:'Acción',zona:'Zona',textura:'Textura',modo:'Modo',tiempo:'Tiempo',lugar:'Lugar'};
+const DICE_ORDER = ['accion','zona','textura','modo','tiempo','lugar'];
+const weighted = (arr,lvl) => { const pool=[]; arr.forEach(x=>{ const w = x.l===lvl?3:x.l===lvl-1?2:1; for(let i=0;i<w;i++) pool.push(x); }); return pick(pool); };
+function rollDice(sel){
+  const L=S.level, okL = x => x.l<=L;
+  const acts = ACTIONS.filter(okL).filter(a=>ok(a.t));
+  for(let tries=0;tries<40;tries++){
+    const a = weighted(acts,L);
+    const zs = a.z.filter(z=>ZONES[z][2]<=L && ok(ZONES[z][0]));
+    if(!zs.length) continue;
+    const r = {a};
+    if(sel.includes('zona') || a.noFree){ r.z = pick(zs); }
+    if(sel.includes('textura')){
+      const tk = (a.tex ?? Object.keys(TEX).filter(k=>TEX[k].tool===a.tool)).filter(k=>TEX[k] && TEX[k].l<=L && ok(TEX[k].t) && !(r.z && (TEX[k].nz||[]).includes(r.z)));
+      if(tk.length) r.tex = pick(tk);
+    }
+    if(sel.includes('modo')){ const ms = MODES.filter(okL).filter(m=>!m.only||m.only.includes(a.tool)).filter(m=>ok(m.t)); r.m = weighted(ms,L); }
+    if(sel.includes('tiempo')){ const ts = TIMES[L].filter(t=>!(r.m && /pida más|parando/.test(r.m.t) && /pida/.test(t))); r.time = pick(ts.length?ts:['3 min']); }
+    if(sel.includes('lugar')){ const ps = PLACES.filter(okL).filter(p=>!(p.wet && r.tex && TEX[r.tex].dry)).filter(p=>ok(p.t)); r.p = pick(ps); }
+    return r;
+  }
+  return {a:ACTIONS[0], z:'cuello'};
+}
+function dieFaces(k, r){
+  // cara de arriba = resultado; las demás, otras opciones reales del mismo dado
+  const L=S.level; let val, others=[];
+  if(k==='accion'){ val=r.a.s; others=ACTIONS.filter(a=>a.l<=L).map(a=>a.s); }
+  if(k==='zona'){ val=r.z?ZONES[r.z][1]:'Libre'; others=ALLZ.filter(z=>ZONES[z][2]<=L).map(z=>ZONES[z][1]); }
+  if(k==='textura'){ val=r.tex?TEX[r.tex].s:'Sin nada'; others=Object.values(TEX).map(t=>t.s); }
+  if(k==='modo'){ val=r.m?r.m.s:'Libre'; others=MODES.filter(m=>m.l<=L).map(m=>m.s); }
+  if(k==='tiempo'){ val=r.time; others=[...new Set(Object.values(TIMES).flat())]; }
+  if(k==='lugar'){ val=r.p?r.p.s:'Libre'; others=PLACES.filter(p=>p.l<=L).map(p=>p.s); }
+  const rest = shuffle(others.filter(o=>o!==val));
+  return [val, ...Array.from({length:5},(_,i)=>rest[i%Math.max(1,rest.length)]||val)];
+}
+function sentence(r){
+  const b = `<em>${esc(B())}</em>`;
+  let s = `<em>${esc(A())}</em>: `;
+  if(r.z) s += esc(r.a.t.toLowerCase()) + ' ' + esc(ZONES[r.z][0]) + ' de ' + b;
+  else s += (r.a.free ? esc(r.a.free).replace('{B}', b) : esc(r.a.t.toLowerCase()) + ' a ' + b + ' donde quieras');
+  if(r.tex) s += ' ' + esc(TEX[r.tex].t);
+  if(r.m) s += ', ' + esc(r.m.t).replace('{B}', b);
+  if(r.p) s += ', ' + esc(r.p.t);
+  if(r.time) s += ` (${esc(r.time)})`;
+  return s + '.';
+}
 
 const CHARLAS = {
   1:['¿Cuándo supiste que te gustaba de verdad?','¿Qué recuerdas de nuestro primer beso?','¿Qué gesto mío te parece sexy aunque yo no lo sepa?','¿Qué ropa mía te gusta más?','¿Cuál es el plan de pareja que más has disfrutado conmigo?','¿Qué parte de mi cuerpo miras cuando no me doy cuenta?','Si pudiéramos escaparnos este fin de semana, ¿adónde iríamos?','¿Qué canción te pone en modo romántico?','¿Qué es lo primero que notaste de mí físicamente?','¿Qué cumplido mío recuerdas más?','¿En qué momento del día me deseas más?','¿Qué te gustaría que hiciera más a menudo cuando estamos solos?'],
@@ -612,30 +717,22 @@ V.noche = () => {
 /* dados */
 V.dados = () => {
   const g=S.g; g.sel = g.sel || ['accion','zona','modo'];
-  const res = g.res;
-  return head('Dados calientes','Elige los dados y tira. Quien tira, lo hace a la otra persona.') + `
-  <div class="dice-pick" role="group" aria-label="Dados">${DICE_ORDER.map(k=>`<button class="dp ${g.sel.includes(k)?'on':''}" data-act="dtoggle" data-k="${k}" aria-pressed="${g.sel.includes(k)}">${ic('dice')}${DICE[k].name}</button>`).join('')}</div>
-  <div class="table" style="margin-top:14px">
-    <div class="row" style="justify-content:space-between">${turnPill()}</div>
-    ${res?`<div class="dice">${res.map(r=>`<div class="die"><span class="face roll">${esc(r.v.replace(/^(el|la|los|las|un|una|solo|con) /i,'').slice(0,2).toUpperCase())}</span><div class="die-l"><small>${DICE[r.k].name}</small><b>${esc(r.v)}</b></div></div>`).join('')}</div>
-    <p class="card-text" style="font-size:22px">${esc(sentence(res))}</p>
-    ${timerHTML(parseSecs((res.find(r=>r.k==='tiempo')||{}).v||''))}`
-    :`<p class="muted">Pulsa tirar para empezar.</p>`}
+  const r = g.res, anim = g.anim; g.anim=false;
+  const dice = r ? g.used.map((k,i)=>{
+    const f = dieFaces(k,r);
+    const rx = 360*(2+Math.floor(Math.random()*2)) + (Math.random()<.5?90:0), ry = 360*(1+Math.floor(Math.random()*2)) + 90*Math.floor(Math.random()*4), rz = Math.floor(Math.random()*90)-45;
+    const fx = (Math.random()<.5?-1:1)*(60+Math.random()*80);
+    return `<div class="dwrap ${anim?'hop':''}" style="--rx:${rx}deg;--ry:${ry}deg;--rz:${rz}deg;--fx:${fx}px;--dur:${1.05+Math.random()*.3}s;--delay:${i*0.07}s"><span class="dname">${DICE[k]}</span><span class="shadow"></span><div class="cube">${f.map((v,j)=>`<div class="cf f${j+1}">${esc(v)}</div>`).join('')}</div></div>`;
+  }).join('') : `<p class="muted" style="text-align:center">Elige los dados y pulsa <b>Lanzar</b>.</p>`;
+  return head('Dados calientes','Quien lanza, se lo hace a la otra persona. Las combinaciones siempre tienen sentido: la textura solo sale si la acción la admite.') + `
+  <div class="dice-pick" role="group" aria-label="Dados">${DICE_ORDER.map(k=>`<button class="dp ${g.sel.includes(k)?'on':''} ${k==='accion'?'lock':''}" data-act="dtoggle" data-k="${k}" aria-pressed="${g.sel.includes(k)}">${ic('dice')}${DICE[k]}</button>`).join('')}</div>
+  <div class="stack" style="margin-top:14px">
+    <div>${turnPill()}</div>
+    <div class="tray" id="tray">${dice}</div>
+    ${r?`<p class="result">${sentence(r)}</p>${timerHTML(parseSecs(r.time||''))}`:''}
   </div>
-  <div class="act"><button class="btn hot" data-act="roll">${res?'Siguiente tirada':'Tirar dados'}</button></div>`;
+  <div class="act"><button class="btn hot" data-act="roll">${r?'Lanzar otra vez':'Lanzar los dados'}</button></div>`;
 };
-function sentence(res){
-  const m={}; res.forEach(r=>m[r.k]=r.v);
-  let s = `${A()}: `;
-  if(m.accion) s += m.accion.toLowerCase(); else s += 'acaricia';
-  if(m.zona) s += ' ' + m.zona; else s += ' donde quieras';
-  s += ` de ${B()}`;
-  if(m.textura) s += ` con ${m.textura}`;
-  if(m.modo) s += `, ${m.modo}`;
-  if(m.lugar) s += `, en ${m.lugar}`;
-  if(m.tiempo) s += ` (${m.tiempo})`;
-  return s+'.';
-}
 
 /* charlas */
 V.charlas = () => {
@@ -820,7 +917,7 @@ document.addEventListener('click', e=>{
   const el = e.target.closest('[data-go],[data-act]'); if(!el) return;
   if(el.dataset.act==='flip'){
     el.classList.add('on'); el.removeAttribute('data-act'); el.removeAttribute('role'); el.removeAttribute('tabindex'); S.g.revealed=true;
-    el.querySelector('.back')?.setAttribute('aria-hidden','true'); el.querySelector('.front')?.setAttribute('aria-hidden','false');
+    el.querySelector('.cback')?.setAttribute('aria-hidden','true'); el.querySelector('.front')?.setAttribute('aria-hidden','false');
     document.querySelectorAll('.hint span').forEach((sp,i)=>sp.classList.toggle('now',i===1));
     return;
   }
@@ -843,8 +940,8 @@ document.addEventListener('click', e=>{
     case 'timer': startTimer(+el.dataset.s); break;
     case 'timerstop': stopTimer(); { const b=$('#tbtn'); if(b){ b.textContent='Seguir'; b.dataset.act='timer'; b.dataset.s=parseSecs('0s')||b.dataset.s; } } break;
     /* dados */
-    case 'dtoggle': { const k=el.dataset.k; g.sel = g.sel.includes(k)? g.sel.filter(x=>x!==k) : [...g.sel,k]; if(!g.sel.length) g.sel=['accion']; g.sel = DICE_ORDER.filter(x=>g.sel.includes(x)); render(); break; }
-    case 'roll': { if(g.res) nextTurn(); g.res = g.sel.map(k=>({k, v: pick(lv(DICE[k].faces))})); render(); break; }
+    case 'dtoggle': { const k=el.dataset.k; if(k==='accion') return; g.sel = g.sel.includes(k)? g.sel.filter(x=>x!==k) : [...g.sel,k]; if(!g.sel.includes('accion')) g.sel.push('accion'); g.sel = DICE_ORDER.filter(x=>g.sel.includes(x)); render(); break; }
+    case 'roll': { stopTimer(); if(g.res) nextTurn(); g.res = rollDice(g.sel); g.used=[...g.sel]; if(g.res.z && !g.used.includes('zona')) g.used.splice(1,0,'zona'); g.anim=true; render(); try{navigator.vibrate&&navigator.vibrate([30,60,30,90,20]);}catch(e){} break; }
     /* charlas */
     case 'cmode': g.mode=el.dataset.m; g.draw=null; render(); break;
     case 'cnext': g.i++; if(el.dataset.swap==='1') nextTurn(); render(); break;
