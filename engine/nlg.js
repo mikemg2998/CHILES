@@ -1,69 +1,60 @@
-/* NaturalLanguageGenerator: convierte una tirada en una instrucción natural, con varias plantillas. */
-import { ACTION, ZONE, STYLE, CONDITION } from './catalog.js';
+/* NaturalLanguageGenerator: una instrucción que parece escrita por una persona.
+   La estructura la decide la condición (slot) y la posición de la forma (pos). */
+import { ACTION, ZONE, METHOD, CONDITION } from './catalog.js';
 
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
-const clean = s => s.replace(/\ba el\b/g, 'al').replace(/\bde el\b/g, 'del').replace(/\s+/g, ' ').replace(/\s+,/g, ',').replace(/,\s*,/g, ',').replace(/\s+\./g, '.').replace(/,\s*\./g, '.').trim();
+const low = s => s.charAt(0).toLowerCase() + s.slice(1);
+const clean = s => s.replace(/\ba el\b/g, 'al').replace(/\bde el\b/g, 'del').replace(/\s+/g, ' ').replace(/\s+([,;:.])/g, '$1').replace(/,\s*,/g, ',').replace(/:\s*,/g, ':').replace(/,\s*\./g, '.').trim();
 
 function fill(t, ctx) {
-  return t.replace(/\{P\}/g, ctx.partner).replace(/\{ZONE\}/g, ctx.zone).replace(/\{ALT\}/g, ctx.alt || '').replace(/\{V\}/g, ctx.verb);
+  return t.replace(/\{P\}/g, ctx.partner).replace(/\{PF\}/g, ctx.performer).replace(/\{ALT\}/g, ctx.alt).replace(/\{V\}/g, ctx.verb);
 }
-
-/* Construye el núcleo "acción + estilo + zona" respetando dónde va cada tipo de estilo. */
-function core(action, zone, style, ctx) {
-  let frame = action.frame;
-  let adv = '', tailStyle = '';
-  if (style) {
-    const txt = fill(style.text, ctx);
-    if (frame.trim().endsWith('{STYLE}')) adv = txt; // hueco al final: cualquier estilo va dentro
-    else if (style.kind === 'adv' && frame.includes('{STYLE}')) adv = txt;
-    else tailStyle = txt; // phrase y tail van después, separados por coma
+/* "{ZONE}" = "el cuello de Ana" o "su cuello" si la pareja ya se nombró; "{ZONE:bare}" = "el cuello" */
+function zoneText(frame, ctx, poss) {
+  return frame.replace(/\{ZONE:bare\}/g, ctx.zoneBare).replace(/\{ZONE\}/g, poss ? ctx.zonePoss : `${ctx.zoneBare} de ${ctx.partner}`);
+}
+/* núcleo: verbo + forma + zona */
+function core(a, m, ctx, poss) {
+  let f = zoneText(poss && a.frameP ? a.frameP : a.frame, ctx, poss);
+  let adv = '', tail = '', end = '';
+  if (m) {
+    const t = fill(m.text, ctx);
+    if (m.pos === 'adv') adv = t; else if (m.pos === 'phrase') tail = t; else end = t;
   }
-  let s = fill(frame, ctx).replace('{STYLE}', adv);
-  if (tailStyle) s += ', ' + tailStyle;
+  let s = fill(f, ctx).replace('{M}', adv);
+  if (tail) s += ', ' + tail;
+  if (end) s += ', ' + end;
   return clean(s);
 }
 
 export const NaturalLanguageGenerator = {
-  /* combo: {action, zone, style, cond, alt, wildcard}; opts: {partner, rng, template} */
-  phrase(combo, opts) {
-    const a = ACTION[combo.action], z = ZONE[combo.zone], s = STYLE[combo.style], c = CONDITION[combo.cond];
-    const partner = opts.partner || 'tu pareja';
-    const ctx = { partner, zone: z ? z.n : '', alt: combo.alt ? ZONE[combo.alt].n : '', verb: a ? a.verb : '' };
-    const rng = opts.rng;
-    const templates = [];
-    if (combo.wildcard === 'freeAction') {
-      // sin acción: "Tú eliges qué hacer en X, estilo, condición"
-      let s1 = `Tú eliges qué hacer en ${ctx.zone} de ${partner}`;
-      if (s) s1 += (s.kind === 'adv' ? ', ' : ', ') + fill(s.text, ctx);
-      if (c) s1 += ', ' + fill(c.tail, ctx);
-      return cap(clean(s1)) + '.';
+  /* combo {action, zone, method, cond, alt}; opts {partner, performer} → {phrase, swap} */
+  phrase(combo, opts = {}) {
+    const a = ACTION[combo.action], z = ZONE[combo.zone], m = combo.method ? METHOD[combo.method] : null, c = combo.cond ? CONDITION[combo.cond] : null;
+    const partner = opts.partner || 'tu pareja', performer = opts.performer || 'tú';
+    const ctx = { partner, performer, verb: a.verb, zoneBare: z.n, zonePoss: z.np, alt: combo.alt ? ZONE[combo.alt].n : '' };
+    if (!c) return cap(core(a, m, ctx, false)) + '.';
+    const ct = fill(c.text, ctx).replace(/\{ZONE\}/g, ctx.zoneBare);
+    switch (c.slot) {
+      case 'intro': return clean(cap(ct) + ' ' + low(core(a, m, ctx, false)) + '.');
+      case 'prep': // la preparación ya nombra a la pareja → posesivo después
+      case 'antic':
+      case 'path': return clean(cap(ct) + ' ' + low(core(a, m, ctx, true)) + '.');
+      case 'after': return clean(cap(core(a, m, ctx, false)) + '. ' + ct);
+      case 'choice': return clean(cap(core(a, m, ctx, false)) + ', ' + ct + '.');
+      case 'end': return clean(cap(core(a, m, ctx, false)) + ', ' + ct + '.');
+      case 'swap': return clean(cap(ct) + ' ' + cap(core(a, m, ctx, false)) + '.');
+      default: { // tail; si la frase ya nombra a la pareja dos veces, usa la forma intro cuando exista
+        let base = core(a, m, ctx, false);
+        const mentions = (base.split(partner).length - 1) + (ct.split(partner).length - 1);
+        if (mentions >= 2 && c.intro) return clean(cap(fill(c.intro, ctx)) + ' ' + low(core(a, m, ctx, true)) + '.');
+        return clean(cap(base) + ', ' + ct + '.');
+      }
     }
-    if (combo.wildcard === 'freeZone') {
-      let s1 = `${a.verb || 'Haz lo que quieras'} donde tú elijas` + (a.verb ? ` a ${partner}` : '');
-      if (a.id === 'parejaElige') s1 = `Pregúntale a ${partner} qué quiere, en la zona que tú elijas`;
-      if (s) s1 += ', ' + fill(s.text, ctx);
-      if (c) s1 += ', ' + fill(c.tail, ctx);
-      return cap(clean(s1)) + '.';
-    }
-    const base = core(a, z, s, ctx);
-    if (!c) return cap(base) + '.';
-    // Plantilla A: núcleo + condición al final
-    templates.push(() => cap(base) + (c.tail.startsWith('y ') || c.tail.startsWith('o,') ? ' ' : ', ') + fill(c.tail, ctx) + '.');
-    // Plantilla B: condición como apertura
-    if (c.intro) templates.push(() => cap(fill(c.intro, ctx)) + ' ' + base.charAt(0).toLowerCase() + base.slice(1) + '.');
-    // Plantilla C: dos frases
-    if (c.sentence) templates.push(() => cap(base) + '. ' + cap(fill(c.sentence, ctx)));
-    const idx = opts.template != null ? opts.template % templates.length : Math.floor((rng ? rng.next() : Math.random()) * templates.length);
-    return clean(templates[idx]());
   },
-  /* etiqueta corta de cada dado */
   faces(combo) {
-    const a = ACTION[combo.action], z = ZONE[combo.zone], s = STYLE[combo.style], c = CONDITION[combo.cond];
-    return {
-      action: combo.wildcard === 'freeAction' ? '⭐' : (a ? a.name : '—'),
-      zone: combo.wildcard === 'freeZone' ? '⭐' : (z ? cap(z.n.replace(/^(el|la|los|las) /, '')) : '—'),
-      style: s ? s.short : '—',
-      cond: c ? c.short : '—',
-    };
+    const a = ACTION[combo.action], z = ZONE[combo.zone], m = combo.method ? METHOD[combo.method] : null, c = combo.cond ? CONDITION[combo.cond] : null;
+    const zn = z.n.replace(/^(el|la|los|las) /, '').replace(/,.*$/, '');
+    return { action: a.name, zone: cap(zn), method: m ? cap(m.text.replace(/\{P\}/g, 'pareja').replace(/^(solo |durante |con |de |a |en |empezando )/, '')) : '—', cond: c ? c.short : '—' };
   },
 };
