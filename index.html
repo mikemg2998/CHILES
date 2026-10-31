@@ -5,67 +5,99 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <title>Pollo a la brasa</title>
-<meta name="theme-color" content="#1c0c14">
+<meta name="theme-color" content="#0c0b09">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Pollo a la brasa">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
 <link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=Figtree:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="app/styles.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="app/styles.css?v=3">
 </head>
-<body data-int="0">
+<body class="idle">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-mark" viewBox="0 0 24 24"><path d="M7 3.5h10a1 1 0 0 1 1 1V21l-6-4.2L6 21V4.5a1 1 0 0 1 1-1z"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 8.5M20 4v4.5h-4.5M20 12a8 8 0 0 1-13.7 5.6L4 15.5M4 20v-4.5h4.5"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6.3 6.3l2.2 2.2M15.5 15.5l2.2 2.2M6.3 17.7l2.2-2.2M15.5 8.5l2.2-2.2"/></symbol>
+</svg>
+
 <div class="wrap">
   <header class="top">
-    <div class="brand"><img src="icon-192.png" alt="" width="40" height="40"><h1>Pollo <em>a la</em> brasa</h1></div>
-    <button class="icon-btn" id="btnFav" aria-label="Favoritas">♥</button>
-    <button class="icon-btn" id="btnSettings" aria-label="Ajustes">⚙</button>
+    <div class="brand"><img src="icon-192.png" alt="" width="30" height="30"><h1>Pollo a la brasa</h1></div>
+    <div class="icons">
+      <button class="ib" id="btnFavs" aria-label="Favoritas"><svg><use href="#i-mark"/></svg><span class="count" id="favCount" hidden></span></button>
+      <button class="ib" id="btnSettings" aria-label="Ajustes"><svg><use href="#i-sliders"/></svg></button>
+    </div>
   </header>
 
-  <div class="modes" id="modes" role="tablist"></div>
+  <nav class="levels" id="levels" role="tablist"></nav>
+  <div class="path" id="path" hidden><span data-b="1">Relax</span><i></i><span data-b="2">Sensual</span><i></i><span data-b="3">Atrevido</span></div>
 
-  <div class="turn" id="turn"></div>
+  <div class="turn" id="turn"><b id="turnA"></b><i>→</i><b id="turnB"></b></div>
 
-  <section class="dice" id="dice"></section>
+  <section class="dice" id="dice">
+    <div class="die" data-k="action"><div class="piece"><span class="face">Acción</span></div><span class="lab">Acción</span></div>
+    <div class="die" data-k="zone"><div class="piece"><span class="face">Zona</span></div><span class="lab">Zona</span></div>
+    <div class="die" data-k="method"><div class="piece"><span class="face">Forma</span></div><span class="lab">Forma</span></div>
+    <div class="die" data-k="cond"><div class="piece"><span class="face">Condición</span></div><span class="lab">Condición</span></div>
+  </section>
 
-  <section class="result" id="result">
-    <p class="intro">Cuatro dados: <b>acción</b>, <b>zona</b>, <b>forma</b> y <b>condición</b>. Cada tirada se convierte en una instrucción que tiene sentido. Las rondas suben y bajan de intensidad solas.</p>
+  <section class="result">
+    <div class="welcome" id="welcome">
+      <p class="meta">Cuatro dados</p>
+      <p class="phrase">Acción, zona, forma y condición. Cada tirada se convierte en una sola instrucción, pensada para los dos.</p>
+    </div>
+    <div class="round" id="roundBox" hidden>
+      <div class="meta"><span id="metaText"></span><button class="fav" id="btnFav" aria-label="Guardar en favoritas"><svg><use href="#i-mark"/></svg></button></div>
+      <p class="phrase" id="phrase"></p>
+      <p class="note" id="note" hidden></p>
+    </div>
   </section>
 
   <div class="actions">
-    <button class="btn primary" id="btnRoll">Lanzar dados</button>
-    <div class="row" id="secondary" hidden>
-      <button class="btn ghost" id="btnPass">Pasar</button>
-      <button class="btn ghost" id="btnReroll">Volver a lanzar</button>
-      <button class="btn ghost" id="btnLower">Bajar intensidad</button>
+    <button class="btn primary" id="btnRoll">Lanzar los dados</button>
+    <div class="row" id="secondary">
+      <button class="btn" id="btnPass">Pasar</button>
+      <button class="btn" id="btnReroll">Otra</button>
+      <button class="btn" id="btnSofter">Bajar</button>
+      <button class="btn" id="btnHarder">Subir</button>
     </div>
   </div>
 </div>
 
-<div class="sheet" id="sheetSettings" hidden>
-  <div class="sheet-card">
-    <div class="sheet-head"><h2>Ajustes</h2><button class="icon-btn" data-close>✕</button></div>
-    <label class="field">Nombre 1<input id="name0" maxlength="18" placeholder="Jugador 1"></label>
-    <label class="field">Nombre 2<input id="name1" maxlength="18" placeholder="Jugador 2"></label>
-    <h3>Zonas del cuerpo</h3>
-    <div class="checks" id="groups"></div>
-    <h3>Intensidad máxima</h3>
-    <div class="range"><input type="range" id="maxInt" min="1" max="5" step="1"><span id="maxIntLabel"></span></div>
-    <h3>Duración de las rondas</h3>
-    <div class="seg" id="duration"><button data-v="corto">Cortas</button><button data-v="normal">Normales</button><button data-v="largo">Largas</button></div>
-    <button class="btn ghost" id="btnReset">Empezar partida nueva</button>
-  </div>
-</div>
+<div class="backdrop" id="backdrop" hidden></div>
 
-<div class="sheet" id="sheetFav" hidden>
-  <div class="sheet-card">
-    <div class="sheet-head"><h2>Favoritas</h2><button class="icon-btn" data-close>✕</button></div>
-    <div id="favList"></div>
-  </div>
-</div>
+<section class="sheet" id="sheetFavs" aria-hidden="true">
+  <div class="sheet-head"><h2>Favoritas</h2><button class="ib" data-close aria-label="Cerrar"><svg><use href="#i-x"/></svg></button></div>
+  <div class="cards" id="favList"></div>
+</section>
 
-<script type="module" src="app/app.js"></script>
+<section class="sheet" id="sheetSettings" aria-hidden="true">
+  <div class="sheet-head"><h2>Ajustes</h2><button class="ib" data-close aria-label="Cerrar"><svg><use href="#i-x"/></svg></button></div>
+  <p class="lab">Nombres</p>
+  <div class="names">
+    <input id="name0" maxlength="16" placeholder="Jugador 1" autocomplete="off" autocapitalize="words">
+    <input id="name1" maxlength="16" placeholder="Jugador 2" autocomplete="off" autocapitalize="words">
+  </div>
+  <p class="lab">Zonas del cuerpo</p>
+  <div class="list" id="groups"></div>
+  <p class="lab">Anatomía íntima</p>
+  <p class="hint">Solo entra en juego en Atrevido y al final de Progresivo.</p>
+  <div class="list" id="groupsIntimate"></div>
+  <p class="lab">Dispositivo</p>
+  <div class="list"><label class="sw"><span>Vibración al lanzar</span><input type="checkbox" id="swVibe"><i></i></label></div>
+  <div class="danger">
+    <button class="btn" id="btnReset">Empezar partida nueva</button>
+    <button class="link" id="btnClearFavs">Borrar favoritas</button>
+  </div>
+</section>
+
+<div class="toast" id="toast" role="status"></div>
+<script type="module" src="app/app.js?v=3"></script>
 </body>
 </html>

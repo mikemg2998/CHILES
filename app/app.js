@@ -1,136 +1,231 @@
-/* Interfaz: solo pinta y manda órdenes al motor. Toda la lógica vive en /engine. */
+/* Interfaz de Pollo a la brasa. El motor (engine/) decide; aquí solo se muestra y se anima. */
 import { GameEngine } from '../engine/engine.js';
-import { GROUPS, MODES, INTENSITY_NAMES } from '../engine/catalog.js';
 import { PreferenceManager } from '../engine/prefs.js';
+import { GROUPS, LEVELS, CATEGORIES, ZONE } from '../engine/catalog.js';
 
+const KEY = 'pab.v2';
 const $ = s => document.querySelector(s);
-const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const store = {
-  get(k, d) { try { const v = localStorage.getItem('pab.' + k); return v ? JSON.parse(v) : d; } catch { return d; } },
-  set(k, v) { try { localStorage.setItem('pab.' + k, JSON.stringify(v)); } catch { } },
-};
+const MODES = [['relajado', 'Relajado'], ['sensual', 'Sensual'], ['atrevido', 'Atrevido'], ['progresivo', 'Progresivo']];
+const DICE = ['action', 'zone', 'method', 'cond'];
+const IDLE_FACE = { action: 'Acción', zone: 'Zona', method: 'Forma', cond: 'Condición' };
 
-const prefs = new PreferenceManager(store.get('prefs', {}));
+/* ---------- estado persistente ---------- */
+const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } };
+const saved = load();
+const prefs = new PreferenceManager(saved.prefs || {});
+if (!MODES.some(m => m[0] === prefs.mode)) prefs.mode = 'relajado';
 const engine = new GameEngine({ prefs });
-engine.state.favorites = store.get('favs', []);
-const DICE = [
-  { k: 'action', lab: 'Acción', c: 'var(--accion)' }, { k: 'zone', lab: 'Zona', c: 'var(--zona)' },
-  { k: 'style', lab: 'Forma', c: 'var(--forma)' }, { k: 'cond', lab: 'Condición', c: 'var(--cond)' },
-];
-let current = null, timer = null, spins = [0, 0, 0, 0];
+engine.state.favorites = Array.isArray(saved.favorites) ? saved.favorites : [];
+const ui = { vibrate: saved.vibrate !== false };
+let current = null, busy = false;
 
-/* ---------- pintar ---------- */
-function renderModes() {
-  $('#modes').innerHTML = Object.entries(MODES).map(([k, m]) => `<button role="tab" data-mode="${k}" class="${prefs.mode === k ? 'on' : ''}">${m.name}</button>`).join('');
+function persist() {
+  try { localStorage.setItem(KEY, JSON.stringify({ prefs: prefs.toJSON(), favorites: engine.state.favorites, vibrate: ui.vibrate })); } catch { /* sin almacenamiento: la partida sigue */ }
 }
+const buzz = p => { if (ui.vibrate && navigator.vibrate) { try { navigator.vibrate(p); } catch { /* nada */ } } };
+
+/* ---------- utilidades de texto ---------- */
+const realNames = () => (prefs.names || []).filter(n => n && n.trim());
+/* frase con los nombres en dorado, construida con nodos (sin HTML) */
+function phraseNode(text, el) {
+  el.textContent = '';
+  const names = realNames();
+  if (!names.length) { el.textContent = text; return; }
+  const re = new RegExp(`(${names.map(n => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'g');
+  for (const part of text.split(re)) {
+    if (!part) continue;
+    if (names.includes(part)) { const b = document.createElement('b'); b.textContent = part; el.appendChild(b); } else el.appendChild(document.createTextNode(part));
+  }
+}
+const toastEl = $('#toast'); let toastT = 0;
+function toast(msg) { toastEl.textContent = msg; toastEl.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove('show'), 1900); }
+
+/* ---------- nivel ---------- */
+const levelsEl = $('#levels');
+function renderLevels() {
+  levelsEl.innerHTML = '';
+  for (const [key, name] of MODES) {
+    const b = document.createElement('button'); b.type = 'button'; b.role = 'tab'; b.textContent = name;
+    if (prefs.mode === key) { b.classList.add('on'); b.setAttribute('aria-selected', 'true'); }
+    b.addEventListener('click', () => setMode(key));
+    levelsEl.appendChild(b);
+  }
+  renderPath();
+}
+function setMode(key) {
+  if (busy || key === prefs.mode) return;
+  prefs.mode = key;
+  if (key === 'progresivo') engine.state.progressive = { band: 1, calm: 0 };
+  persist(); renderLevels(); updateVariants(); buzz(6);
+}
+const pathEl = $('#path');
+function renderPath() {
+  pathEl.hidden = prefs.mode !== 'progresivo';
+  const band = engine.state.progressive.band;
+  pathEl.querySelectorAll('span').forEach(s => { const b = Number(s.dataset.b); s.classList.toggle('on', b === band); s.classList.toggle('done', b < band); });
+}
+
+/* ---------- turno ---------- */
 function renderTurn() {
-  const n = prefs.names;
-  const p = current ? current.performer : engine.state.performer;
-  const a = n[p] || `Jugador ${p + 1}`, b = n[1 - p] || `Jugador ${2 - p}`;
-  $('#turn').innerHTML = `<span><b>${esc(a)}</b> <i>→</i> ${esc(b)}</span>`;
-}
-function renderDice(faces) {
-  const size = Math.min(92, Math.floor((Math.min(window.innerWidth, 520) - 32 - 30) / 4));
-  $('#dice').innerHTML = DICE.map((d, i) => {
-    const f = faces ? faces[d.k] : [d.lab, '?', '?', '?', '?', '?'];
-    return `<div class="die ${faces ? '' : 'idle'}" style="--c:${d.c};--s:${size}px" data-i="${i}"><div class="box"><div class="cube">${f.map((t, j) => `<div class="f f${j + 1} ${t === '⭐' ? 'star' : ''}">${esc(t)}</div>`).join('')}</div></div><div class="shadow"></div><div class="lab">${d.lab}</div></div>`;
-  }).join('');
-}
-function spin() {
-  document.querySelectorAll('.die').forEach((d, i) => {
-    d.classList.add('rolling');
-    const cube = d.querySelector('.cube');
-    spins[i] += 2 + Math.floor(Math.random() * 2);
-    const rx = 360 * spins[i], ry = 360 * (spins[i] + (i % 2));
-    cube.style.transitionDelay = (i * 90) + 'ms';
-    cube.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
-  });
-}
-function renderResult(r) {
-  const el = $('#result');
-  el.classList.remove('enter', 'sig'); void el.offsetWidth;
-  const fav = engine.state.favorites.some(f => f.id === r.id);
-  let meta = `<span class="dot"></span>${INTENSITY_NAMES[r.intensity]} · ${r.categoryName}`;
-  if (r.signature) meta += ` <span class="sig">✦ combinación especial</span>`;
-  if (r.wildcard) meta += ` <span class="wild">⭐ ${esc(r.wildcardText || 'comodín')}</span>`;
-  const phrase = esc(r.phrase).replace(new RegExp(`\\b(${[r.performerName, r.partnerName].filter(Boolean).map(s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\b`, 'g'), '<b>$1</b>');
-  el.innerHTML = `<div class="meta">${meta}</div><p class="phrase">${phrase}</p>
-    ${r.seconds ? `<button class="timer" id="timer"><span>⏱</span><b>${r.seconds}</b> s · toca para empezar</button>` : ''}
-    <button class="favbtn ${fav ? 'on' : ''}" id="favToggle" aria-label="Guardar favorita">${fav ? '♥' : '♡'}</button>`;
-  el.classList.add('enter'); if (r.signature) el.classList.add('sig');
-  document.body.dataset.int = r.intensity;
-  $('#secondary').hidden = false;
-  $('#btnRoll').textContent = 'Siguiente ronda';
-}
-function show(r) {
-  current = r; stopTimer();
-  renderDice(r.dice);
-  requestAnimationFrame(() => requestAnimationFrame(spin));
-  renderTurn();
-  $('#btnRoll').disabled = true;
-  $('#secondary').hidden = true;
-  $('#result').innerHTML = '<p class="intro">…</p>';
-  try { navigator.vibrate && navigator.vibrate([20, 40, 30]); } catch { }
-  setTimeout(() => { renderResult(r); $('#btnRoll').disabled = false; }, 1450);
+  const names = prefs.names || ['', ''];
+  let a, b;
+  if (current) { a = current.performerName; b = current.partnerName; }
+  else { const p = engine.state.performer; a = names[p] || `Jugador ${p + 1}`; b = names[1 - p] || `Jugador ${2 - p}`; }
+  $('#turnA').textContent = a; $('#turnB').textContent = b;
 }
 
-/* ---------- temporizador ---------- */
-function stopTimer() { clearInterval(timer); timer = null; }
-function startTimer(btn, secs) {
-  stopTimer(); let left = secs; const b = btn.querySelector('b');
-  btn.lastChild.textContent = ''; btn.classList.remove('done');
-  timer = setInterval(() => { left--; b.textContent = left; if (left <= 0) { stopTimer(); btn.classList.add('done'); btn.lastChild.textContent = ' · ¡tiempo!'; try { navigator.vibrate && navigator.vibrate([80, 60, 80]); } catch { } } }, 1000);
+/* ---------- dados ---------- */
+const dieEls = Object.fromEntries(DICE.map(k => [k, document.querySelector(`.die[data-k="${k}"]`)]));
+function setFace(k, text) { const f = dieEls[k].querySelector('.face'); const free = text === '—'; f.textContent = free ? 'Libre' : text; f.classList.toggle('free', free); }
+function idleDice() { for (const k of DICE) setFace(k, IDLE_FACE[k]); }
+const wait = ms => new Promise(r => setTimeout(r, ms));
+/* ~1 s: las caras pasan rápido y frenan; solo se muestran caras válidas del nivel (round.dice) y se posa en el resultado */
+async function animateDie(k, faces, delay) {
+  await wait(delay);
+  const el = dieEls[k]; el.classList.remove('settle'); el.classList.add('rolling');
+  const steps = [60, 70, 80, 95, 115, 140, 170];
+  let last = -1;
+  for (const ms of steps) {
+    let i; do { i = 1 + Math.floor(Math.random() * 5); } while (i === last && faces.length > 2); last = i;
+    setFace(k, faces[i] || faces[0]);
+    await wait(ms);
+  }
+  setFace(k, faces[0]);
+  el.classList.remove('rolling'); el.classList.add('settle'); buzz(6);
+}
+async function rollDice(round) {
+  await Promise.all(DICE.map((k, i) => animateDie(k, round.dice[k], i * 70)));
+  await wait(90);
 }
 
-/* ---------- ajustes ---------- */
-function renderSettings() {
-  $('#name0').value = prefs.names[0] || ''; $('#name1').value = prefs.names[1] || '';
-  $('#groups').innerHTML = Object.entries(GROUPS).map(([k, g]) => `<label class="${g.intimate ? 'intimate' : ''}"><input type="checkbox" data-group="${k}" ${prefs.enabledGroups.includes(k) ? 'checked' : ''}>${g.name}</label>`).join('');
-  $('#maxInt').value = prefs.maxIntensity; $('#maxIntLabel').textContent = `${prefs.maxIntensity} · ${INTENSITY_NAMES[prefs.maxIntensity]}`;
-  $('#duration').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === prefs.durationPreference));
+/* ---------- ronda ---------- */
+const roundBox = $('#roundBox'), welcome = $('#welcome');
+function showRound(r) {
+  current = r;
+  welcome.hidden = true; roundBox.hidden = false; roundBox.classList.remove('show');
+  const extra = r.variant === 'softer' ? ' · más suave' : r.variant === 'harder' ? ' · más intenso' : '';
+  $('#metaText').textContent = `${LEVELS[r.level].name} · ${CATEGORIES[r.category] || ''}${extra}`;
+  phraseNode(r.phrase, $('#phrase'));
+  const note = $('#note');
+  if (r.bandUp) { note.hidden = false; note.textContent = `La siguiente ronda sube a ${LEVELS[r.bandUp].name}.`; }
+  else note.hidden = true;
+  void roundBox.offsetWidth; roundBox.classList.add('show');
+  renderFavBtn(); renderTurn(); renderPath(); updateVariants();
 }
-function savePrefs() { store.set('prefs', prefs.toJSON()); renderModes(); renderTurn(); }
+function renderFavBtn() { $('#btnFav').classList.toggle('on', !!current && engine.state.favorites.some(f => f.id === current.id)); }
+/* Bajar/Subir solo cuando el motor tiene una variante con la misma idea */
+function updateVariants() {
+  const can = dir => { if (!current) return false; try { return !!engine.getVariant(current, dir); } catch { return false; } };
+  $('#btnSofter').disabled = !can(-1); $('#btnHarder').disabled = !can(+1);
+}
+function setBusy(v) {
+  busy = v;
+  for (const id of ['btnRoll', 'btnPass', 'btnReroll']) $(`#${id}`).disabled = v;
+  if (v) { $('#btnSofter').disabled = true; $('#btnHarder').disabled = true; }
+}
+async function play(fn, emptyMsg) {
+  if (busy) return;
+  let r;
+  try { r = fn(); } catch (e) { console.error(e); toast('No he encontrado una combinación válida. Revisa las zonas activas en ajustes.'); return; }
+  if (!r) { if (emptyMsg) toast(emptyMsg); return; }
+  setBusy(true); buzz(14);
+  document.body.classList.remove('idle');
+  roundBox.classList.remove('show'); welcome.hidden = true;
+  await rollDice(r);
+  showRound(r);
+  setBusy(false);
+}
+
+$('#btnRoll').addEventListener('click', () => play(() => engine.roll()));
+$('#btnPass').addEventListener('click', () => play(() => engine.pass()));
+$('#btnReroll').addEventListener('click', () => play(() => engine.reroll()));
+$('#btnSofter').addEventListener('click', () => play(() => engine.softer(), 'No hay una versión más suave de esta misma idea.'));
+$('#btnHarder').addEventListener('click', () => play(() => engine.harder(), 'No hay una versión más intensa de esta misma idea.'));
 
 /* ---------- favoritas ---------- */
+const slim = r => ({ id: r.id, action: r.action, zone: r.zone, method: r.method, cond: r.cond, alt: r.alt, intensity: r.intensity, level: r.level, levelName: r.levelName, phrase: r.phrase, performerName: r.performerName, partnerName: r.partnerName, category: r.category });
+$('#btnFav').addEventListener('click', () => {
+  if (!current) return;
+  if (engine.state.favorites.some(f => f.id === current.id)) { engine.removeFavorite(current.id); toast('Quitada de favoritas'); }
+  else { engine.addFavorite(slim(current)); toast('Guardada en favoritas'); buzz(10); }
+  persist(); renderFavBtn(); renderFavCount();
+});
+function renderFavCount() { const n = engine.state.favorites.length; const c = $('#favCount'); c.hidden = !n; c.textContent = n; }
 function renderFavs() {
-  const list = engine.state.favorites;
-  $('#favList').innerHTML = list.length ? list.slice().reverse().map(f => `<div class="fav"><p>${esc(f.phrase)}</p><div class="row"><button class="btn ghost" data-fav="repeat" data-id="${f.id}">Repetir</button><button class="btn ghost" data-fav="inspire" data-id="${f.id}">Inspirarse</button><button class="btn ghost" data-fav="del" data-id="${f.id}" aria-label="Quitar">✕</button></div></div>`).join('') : '<p class="empty">Toca ♡ en una ronda para guardarla aquí.</p>';
-}
-function saveFavs() { store.set('favs', engine.state.favorites); }
-
-/* ---------- eventos ---------- */
-$('#btnRoll').addEventListener('click', () => show(engine.roll()));
-$('#btnPass').addEventListener('click', () => show(engine.pass()));
-$('#btnReroll').addEventListener('click', () => show(engine.reroll()));
-$('#btnLower').addEventListener('click', () => show(engine.lowerIntensity()));
-$('#modes').addEventListener('click', e => { const b = e.target.closest('[data-mode]'); if (!b) return; prefs.mode = b.dataset.mode; savePrefs(); });
-$('#result').addEventListener('click', e => {
-  if (e.target.closest('#timer')) { const t = e.target.closest('#timer'); if (!timer) startTimer(t, current.seconds); return; }
-  if (e.target.closest('#favToggle') && current) {
-    const on = engine.state.favorites.some(f => f.id === current.id);
-    if (on) engine.removeFavorite(current.id); else engine.addFavorite(current);
-    saveFavs(); const b = $('#favToggle'); b.classList.toggle('on', !on); b.textContent = on ? '♡' : '♥';
+  const list = $('#favList'); list.innerHTML = '';
+  const favs = [...engine.state.favorites].reverse();
+  if (!favs.length) { const e = document.createElement('p'); e.className = 'empty'; e.textContent = 'Aún no hay favoritas. Guarda una ronda con el marcador que hay junto a la frase.'; list.appendChild(e); return; }
+  for (const f of favs) {
+    const card = document.createElement('article'); card.className = 'card';
+    const meta = document.createElement('div'); meta.className = 'meta';
+    const ms = document.createElement('span'); ms.textContent = `${f.levelName} · ${f.performerName} → ${f.partnerName}`; meta.appendChild(ms);
+    const rm = document.createElement('button'); rm.className = 'ib'; rm.setAttribute('aria-label', 'Quitar'); rm.innerHTML = '<svg><use href="#i-x"/></svg>';
+    rm.addEventListener('click', () => { engine.removeFavorite(f.id); persist(); renderFavs(); renderFavCount(); renderFavBtn(); });
+    meta.appendChild(rm); card.appendChild(meta);
+    const p = document.createElement('p'); p.className = 'phrase'; phraseNode(f.phrase, p); card.appendChild(p);
+    const acts = document.createElement('div'); acts.className = 'acts';
+    const rep = document.createElement('button'); rep.className = 'btn gold'; rep.innerHTML = '<svg><use href="#i-repeat"/></svg>Repetir';
+    rep.addEventListener('click', () => {
+      if (!prefs.zoneEnabled(ZONE[f.zone])) { toast('Esa zona está desactivada en ajustes.'); return; }
+      closeSheets(); play(() => engine.repeatFavorite(f));
+    });
+    const ins = document.createElement('button'); ins.className = 'btn'; ins.innerHTML = '<svg><use href="#i-spark"/></svg>Inspirarse';
+    ins.addEventListener('click', () => { closeSheets(); play(() => engine.inspireFavorite(f)); });
+    acts.append(rep, ins); card.appendChild(acts);
+    list.appendChild(card);
   }
-});
-$('#btnSettings').addEventListener('click', () => { renderSettings(); $('#sheetSettings').hidden = false; });
-$('#btnFav').addEventListener('click', () => { renderFavs(); $('#sheetFav').hidden = false; });
-document.querySelectorAll('.sheet').forEach(sh => sh.addEventListener('click', e => { if (e.target === sh || e.target.closest('[data-close]')) sh.hidden = true; }));
-$('#sheetSettings').addEventListener('input', e => {
-  if (e.target.id === 'name0' || e.target.id === 'name1') { prefs.names = [$('#name0').value.trim(), $('#name1').value.trim()]; }
-  if (e.target.dataset.group) { prefs.enabledGroups = [...document.querySelectorAll('[data-group]:checked')].map(c => c.dataset.group); if (!prefs.enabledGroups.length) { e.target.checked = true; prefs.enabledGroups = [e.target.dataset.group]; } }
-  if (e.target.id === 'maxInt') { prefs.maxIntensity = Number(e.target.value); $('#maxIntLabel').textContent = `${prefs.maxIntensity} · ${INTENSITY_NAMES[prefs.maxIntensity]}`; }
-  savePrefs();
-});
-$('#duration').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; prefs.durationPreference = b.dataset.v; renderSettings(); savePrefs(); });
-$('#btnReset').addEventListener('click', () => { engine.resetGame(); current = null; stopTimer(); $('#sheetSettings').hidden = true; renderDice(null); renderTurn(); document.body.dataset.int = 0; $('#secondary').hidden = true; $('#btnRoll').textContent = 'Lanzar dados'; $('#result').innerHTML = '<p class="intro">Partida nueva. Cuando queráis, lanzad.</p>'; });
-$('#favList').addEventListener('click', e => {
-  const b = e.target.closest('[data-fav]'); if (!b) return;
-  const fav = engine.state.favorites.find(f => f.id === b.dataset.id); if (!fav) return;
-  if (b.dataset.fav === 'del') { engine.removeFavorite(fav.id); saveFavs(); renderFavs(); return; }
-  $('#sheetFav').hidden = true;
-  show(b.dataset.fav === 'repeat' ? engine.repeatFavorite(fav) : engine.inspireFavorite(fav));
-});
-document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.sheet').forEach(s => s.hidden = true); });
-window.addEventListener('resize', () => { if (!current) renderDice(null); });
+}
 
-renderModes(); renderTurn(); renderDice(null);
+/* ---------- hojas ---------- */
+const backdrop = $('#backdrop');
+let openSheet = null;
+function open(sheet) { openSheet = sheet; backdrop.hidden = false; void backdrop.offsetWidth; backdrop.classList.add('show'); sheet.classList.add('open'); sheet.setAttribute('aria-hidden', 'false'); }
+function closeSheets() {
+  if (!openSheet) return;
+  openSheet.classList.remove('open'); openSheet.setAttribute('aria-hidden', 'true'); openSheet = null;
+  backdrop.classList.remove('show'); setTimeout(() => { if (!openSheet) backdrop.hidden = true; }, 300);
+}
+backdrop.addEventListener('click', closeSheets);
+document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeSheets));
+$('#btnFavs').addEventListener('click', () => { renderFavs(); open($('#sheetFavs')); });
+$('#btnSettings').addEventListener('click', () => { renderSettings(); open($('#sheetSettings')); });
+
+/* ---------- ajustes ---------- */
+function groupSwitch(g) {
+  const l = document.createElement('label'); l.className = 'sw';
+  const s = document.createElement('span'); s.textContent = GROUPS[g].name;
+  const i = document.createElement('input'); i.type = 'checkbox'; i.checked = prefs.enabledGroups.includes(g);
+  i.addEventListener('change', () => {
+    const set = new Set(prefs.enabledGroups);
+    if (i.checked) set.add(g); else set.delete(g);
+    if (!set.size) { i.checked = true; toast('Deja al menos una zona activa.'); return; }
+    prefs.enabledGroups = [...set]; persist(); updateVariants();
+  });
+  l.append(s, i, document.createElement('i'));
+  return l;
+}
+function renderSettings() {
+  $('#name0').value = prefs.names[0] || ''; $('#name1').value = prefs.names[1] || '';
+  const g1 = $('#groups'), g2 = $('#groupsIntimate'); g1.innerHTML = ''; g2.innerHTML = '';
+  for (const g of Object.keys(GROUPS)) (GROUPS[g].intimate ? g2 : g1).appendChild(groupSwitch(g));
+  $('#swVibe').checked = ui.vibrate;
+  $('#btnClearFavs').classList.remove('arm'); $('#btnClearFavs').textContent = 'Borrar favoritas';
+}
+for (const [id, i] of [['#name0', 0], ['#name1', 1]]) {
+  $(id).addEventListener('input', e => { const n = [...(prefs.names || ['', ''])]; n[i] = e.target.value.trim(); prefs.names = n; persist(); renderTurn(); });
+}
+$('#swVibe').addEventListener('change', e => { ui.vibrate = e.target.checked; persist(); if (ui.vibrate) buzz(10); });
+$('#btnReset').addEventListener('click', () => {
+  engine.resetGame(); engine.state.performer = 0; current = null;
+  roundBox.hidden = true; roundBox.classList.remove('show'); welcome.hidden = false;
+  document.body.classList.add('idle'); idleDice(); renderTurn(); renderPath(); updateVariants();
+  closeSheets(); toast('Partida nueva');
+});
+$('#btnClearFavs').addEventListener('click', e => {
+  const b = e.currentTarget;
+  if (!b.classList.contains('arm')) { b.classList.add('arm'); b.textContent = '¿Seguro? Toca otra vez para borrar'; setTimeout(() => { b.classList.remove('arm'); b.textContent = 'Borrar favoritas'; }, 3000); return; }
+  engine.state.favorites = []; persist(); renderFavCount(); renderFavBtn(); b.classList.remove('arm'); b.textContent = 'Borrar favoritas'; toast('Favoritas borradas');
+});
+
+/* ---------- arranque ---------- */
+renderLevels(); renderTurn(); idleDice(); renderFavCount(); updateVariants();
