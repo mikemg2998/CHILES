@@ -1,0 +1,892 @@
+<!doctype html>
+<html lang="es"><head><meta name="robots" content="noindex,nofollow"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style></head><body>
+<title>Chiles</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Chiles">
+<meta name="theme-color" content="#1c0c14">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=Figtree:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: one-column phone app. Sticky top bar with the heat dial (chiles 1-4), a games grid,
+   and each game as a full card "table" with one big action under the thumb. Single dark night theme by design. */
+:root{
+  color-scheme:dark;
+  --bg:#1c0c14;          /* vino muy oscuro */
+  --bg-2:#2a1320;        /* superficie */
+  --bg-3:#3a1b2c;        /* superficie elevada */
+  --line:#4a2639;
+  --fg:#f7e9df;          /* crema cálida */
+  --fg-2:#d4b7ad;
+  --fg-3:#a07f80;
+  --chile:#ff4a2e;       /* rojo chile */
+  --chile-2:#ff8a3d;     /* naranja brasa */
+  --chile-deep:#b8261a;
+  --leaf:#7fbf5a;        /* rabito verde del chile */
+  --ok:#8bd17c; --no:#ff7a7a;
+  --grad:linear-gradient(140deg,#ff8a3d 0%,#ff4a2e 55%,#c21d4f 100%);
+  --display:"Gloock","Georgia",serif;
+  --body:"Figtree","Segoe UI",system-ui,-apple-system,sans-serif;
+  --r:22px; --r-sm:14px;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);min-height:100%}
+body{color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--chile-2);outline-offset:2px;border-radius:10px}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:clamp(34px,9vw,52px);line-height:1}
+h2{font-size:clamp(26px,6.6vw,34px);line-height:1.05}
+h3{font-size:21px;line-height:1.15}
+p{margin:0}
+.wrap{max-width:720px;margin:0 auto;overflow-x:clip;padding-bottom:calc(40px + env(safe-area-inset-bottom,0px))}
+.muted{color:var(--fg-2)} .small{font-size:14px;color:var(--fg-3)}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--fg-3);font-weight:700}
+.stack{display:flex;flex-direction:column;gap:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding-block:12px;border-bottom:1px solid var(--line);margin-bottom:18px}
+.brand{display:inline-flex;align-items:center;gap:8px;background:none;border:0;padding:0;font-family:var(--display);font-size:26px;color:var(--fg)}
+.brand svg{width:26px;height:26px}
+.top-r{display:flex;gap:8px;align-items:center}
+.icon-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--bg-2);display:inline-flex;align-items:center;justify-content:center;color:var(--fg)}
+.icon-btn svg{width:19px;height:19px}
+
+/* heat dial */
+.heat{order:3;width:100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:4px;border-radius:999px;background:var(--bg-2);border:1px solid var(--line)}
+.heat button{border:0;background:none;border-radius:999px;padding:7px 4px;display:inline-flex;gap:5px;align-items:center;justify-content:center;color:var(--fg-3);font-size:13px;font-weight:700;min-width:0}
+.heat button svg{width:13px;height:16px}
+.heat button.on{background:var(--grad);color:#fff}
+.heat button:disabled{opacity:.3;cursor:not-allowed}
+.heat-name{font-size:13px;font-weight:700;color:var(--chile-2);letter-spacing:.06em;text-transform:uppercase}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 22px;border-radius:999px;border:1px solid transparent;font-weight:700;font-size:16.5px;line-height:1.2;transition:transform .1s ease}
+.btn:active:not(:disabled){transform:translateY(2px)}
+.btn.hot{background:var(--grad);color:#fff;box-shadow:0 6px 24px -8px rgba(255,74,46,.6)}
+.btn.ghost{background:var(--bg-2);border-color:var(--line);color:var(--fg)}
+.btn.sm{padding:9px 15px;font-size:14.5px}
+.btn.wide{width:100%}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.back{display:inline-flex;align-items:center;gap:6px;border:0;background:none;color:var(--fg-2);font-weight:600;padding:2px 0;margin-bottom:10px}
+.back svg{width:18px;height:18px}
+
+/* home */
+.hello{display:flex;flex-direction:column;gap:8px;margin-bottom:22px}
+.hello h1 em{font-style:normal;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.night{display:flex;gap:14px;align-items:center;justify-content:space-between;padding:20px;border-radius:var(--r);background:var(--grad);color:#fff;border:0;text-align:left;width:100%;margin-bottom:22px}
+.night b{font-family:var(--display);font-weight:400;font-size:25px;display:block;line-height:1.1}
+.night span{font-size:14.5px;opacity:.92}
+.night svg{width:28px;height:28px;flex:none}
+.games{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (min-width:620px){.games{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.g{display:flex;flex-direction:column;gap:8px;align-items:flex-start;text-align:left;padding:16px;border-radius:var(--r-sm);background:var(--bg-2);border:1px solid var(--line);min-width:0;transition:border-color .15s}
+.g:hover{border-color:var(--chile-2)}
+.g .gi{width:42px;height:42px;border-radius:13px;background:var(--bg-3);display:flex;align-items:center;justify-content:center;color:var(--chile-2)}
+.g .gi svg{width:22px;height:22px}
+.g b{font-size:16px;line-height:1.2}
+.g span{font-size:13px;color:var(--fg-3);line-height:1.35}
+.sec-t{margin:26px 0 12px}
+
+/* turn pill */
+.turn{display:inline-flex;align-items:center;gap:10px;padding:8px 14px;border-radius:999px;background:var(--bg-2);border:1px solid var(--line);font-weight:700}
+.turn .arrow{color:var(--chile)}
+.dot{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;color:#fff}
+.dot.a{background:#e0457b}.dot.b{background:#8a5cf6}
+
+/* card table */
+.table{padding:22px;border-radius:var(--r);background:var(--bg-2);border:1px solid var(--line);display:flex;flex-direction:column;gap:14px;min-height:260px;justify-content:center}
+.card-text{font-family:var(--display);font-size:clamp(25px,6.4vw,32px);line-height:1.2}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;background:var(--bg-3);font-size:13px;font-weight:700;color:var(--fg-2)}
+.chip.hot{background:rgba(255,74,46,.16);color:var(--chile-2)}
+.act{display:flex;gap:10px;margin-top:16px}
+.act .btn{flex:1}
+
+/* dice */
+.dice-pick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.dp{padding:14px 8px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--bg-2);display:flex;flex-direction:column;align-items:center;gap:6px;font-weight:700;font-size:14.5px;color:var(--fg-3)}
+.dp.on{border-color:var(--chile-2);color:var(--fg);background:var(--bg-3)}
+.dp svg{width:26px;height:26px}
+.dice{display:flex;flex-direction:column;gap:12px}
+.die{display:flex;align-items:center;gap:14px}
+.face{width:64px;height:64px;flex:none;border-radius:16px;background:var(--fg);color:var(--chile-deep);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:22px;box-shadow:inset 0 -4px 0 rgba(0,0,0,.15)}
+.face.roll{animation:roll .5s ease}
+@keyframes roll{0%{transform:rotate(0) scale(.7)}60%{transform:rotate(250deg) scale(1.08)}100%{transform:rotate(360deg) scale(1)}}
+.die-l small{display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-3);font-weight:700}
+.die-l b{font-size:20px;font-weight:700}
+
+/* timer */
+.timer{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:var(--r-sm);background:var(--bg-3)}
+.timer .t{font-family:var(--display);font-size:38px;line-height:1;font-variant-numeric:tabular-nums;min-width:4ch}
+.timer .bar{flex:1;height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.timer .bar i{display:block;height:100%;background:var(--grad);width:0}
+
+/* board */
+.board{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}
+.sq{aspect-ratio:1;max-width:100%;border-radius:9px;background:var(--bg-3);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--fg-3);position:relative;border:1px solid transparent}
+.sq.z2{background:#4a1d2c}.sq.z3{background:#5e1a22}
+.sq.sp{border-color:var(--chile-2);color:var(--chile-2)}
+.sq.goal{background:var(--grad);color:#fff}
+.sq .tok{display:flex;gap:2px;position:absolute;bottom:3px}
+.sq .tok i{width:10px;height:10px;border-radius:50%;border:1.5px solid var(--bg)}
+.sq .tok i.a{background:#e0457b}.sq .tok i.b{background:#8a5cf6}
+
+/* positions */
+.pos-fig{width:100%;max-width:100%;height:120px;border-radius:var(--r-sm);background:var(--bg-3);display:flex;align-items:center;justify-content:center}
+.pos-fig svg{height:90px;width:auto;max-width:100%}
+.stars{color:var(--chile-2);font-weight:700;font-size:14px}
+.toggles{display:flex;gap:8px;flex-wrap:wrap}
+.tg{padding:8px 13px;border-radius:999px;border:1px solid var(--line);background:var(--bg-2);font-weight:700;font-size:14px;color:var(--fg-2)}
+.tg.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.list{display:flex;flex-direction:column;gap:8px}
+.li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;border-radius:var(--r-sm);background:var(--bg-2);border:1px solid var(--line);text-align:left;width:100%}
+.li b{font-weight:700}
+.li span{font-size:13px;color:var(--fg-3)}
+
+/* yes/no/maybe */
+.ynm{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.ynm .btn{padding:16px 8px}
+.match{display:flex;gap:10px;align-items:center;padding:12px 14px;border-radius:var(--r-sm);background:var(--bg-2);border:1px solid var(--line)}
+.match .m{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:rgba(139,209,124,.16);color:var(--ok);flex:none}
+.match .m.q{background:rgba(255,138,61,.16);color:var(--chile-2)}
+
+/* forms */
+.field{width:100%;padding:13px 15px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--bg-2);font-size:16px;color:var(--fg)}
+.field:focus{outline:none;border-color:var(--chile-2)}
+textarea.field{min-height:90px;resize:vertical}
+label.lab{font-weight:700;font-size:14.5px;display:block;margin-bottom:6px}
+.set{display:flex;flex-direction:column;gap:18px}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;border-radius:var(--r-sm);background:var(--bg-2);border:1px solid var(--line);width:100%;text-align:left}
+.switch i{width:44px;height:26px;border-radius:99px;background:var(--line);position:relative;flex:none;transition:background .15s}
+.switch i::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--fg);transition:transform .15s}
+.switch.on i{background:var(--chile)}
+.switch.on i::after{transform:translateX(18px)}
+
+/* breathing */
+.breath{width:180px;height:180px;max-width:100%;margin:10px auto;border-radius:50%;background:radial-gradient(circle,var(--chile-2),var(--chile-deep));display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;transform:scale(.6);transition:transform 4s ease-in-out}
+.breath.in{transform:scale(1)}
+.secret{padding:18px;border-radius:var(--r-sm);background:var(--bg-3);border:1px dashed var(--chile-2)}
+.score{display:flex;gap:10px}
+.score div{flex:1;padding:12px;border-radius:var(--r-sm);background:var(--bg-2);border:1px solid var(--line);text-align:center}
+.score b{display:block;font-family:var(--display);font-size:30px;font-variant-numeric:tabular-nums}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:700;z-index:40}
+.steps{display:flex;flex-direction:column;gap:10px}
+.step{display:flex;gap:14px;align-items:center;padding:14px 16px;border-radius:var(--r-sm);background:var(--bg-2);border:1px solid var(--line);text-align:left;width:100%}
+.step .n{width:34px;height:34px;border-radius:50%;background:var(--bg-3);display:flex;align-items:center;justify-content:center;font-weight:800;flex:none}
+.step.done .n{background:var(--ok);color:var(--bg)}
+.step.next{border-color:var(--chile-2)}
+.step div{flex:1;min-width:0}
+.step span{font-size:13px;color:var(--fg-3);display:block}
+/* cartas: mazo, reparto y giro */
+.deal{position:relative;perspective:1400px;margin-top:4px}
+.deal.enter{animation:deal .55s cubic-bezier(.2,.9,.25,1.15) both}
+.deal.out{animation:toss .32s ease-in forwards}
+@keyframes deal{0%{transform:translate(-30px,-60px) rotate(-14deg) scale(.82);opacity:0}100%{transform:none;opacity:1}}
+@keyframes toss{to{transform:translate(115%,-10px) rotate(16deg);opacity:0}}
+.stackfx{position:absolute;inset:0;border-radius:var(--r);background:var(--bg-3);border:1px solid var(--line);transform:rotate(3deg) translate(6px,6px);z-index:0}
+.stackfx.two{transform:rotate(-2.5deg) translate(-5px,9px);opacity:.6}
+.flip{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr);width:100%;transform-style:preserve-3d;transition:transform .75s cubic-bezier(.3,1.35,.45,1);border-radius:var(--r)}
+.flip.on{transform:rotateY(180deg)}
+.flip:not(.on){cursor:pointer}
+.flip:not(.on):hover{transform:translateY(-4px) rotate(-1deg)}
+.cface{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:var(--r);padding:22px;display:flex;flex-direction:column;gap:14px;min-height:300px}
+.cface.front{transform:rotateY(180deg);background:var(--bg-2);border:1px solid var(--line);justify-content:center}
+.cface.back{background:var(--grad);color:#fff;align-items:center;justify-content:center;text-align:center;overflow:hidden;position:relative;box-shadow:0 18px 40px -18px rgba(255,74,46,.55)}
+.cface.back.cool{background:linear-gradient(150deg,#3b6f8f 0%,#284a6b 55%,#1f2f52 100%);box-shadow:0 18px 40px -18px rgba(59,111,143,.6)}
+.cface.back::before{content:"";position:absolute;inset:12px;border:1.5px solid rgba(255,255,255,.45);border-radius:calc(var(--r) - 8px)}
+.cface.back::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(255,255,255,.07) 0 10px,transparent 10px 20px)}
+.cface.back > *{position:relative;z-index:1}
+.cface.back .bk-ic{width:62px;height:62px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center}
+.cface.back .bk-ic svg{width:34px;height:34px}
+.cface.back b{font-family:var(--display);font-weight:400;font-size:32px;line-height:1.05}
+.cface.back .tap{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:700;background:rgba(0,0,0,.22);padding:7px 14px;border-radius:999px;animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.front .card-text{animation:none}
+.flip.on .cface.front > *{animation:rise .5s .35s both}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.hint{display:flex;gap:8px;justify-content:center;margin-top:14px;font-size:13.5px;color:var(--fg-3)}
+.hint span{display:inline-flex;align-items:center;gap:6px}
+.hint i{font-style:normal;width:20px;height:20px;border-radius:50%;background:var(--bg-3);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--fg-2)}
+.hint .now i{background:var(--chile);color:#fff}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <button class="brand" data-go="home" aria-label="Chiles, inicio"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 3.5c.4 1.2 1.4 1.9 2.6 1.9" fill="none" stroke="var(--leaf)" stroke-width="2" stroke-linecap="round"/><path d="M17 6.5c1.6 3 .8 7.6-2.6 10.9C11.6 20 7.2 21.3 4 20.4c2.6-1 5-3 6.6-5.6 1.6-2.6 2.2-5.5 2.4-7.8 1-.8 2.6-1.2 4-.5z" fill="var(--chile)"/></svg>Chiles</button>
+    <div class="top-r">
+      <button class="icon-btn" data-go="ajustes" aria-label="Ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+    </div>
+    <div class="heat" id="heat" role="group" aria-label="Nivel de picante"></div>
+  </header>
+  <main id="main"></main>
+</div>
+<div id="toast-root"></div>
+
+<script>
+/* ================= utilidades ================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const shuffle = a => { a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const store = {
+  get(k,d){ try{ const v=localStorage.getItem('chiles:'+k); return v==null?d:JSON.parse(v);}catch(e){return d;} },
+  set(k,v){ try{ localStorage.setItem('chiles:'+k,JSON.stringify(v)); }catch(e){} }
+};
+function toast(msg){ const r=$('#toast-root'); r.innerHTML=`<div class="toast" role="status">${esc(msg)}</div>`; clearTimeout(toast.t); toast.t=setTimeout(()=>r.innerHTML='',1800); }
+
+const CHILE = '<svg viewBox="0 0 12 16" aria-hidden="true"><path d="M8.6 1.2c.2.7.8 1.1 1.5 1.1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M9.8 3c1 1.9.5 4.8-1.6 6.9C6.4 11.7 3.6 12.5 1.6 11.9c1.7-.6 3.2-1.9 4.2-3.6 1-1.7 1.4-3.5 1.5-4.9.6-.5 1.6-.8 2.5-.4z" fill="currentColor"/></svg>';
+const chiles = n => `<span class="row" style="gap:1px;display:inline-flex">${CHILE.repeat(n)}</span>`;
+const LEVELS = ['','Chispa','Brasa','Llama','Volcán'];
+const I = {
+  dice:'<rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8" cy="8" r="1.2" fill="currentColor"/><circle cx="16" cy="16" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="16" cy="8" r="1.2" fill="currentColor"/><circle cx="8" cy="16" r="1.2" fill="currentColor"/>',
+  chat:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-5.1A8 8 0 1 1 21 12z"/>',
+  card:'<rect x="5" y="3" width="14" height="18" rx="3"/><path d="M9 9h6M9 13h4"/>',
+  board:'<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>',
+  body:'<circle cx="8" cy="5" r="2"/><circle cx="16" cy="7" r="2"/><path d="M8 7v6l-3 6M8 13l4 2 4-4M16 9v4l3 6"/>',
+  clock:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/>',
+  hand:'<path d="M7 11V5.5a1.5 1.5 0 0 1 3 0V10M10 9.5V4a1.5 1.5 0 0 1 3 0v6M13 9.5V5.5a1.5 1.5 0 0 1 3 0V12M16 10a1.5 1.5 0 0 1 3 0v4a7 7 0 0 1-7 7h-1a6 6 0 0 1-5-3l-2.5-4.3a1.5 1.5 0 0 1 2.6-1.5L7 14"/>',
+  check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  heart:'<path d="M12 20s-7.5-4.6-9-9.2C2 7.6 4.2 5 7 5c2 0 3.4 1.1 5 3 1.6-1.9 3-3 5-3 2.8 0 5 2.6 4 5.8-1.5 4.6-9 9.2-9 9.2z"/>',
+  mask:'<path d="M3 7c3-1 6-1 9 1 3-2 6-2 9-1 0 6-3 10-6 10-1.5 0-2-1.5-3-1.5S10.5 17 9 17c-3 0-6-4-6-10z"/><circle cx="8.5" cy="10.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="10.5" r="1.2" fill="currentColor"/>',
+  q:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17v.3"/>',
+  flame:'<path d="M12 2c1 3.6 5.5 5.6 5.5 11a5.5 5.5 0 0 1-11 0c0-2.3 1.1-4 2.3-5.1.1 2.1 1.1 3.2 2.2 3.2C11 8 10 5 12 2z"/>',
+  left:'<path d="M19 12H5M11 6l-6 6 6 6"/>',
+  moon:'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>'
+};
+const ic = (n,extra='') => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ${extra}>${I[n]||''}</svg>`;
+
+/* ================= estado ================= */
+const S = {
+  names: store.get('names',['Mike','Pareja']),
+  level: store.get('level',1),
+  volcan: store.get('volcan',false),
+  avoid: store.get('avoid',''),
+  turn: 0,
+  view: 'home',
+  fav: store.get('fav',{}), tried: store.get('tried',{}),
+  buzon: store.get('buzon',[]),
+  night: null, // índice de paso de la noche guiada
+  g: {}        // estado del juego activo
+};
+if (!S.volcan && S.level>3) S.level=3;
+const A = () => S.names[S.turn], B = () => S.names[1-S.turn];
+const nextTurn = () => { S.turn = 1-S.turn; };
+const avoidList = () => S.avoid.split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);
+const ok = t => { const l=avoidList(); const s=String(t).toLowerCase(); return !l.some(w=>s.includes(w)); };
+/* contenido por nivel: devuelve los del nivel elegido (y si faltan, los anteriores) */
+function lv(obj, level=S.level){ let out=[]; for(let l=level;l>=1&&out.length<4;l--){ out=out.concat((obj[l]||[]).filter(ok)); } return out.length?out:(obj[1]||[]); }
+function turnPill(){ const a=S.turn, b=1-S.turn; return `<span class="turn"><span class="dot ${a?'b':'a'}">${esc(S.names[a][0]||'?')}</span>${esc(S.names[a])}<span class="arrow">›</span><span class="dot ${b?'b':'a'}">${esc(S.names[b][0]||'?')}</span>${esc(S.names[b])}</span>`; }
+
+/* carta: se reparte boca abajo, se toca para darle la vuelta */
+const BACK_IC = {verdad:'q',reto:'flame',charla:'chat',mente:'q',reloj:'clock',postura:'body',rol:'mask',quiz:'heart',buzon:'heart'};
+function deck(key, front, {label='Carta', kind='charla', auto=false, cool=false}={}){
+  const g=S.g; let enter=false;
+  if(g.key!==key){ g.key=key; g.revealed=!!auto; enter=true; }
+  const rev = g.revealed;
+  return `<div class="deal ${enter?'enter':''}" id="deal">
+    <div class="stackfx two" aria-hidden="true"></div><div class="stackfx" aria-hidden="true"></div>
+    <div class="flip ${rev?'on':''}" id="flip" ${rev?'':'data-act="flip" role="button" tabindex="0" aria-label="Destapar la carta"'}>
+      <div class="cface back ${cool?'cool':''}" aria-hidden="${rev}"><span class="bk-ic">${ic(BACK_IC[kind]||'card')}</span><b>${esc(label)}</b><span class="tap">${ic('hand','style="width:16px;height:16px"')}Toca para destapar</span></div>
+      <div class="cface front" aria-hidden="${!rev}">${front}</div>
+    </div></div>
+  <div class="hint" aria-hidden="true"><span class="${rev?'':'now'}"><i>1</i>Destapa</span><span class="${rev?'now':''}"><i>2</i>Haz o responde</span><span><i>3</i>Siguiente carta</span></div>`;
+}
+
+/* ================= contenido ================= */
+const DICE = {
+  accion:{name:'Acción', faces:{
+    1:['Besa','Acaricia','Sopla suave en','Masajea','Roza con los labios','Mordisquea suave'],
+    2:['Lame','Besa despacio','Desnuda','Masajea con aceite','Mordisquea','Recorre con la lengua'],
+    3:['Lame','Chupa','Acaricia con la mano','Besa con hambre','Frota tu cuerpo contra','Estimula con la boca'],
+    4:['Venda los ojos y lame','Ata las manos y besa','Usa un juguete en','Da nalgadas en','Muerde','Ordena y luego besa']}},
+  zona:{name:'Zona', faces:{
+    1:['el cuello','las orejas','los labios','la espalda','la nuca','las manos'],
+    2:['el pecho','el abdomen','los muslos internos','los glúteos','los pezones','la cintura'],
+    3:['los genitales','los pezones','los muslos internos','los glúteos','la entrepierna','donde quieras'],
+    4:['los genitales','todo el cuerpo','los glúteos','los pezones','la entrepierna','donde te pida']}},
+  modo:{name:'Modo', faces:{
+    1:['muy lento','con los ojos cerrados','mirándose a los ojos','con la punta de los dedos','en silencio','como quieras'],
+    2:['sin usar las manos','susurrando lo que harás','con hielo','muy lento','de rodillas','con aceite'],
+    3:['hasta que pida más','sin parar','alternando lento y rápido','sin usar las manos','mirándose a los ojos','sin dejar que te toque'],
+    4:['con los ojos vendados','con las manos atadas','dando órdenes','con un juguete','hasta el borde y parar','sin permiso para tocar']}},
+  tiempo:{name:'Tiempo', faces:{
+    1:['30 s','1 min','1 min','2 min','2 min','3 min'],
+    2:['1 min','2 min','2 min','3 min','3 min','5 min'],
+    3:['2 min','3 min','3 min','5 min','5 min','hasta que pida más'],
+    4:['3 min','5 min','5 min','hasta que pida más','hasta que pida más','10 min']}},
+  lugar:{name:'Lugar', faces:{
+    1:['el sofá','la cama','la cocina','de pie','el suelo con cojines','frente al espejo'],
+    2:['la ducha','contra la pared','la cama','el sofá','frente al espejo','la mesa'],
+    3:['la ducha','contra la pared','la mesa','el suelo','el borde de la cama','frente al espejo'],
+    4:['la ducha','la mesa','el balcón con la luz apagada','contra la pared','el coche aparcado en casa','donde elija quien recibe']}},
+  textura:{name:'Textura', faces:{
+    1:['una pluma','un cubito de hielo','aceite tibio','una tela suave','solo el aliento','las uñas suaves'],
+    2:['una pluma','un cubito de hielo','aceite tibio','una tela suave','solo el aliento','las uñas suaves'],
+    3:['un cubito de hielo','aceite tibio','la lengua','solo el aliento','las uñas','una tela suave'],
+    4:['un cubito de hielo','un juguete','la lengua','una corbata o pañuelo','las uñas','cera tibia de masaje']}}
+};
+const DICE_ORDER = ['accion','zona','modo','tiempo','lugar','textura'];
+
+const CHARLAS = {
+  1:['¿Cuándo supiste que te gustaba de verdad?','¿Qué recuerdas de nuestro primer beso?','¿Qué gesto mío te parece sexy aunque yo no lo sepa?','¿Qué ropa mía te gusta más?','¿Cuál es el plan de pareja que más has disfrutado conmigo?','¿Qué parte de mi cuerpo miras cuando no me doy cuenta?','Si pudiéramos escaparnos este fin de semana, ¿adónde iríamos?','¿Qué canción te pone en modo romántico?','¿Qué es lo primero que notaste de mí físicamente?','¿Qué cumplido mío recuerdas más?','¿En qué momento del día me deseas más?','¿Qué te gustaría que hiciera más a menudo cuando estamos solos?'],
+  2:['¿Qué te gustaría que te hiciera más a menudo en la cama?','Cuéntame un sueño erótico que hayas tenido conmigo.','¿Dónde te gustaría hacerlo que todavía no hayamos probado?','¿Cuál ha sido nuestra mejor noche hasta ahora y por qué?','¿Qué palabra o frase te enciende cuando te la digo al oído?','¿Prefieres que yo tome la iniciativa o tomarla tú?','¿Qué prenda te gustaría verme puesta… y quitarme?','¿Qué parte de tu cuerpo te gusta que bese y casi nunca beso?','¿Luz encendida o apagada? ¿Por qué?','¿Qué te pone más: mirar o que te miren?','¿Qué pensaste la última vez que me viste desnudo/a?','¿Qué olor, sabor o sonido mío te excita?'],
+  3:['Describe con detalle nuestra noche perfecta, de principio a fin.','¿Qué fantasía nunca me has contado?','Si esta noche pudieras pedirme cualquier cosa, ¿qué sería?','¿Qué es lo más atrevido que te gustaría probar conmigo?','¿Cómo te gusta que te toque cuando estás a punto de acabar?','¿Qué postura te hace sentir más conectado/a conmigo?','¿Qué te gustaría que te dijera mientras lo hacemos?','¿Hay algo que te gustaría que hiciera más lento? ¿O más rápido?','¿Qué recuerdo nuestro usas cuando piensas en mí a solas?','¿Te gustaría grabar un audio para el otro? ¿Qué diría?','¿Qué juguete te daría curiosidad probar juntos?','Cuéntame algo que te excite y que te dé un poco de vergüenza decir.'],
+  4:['¿Te gustaría dominar o ser dominado/a? ¿Hasta dónde?','¿Qué escena de rol te encantaría que hiciéramos?','¿Qué límite te gustaría acercar un poquito, con mucha confianza?','¿Qué palabra de seguridad elegimos para los juegos fuertes?','¿Qué orden te gustaría recibir de mí esta noche?','¿Qué lugar fuera de casa te parece el más excitante para imaginarlo?']
+};
+const PAREJA = ['¿Qué te hace sentir más deseado/a por mí?','¿Qué cosa pequeña podría hacer mañana para ponerte de buen humor?','¿Qué es lo que más valoras de nosotros ahora mismo?','¿Qué nos falta por hacer juntos este año?'];
+
+const VERDAD = {
+  1:['¿Qué fue lo primero que te atrajo de mí físicamente?','¿Alguna vez pensaste en besarme antes de que pasara?','¿Cuál es tu zona favorita para que te besen?','¿Qué es lo más romántico que alguien ha hecho por ti?','¿Qué te pone nervioso/a de mí, en el buen sentido?','¿Qué ropa interior mía es tu favorita?'],
+  2:['¿Qué parte de mi cuerpo te gusta más y por qué?','¿Cuál fue la última vez que pensaste en mí de forma sexual?','¿Qué te gustaría que te hiciera ahora mismo?','¿Qué es lo más sexy que te he dicho?','¿Qué tres palabras describen cómo besas?','¿Has tenido alguna vez un sueño húmedo conmigo? Cuéntalo.'],
+  3:['Describe cómo quieres que acabe esta noche.','¿Qué es lo que más te gusta que te haga con la boca?','¿Cuál es tu postura favorita conmigo y por qué?','¿Qué fantasía te da más curiosidad?','¿Qué sonido mío te excita más?','¿Qué es lo más atrevido que has pensado hacer conmigo?'],
+  4:['¿Qué juego de dominación te gustaría probar?','¿Qué juguete te gustaría que usáramos esta noche?','¿Qué fantasía tienes que nunca te has atrevido a decir?']
+};
+const RETO = {
+  1:['Bésame como en nuestra primera cita.','Dame un masaje de hombros de 1 minuto.','Susúrrame al oído algo que te guste de mí.','Bésame el cuello durante 30 segundos.','Bailemos una canción lenta, muy pegados.','Mírame a los ojos 30 segundos sin reír.'],
+  2:['Quítame una prenda usando solo la boca.','Bésame desde el cuello hasta el ombligo.','Hazme un striptease de una prenda.','Masajéame la espalda sin ropa durante 2 minutos.','Pasa un cubito de hielo por mi pecho.','Bésame los muslos internos, pero sin subir más.'],
+  3:['Dos minutos de sexo oral y luego paras, aunque te pida más.','Tócame donde quieras con los ojos cerrados durante 1 minuto.','Elige una postura y quédate en ella 3 minutos.','Desnúdame por completo, muy despacio.','Haz que gima en menos de un minuto.','Usa solo la lengua durante 2 minutos donde tú elijas.'],
+  4:['Véndame los ojos y haz lo que quieras durante 3 minutos.','Átame las manos y bésame todo el cuerpo.','Dame tres órdenes y las cumpliré.','Usa un juguete conmigo durante 2 minutos.']
+};
+const CASTIGO = ['Quítate una prenda.','Da un beso de 10 segundos donde el otro elija.','El otro elige tu próximo reto.','Masaje de pies de 1 minuto.'];
+
+const RELOJ = {
+  1:[['Bésame el cuello y no puedo tocarte',60],['Acaríciame la espalda, yo no puedo moverme',60],['Bésame los labios sin usar las manos',45],['Susúrrame cosas al oído; no puedo sonreír',45]],
+  2:[['Desnúdame mientras tengo las manos detrás de la espalda',120],['Besa mis muslos internos; no puedo hacer ruido',90],['Recorre mi cuerpo con hielo; no puedo moverme',90],['Hazme un baile pegado; no puedo tocarte',60]],
+  3:[['Sexo oral; no puedo acabar',180],['Tócame donde quieras; no puedo gemir',120],['Frota tu cuerpo contra el mío; no puedo tocarte',120],['Usa solo la lengua; no puedo mover las caderas',90]],
+  4:[['Con los ojos vendados, haz lo que quieras; no puedo hablar',180],['Con mis manos atadas, provócame; no puedo pedir más',180]]
+};
+
+const POS = [
+  {n:'El sillón',l:2,d:1,t:'Uno se sienta en el borde de la cama o en una silla firme; el otro se sienta encima, de frente, con los pies en el suelo. Quien está encima marca el ritmo y quedan cara a cara para besarse.'},
+  {n:'La cuchara lenta',l:2,d:1,t:'Los dos tumbados de lado, uno detrás del otro. Muy íntima y de poco esfuerzo: las manos quedan libres para acariciar el pecho y el vientre.'},
+  {n:'Cara a cara',l:2,d:1,t:'Uno tumbado boca arriba y el otro encima, con el peso en los antebrazos. Clásica, con muchos besos y miradas.'},
+  {n:'El puente',l:3,d:2,t:'Quien recibe se tumba boca arriba con una almohada bajo la cadera; el otro, de rodillas. La almohada cambia el ángulo y hace que todo se sienta más profundo.'},
+  {n:'La escalera',l:3,d:2,t:'Quien recibe, de pie, apoya una pierna en un escalón, el borde de la bañera o la cama; el otro se coloca detrás. Ideal para la ducha.'},
+  {n:'El columpio',l:3,d:3,t:'Uno, de pie, sostiene al otro mientras le rodea con las piernas, con la espalda apoyada en la pared para tener estabilidad.'},
+  {n:'El espejo',l:3,d:2,t:'Quien está encima se sienta de espaldas al otro, frente a un espejo, para que los dos se vean. El que está debajo puede acariciar con las manos libres.'},
+  {n:'La jinete',l:3,d:1,t:'Uno tumbado boca arriba; el otro encima, de rodillas, controla la profundidad y el ritmo. Perfecta para mirarse y tocarse.'},
+  {n:'La ola',l:3,d:2,t:'Quien está encima se mueve en círculos lentos en lugar de arriba y abajo, como una ola. Menos velocidad, más roce.'},
+  {n:'La mesa',l:3,d:2,t:'Quien recibe se sienta en el borde de una mesa estable o una encimera; el otro, de pie, entre sus piernas. Altura perfecta y muy pasional.'},
+  {n:'El abrazo de loto',l:2,d:2,t:'Uno sentado con las piernas cruzadas; el otro se sienta encima rodeándole con las piernas. Se abrazan y se mueven despacio, pecho con pecho.'},
+  {n:'Tumbados en tijera',l:3,d:2,t:'Los dos tumbados, con las piernas entrelazadas en forma de tijera. Movimientos cortos y mucho contacto de piel.'},
+  {n:'La rendición',l:3,d:1,t:'Quien recibe boca abajo, con un cojín bajo la cadera; el otro encima, cuerpo con cuerpo. Mucho contacto y besos en la nuca.'},
+  {n:'Desde atrás, de rodillas',l:3,d:1,t:'Quien recibe a cuatro patas o apoyado en los antebrazos; el otro, de rodillas detrás. Clásica e intensa; agarrarse a la cadera ayuda a marcar el ritmo.'},
+  {n:'El borde de la cama',l:3,d:1,t:'Quien recibe tumbado boca arriba con la cadera en el borde de la cama; el otro, de pie. Las piernas pueden apoyarse en sus hombros para más profundidad.'},
+  {n:'La silla giratoria',l:3,d:2,t:'Uno sentado en una silla sin brazos; el otro encima de espaldas, apoyando las manos en sus rodillas. Muy visual.'},
+  {n:'El 69 de lado',l:3,d:2,t:'Los dos tumbados de lado, cada uno con la cabeza a la altura de la cadera del otro. Más cómodo que el clásico encima y sin cansar el cuello.'},
+  {n:'El trono',l:3,d:1,t:'Uno sentado al borde de la cama o el sofá; el otro de rodillas frente a él, con almohada bajo las rodillas, para sexo oral cómodo.'},
+  {n:'El arco',l:3,d:3,t:'Quien está encima, a horcajadas, se inclina hacia atrás apoyando las manos en las piernas del otro. Abre el pecho y cambia mucho el ángulo.'},
+  {n:'La carretilla suave',l:4,d:3,t:'Quien recibe apoya las manos en el suelo o la cama y el otro le sujeta por los muslos desde atrás. Solo para ratos cortos y con confianza.'},
+  {n:'El nudo',l:4,d:2,t:'Quien recibe tumbado boca arriba con las muñecas sujetas suavemente por encima de la cabeza (con las manos o una tela). El otro marca todo el ritmo.'},
+  {n:'La ducha',l:3,d:2,t:'De pie bajo el agua, quien recibe se apoya con las manos en la pared y el otro detrás. Antideslizante en el suelo, por favor.'}
+];
+const DIF = ['','Fácil','Media','Atlética'];
+
+const YNM = [
+  [1,'Darnos un masaje con aceite'],[1,'Bañarnos juntos con velas'],[1,'Mandarnos mensajes picantes durante el día'],[1,'Bailar desnudos en el salón'],
+  [2,'Vendar los ojos al otro'],[2,'Hacerlo en la ducha'],[2,'Mirarnos al espejo mientras lo hacemos'],[2,'Usar hielo o comida en el cuerpo'],[2,'Despertar al otro con sexo oral'],[2,'Hacer un striptease completo'],
+  [3,'Grabar un audio con gemidos para el otro'],[3,'Probar un juguete en pareja'],[3,'Hacerlo en la cocina o sobre la mesa'],[3,'Masturbarnos mirándonos'],[3,'Pasar una noche entera sin parar'],[3,'Decirnos cosas sucias en voz alta'],[3,'Hacerlo en un hotel con temática'],
+  [4,'Atar las manos al otro'],[4,'Dominar o ser dominado/a una noche'],[4,'Rol de desconocidos en un bar'],[4,'Nalgadas suaves'],[4,'Hacerlo en un lugar semipúblico (con cuidado)'],[4,'Usar un antifaz y esposas de peluche']
+];
+
+const QUIZ = ['¿Cuál es mi zona más sensible?','¿Luz encendida o apagada: qué prefiero?','¿Cuál es mi postura favorita?','¿Qué parte de mi cuerpo me gusta más?','¿Prefiero besos lentos o con prisa?','¿Qué hora del día me apetece más?','¿Qué canción pondría para una noche especial?','¿Qué prenda tuya me encanta?','¿Qué me pone más: mirar o que me miren?','¿Dónde me gustaría hacerlo que no hayamos probado?','¿Qué me gusta que me digan al oído?','¿Cuál fue nuestra mejor noche, según yo?','¿Masaje de espalda o de pies?','¿Qué olor me recuerda a ti?','¿Ducha juntos: sí o no?'];
+
+const ROL = [
+  {t:'Desconocidos en el bar de un hotel',a:'No digas tu nombre real en toda la noche.',b:'Convence al otro de subir a la habitación sin tocarle.'},
+  {t:'Masaje profesional',a:'Eres quien da el masaje. Tienes que ser muy profesional… hasta que no puedas más.',b:'Eres cliente. Pide "un poco más abajo" tres veces.'},
+  {t:'Reencuentro con un ex',a:'Llevas años sin verle y nunca le olvidaste. Que no se note al principio.',b:'Vienes a devolverle algo. No te vas a ir tan rápido.'},
+  {t:'Después de hora en la oficina',a:'Eres quien manda. Tienes que dar órdenes amables.',b:'Te quedaste para "terminar un informe". Intenta distraer al otro.'},
+  {t:'La cita a ciegas',a:'Finge que no te gusta nada… durante 5 minutos.',b:'Tienes que conseguir un beso antes de que acabe la copa.'},
+  {t:'Fotógrafo y modelo',a:'Eres quien fotografía. Da indicaciones de pose cada vez más atrevidas.',b:'Eres modelo. Obedece, pero quítate una prenda solo cuando te lo pidan dos veces.'}
+];
+
+/* sin picante */
+const MENTE = {
+  prefieres:{n:'¿Qué prefieres?',q:[
+    '¿Saber la fecha exacta de tu muerte o la causa, pero no ambas?',
+    '¿Poder pausar el tiempo una hora al día (pero tú sí envejeces) o rebobinar 10 segundos una vez al día?',
+    '¿Recordar con detalle todo lo que has vivido o poder olvidar lo que quieras, cuando quieras?',
+    '¿Que todo el mundo oiga tus pensamientos una hora al azar cada mes o no poder volver a mentir nunca?',
+    '¿Vivir 200 años con salud sin poder salir de tu ciudad, o 80 años viajando sin límite?',
+    '¿Saber qué piensa de ti de verdad cada persona que conoces o que nadie pueda juzgarte jamás?',
+    '¿Hablar todos los idiomas humanos o poder hablar con los animales (y oír lo que opinan de ti)?',
+    '¿Ser la mejor persona del mundo en algo que nadie valora o del montón en algo que todos admiran?',
+    '¿Cinco minutos con tu yo de hace 10 años o con tu yo de dentro de 10 años?',
+    '¿Que tu vida tenga una banda sonora que oye todo el mundo o un narrador que solo oyes tú?',
+    '¿Perder todas tus fotos o todos tus chats guardados?',
+    '¿Un trabajo que te apasiona con un sueldo normal o uno que odias que te deja retirarte a los 40?',
+    '¿Ver un minuto del futuro cuando quieras o una hora del pasado de cualquier persona, una sola vez?',
+    '¿Ser famoso/a por algo vergonzoso o ser un genio que nadie conocerá nunca?',
+    '¿Volver a los 18 sabiendo todo lo que sabes ahora, sin la garantía de volver a encontrarnos, o quedarte como estás?'
+  ]},
+  dilemas:{n:'Dilemas y situaciones límite',q:[
+    'Encuentras una cartera con 2.000 € y la dirección del dueño, que vive en una mansión. ¿Qué haces exactamente?',
+    'Te ofrecen un millón de euros por no hablar con tu familia durante 5 años. ¿Lo aceptas? ¿Y por 10 millones?',
+    'Puedes saber con una prueba si tienes un gen de una enfermedad incurable que quizá nunca aparezca. ¿Te la haces?',
+    'Puedes borrar tu recuerdo más doloroso, pero también se borra todo lo que aprendiste de él. ¿Lo borras?',
+    'Descubres que tu jefe hace algo ilegal que no perjudica a nadie y que a ti te beneficia. ¿Qué haces?',
+    'Un naufragio: puedes salvar a un desconocido o a tu mascota. ¿A quién, y te sentirías culpable?',
+    'Puedes leer todo el móvil de tu pareja sin que se entere nunca. ¿Lo harías? ¿Querrías que lo hiciera contigo?',
+    'Una app te dice, con un 99 % de acierto, cuántos años vas a vivir. ¿La abres?',
+    'Tu mejor amigo te pide que le cubras con una mentira a su pareja. ¿Dónde está tu límite?',
+    'Te pillan en una mentira pequeña delante de todos. ¿La admites o la sostienes hasta el final?',
+    'Puedes evitar una injusticia grande a un desconocido, pero a cambio pierdes tu trabajo. ¿Lo haces?',
+    'Te dan la oportunidad de vivir un año en otro país con todo pagado, pero sin poder volver ni una vez. ¿Te vas?'
+  ]},
+  hipotesis:{n:'Hipótesis locas',q:[
+    'Si los animales pudieran hablar, ¿cuál sería el más maleducado y qué diría?',
+    'Todo el mundo nace con un superpoder inútil. ¿Cuál es el tuyo?',
+    'Si nuestra relación fuera una película, ¿de qué género sería y quién nos interpretaría?',
+    'Te despiertas invisible durante 24 horas. ¿Qué es lo primero que haces, con total honestidad?',
+    'Tu vida tiene un botón de "saltar escena". ¿Qué momento te habrías saltado?',
+    'Puedes añadir una ley absurda de obligado cumplimiento para todo el país. ¿Cuál?',
+    'Si los recuerdos se pudieran vender, ¿cuál venderías y cuál no venderías por nada?',
+    'Mañana todo el mundo puede ver tu historial de búsquedas. ¿Qué búsqueda te costaría más explicar?',
+    'Eres el villano de una película. ¿Cuál es tu plan malvado y por qué falla?',
+    'Tu mascota (real o imaginaria) puede dejarte una reseña. ¿Cuántas estrellas te pone y qué escribe?',
+    'Puedes cambiarle el nombre a un día de la semana. ¿Cuál y cómo lo llamarías?',
+    'Te dejan vivir un día dentro de cualquier videojuego, serie o libro. ¿Cuál eliges y qué haces primero?'
+  ]},
+  pensar:{n:'Para pensar',q:[
+    '¿Qué creías firmemente hace 5 años que ahora te parece absurdo?',
+    '¿Qué opinión impopular tienes que defenderías en un debate?',
+    '¿Qué cosa pequeña te hace sentir muy adulto/a?',
+    '¿Qué consejo le darías a tu yo de 15 años sabiendo que no te haría caso?',
+    '¿De qué te sientes orgulloso/a que casi nadie sabe?',
+    '¿Qué hace todo el mundo que a ti te parece rarísimo?',
+    '¿Qué pregunta te gustaría que te hicieran más a menudo?',
+    'Si no tuvieras que trabajar nunca más, ¿qué harías en el tercer mes, cuando ya te hayas aburrido de descansar?',
+    '¿Qué parte de tu forma de ser viene claramente de tu madre o de tu padre?',
+    '¿Cuál es la decisión más pequeña que más te ha cambiado la vida?',
+    '¿En qué crees que estás equivocado/a ahora mismo, sin saberlo todavía?',
+    '¿Qué te gustaría que se dijera de ti cuando no estás en la habitación?'
+  ]},
+  risa:{n:'Para reírse',q:[
+    '¿Cuál es la mentira más absurda que te creíste de pequeño/a?',
+    'Imita cómo hablo cuando me enfado. El otro puntúa del 1 al 10.',
+    '¿Cuál es tu teoría conspirativa favorita, aunque no te la creas?',
+    'Te despiertas con 30 patos en el salón. Plan detallado, paso a paso.',
+    '¿Qué canción cantas fatal pero con muchísimas ganas? Cántala.',
+    'Cuenta la situación más ridícula que has vivido en público.',
+    'Si yo fuera un animal, ¿cuál sería y por qué? Sin piedad.',
+    'Narra lo que hiciste ayer como si fuera un documental de naturaleza.',
+    '¿Qué producto absurdo comprarías sin pensarlo si costara 5 €?',
+    '¿Qué palabra te parece ridícula sin ningún motivo?',
+    'Inventa en 30 segundos un eslogan publicitario para venderme a mí.',
+    '¿Cuál sería el título de tu autobiografía?'
+  ]},
+  nosotros:{n:'Sobre nosotros',q:[
+    '¿Qué costumbre mía has acabado copiando sin darte cuenta?',
+    '¿Cuál fue nuestra discusión más absurda, vista ahora con humor?',
+    'Si montáramos un negocio juntos, ¿cuál sería y quién mandaría de verdad?',
+    '¿En qué somos un equipo imbatible?',
+    '¿Qué tradición nuestra te gustaría inventar desde hoy?',
+    'Apocalipsis zombi: ¿qué papel tendría cada uno y quién caería primero?',
+    '¿Qué cosa de mí te sorprendió cuando empezamos a pasar más tiempo juntos?',
+    '¿Qué viaje nos falta y qué excusa hemos puesto hasta ahora?',
+    '¿Qué canción es "nuestra" aunque nunca lo hayamos dicho?',
+    '¿Qué versión de nosotros te imaginas dentro de 10 años, un domingo cualquiera?'
+  ]}
+};
+
+/* rituales */
+const RITUALS = {
+  besos:{n:'Tres minutos de besos',l:1,secs:180,desc:'Solo vale besarse, abrazarse y mirarse a los ojos. Las manos no bajan. Es la forma más rápida de encender la noche.',cues:[]},
+  tacto:{n:'Tacto a ciegas',l:1,secs:600,desc:'Uno se venda los ojos. El otro explora todo su cuerpo, sin prisa, con distintas texturas, antes de llegar a las zonas íntimas. La regla es solo sentir. Después se cambian.',cues:['Empieza por las manos y los brazos, con una pluma o tela.','Cuello y nuca, con el aliento.','Espalda, con aceite tibio.','Piernas y muslos internos, con hielo.','Lo que quieras… muy despacio.']},
+  respirar:{n:'Respirar juntos',l:1,secs:120,desc:'Frente a frente, en silencio, frente con frente si queréis. Sigan el círculo: inhalar cuando crece, exhalar cuando se encoge.',cues:[]}
+};
+
+/* noche guiada */
+const NIGHT = [
+  {go:'ritual',arg:'besos',lvl:1,n:'Tres minutos de besos',s:'Para arrancar'},
+  {go:'charlas',lvl:1,n:'Charlas para calentar',s:'5 preguntas con una copa'},
+  {go:'tablero',lvl:1,n:'El tablero',s:'Sube de tono solo'},
+  {go:'ritual',arg:'tacto',lvl:2,n:'Tacto a ciegas',s:'10 minutos para sentir'},
+  {go:'posturas',lvl:3,n:'Posturas en ruleta',s:'Cambia cada 3 minutos'}
+];
+
+const GAMES = [
+  {id:'dados',n:'Dados calientes',d:'Tira y haz lo que diga',i:'dice'},
+  {id:'charlas',n:'Charlas',d:'Preguntas para hablar y calentar',i:'chat'},
+  {id:'verdad',n:'Verdad o reto',d:'Cartas por turnos',i:'card'},
+  {id:'tablero',n:'El tablero',d:'30 casillas que suben de tono',i:'board'},
+  {id:'posturas',n:'Posturas',d:'Baraja, ruleta y colección',i:'body'},
+  {id:'reloj',n:'Contrarreloj',d:'Provoca y aguanta',i:'clock'},
+  {id:'rituales',n:'Rituales',d:'Lentos, para conectar',i:'hand'},
+  {id:'ynm',n:'Sí, no, quizás',d:'Solo se ven las coincidencias',i:'check'},
+  {id:'quiz',n:'¿Me conoces?',d:'Fallas, te quitas algo',i:'q'},
+  {id:'rol',n:'Escenas de rol',d:'Cada uno con su regla secreta',i:'mask'}
+];
+
+/* ================= temporizador ================= */
+let T = null;
+let wake = null;
+async function keepAwake(){ try{ if('wakeLock' in navigator) wake = await navigator.wakeLock.request('screen'); }catch(e){} }
+function stopTimer(){ if(T){ clearInterval(T.id); T=null; } }
+function parseSecs(s){ const m=String(s).match(/(\d+)\s*(s|min)/); if(!m) return 0; return m[2]==='s'?+m[1]:+m[1]*60; }
+function timerHTML(secs){ return secs?`<div class="timer" id="timer"><span class="t" id="tt">${fmt(secs)}</span><span class="bar"><i id="tb"></i></span><button class="btn sm ghost" data-act="timer" data-s="${secs}" id="tbtn">Empezar</button></div>`:''; }
+function fmt(s){ s=Math.max(0,Math.ceil(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+function beep(){ try{ const c=new (window.AudioContext||window.webkitAudioContext)(); const o=c.createOscillator(), g=c.createGain(); o.frequency.value=660; o.connect(g); g.connect(c.destination); g.gain.setValueAtTime(.18,c.currentTime); g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.8); o.start(); o.stop(c.currentTime+.8);}catch(e){} try{navigator.vibrate&&navigator.vibrate([200,100,200]);}catch(e){} }
+function startTimer(total,{onTick,onEnd}={}){
+  stopTimer(); keepAwake();
+  const end = Date.now()+total*1000;
+  const btn=$('#tbtn'); if(btn){ btn.textContent='Parar'; btn.dataset.act='timerstop'; }
+  T = {id:setInterval(()=>{
+    const left=(end-Date.now())/1000;
+    const tt=$('#tt'), tb=$('#tb');
+    if(tt) tt.textContent=fmt(left);
+    if(tb) tb.style.width=Math.min(100,(1-left/total)*100)+'%';
+    onTick && onTick(total-left,left);
+    if(left<=0){ stopTimer(); beep(); if(tt) tt.textContent='¡Ya!'; const b=$('#tbtn'); if(b){b.textContent='Otra vez';b.dataset.act='timer';} onEnd&&onEnd(); }
+  },250)};
+}
+
+/* ================= vistas ================= */
+function renderHeat(){
+  $('#heat').innerHTML = [1,2,3,4].map(l=>`<button data-act="level" data-l="${l}" class="${S.level===l?'on':''}" ${l===4&&!S.volcan?'disabled':''} aria-label="Nivel ${l}, ${LEVELS[l]}" aria-pressed="${S.level===l}">${CHILE}${LEVELS[l]}</button>`).join('');
+}
+function head(title, sub){ return `<button class="back" data-go="${S.night!=null?'noche':'home'}">${ic('left')}${S.night!=null?'Noche guiada':'Juegos'}</button><div class="stack" style="margin-bottom:16px"><div class="row" style="justify-content:space-between"><h2>${esc(title)}</h2><span class="chip hot">${chiles(S.level)} ${LEVELS[S.level]}</span></div>${sub?`<p class="muted">${sub}</p>`:''}</div>`; }
+
+const V = {};
+V.home = () => `
+  <section class="hello">
+    <span class="eyebrow">Solo para ${esc(S.names[0])} y ${esc(S.names[1])}</span>
+    <h1>¿Cuánto <em>picante</em> esta noche?</h1>
+    <p class="muted">Elige los chiles arriba. Cada juego cambia su contenido según el nivel: ${LEVELS.slice(1,S.volcan?5:4).join(', ')}.</p>
+  </section>
+  <button class="night" data-go="noche"><div><b>Noche guiada</b><span>5 pasos, unos 45 minutos, de besos a posturas</span></div>${ic('moon')}</button>
+  <div class="games">${GAMES.map(g=>`<button class="g" data-go="${g.id}"><span class="gi">${ic(g.i)}</span><b>${g.n}</b><span>${g.d}</span></button>`).join('')}</div>
+  <h3 class="sec-t">Sin picante</h3>
+  <button class="li" data-go="mente" style="padding:16px"><div><b>Preguntas que no son las de siempre</b><br><span>Dilemas, qué prefieres, hipótesis locas, para pensar y para reírse. Nada sexual.</span></div><span class="gi" style="color:var(--chile-2)">${ic('q','style="width:24px;height:24px"')}</span></button>
+  <p class="small" style="margin-top:22px">Se puede saltar cualquier carta sin explicar por qué. Para filtrar lo que no os guste, entra en Ajustes.</p>`;
+
+V.noche = () => {
+  const done = S.g.nightDone || 0;
+  return `<button class="back" data-act="endnight">${ic('left')}Juegos</button>
+  <div class="stack" style="margin-bottom:16px"><h2>Noche guiada</h2><p class="muted">Cada paso sube un poco el picante. Al terminar uno, vuelve aquí para seguir.</p></div>
+  <div class="steps">${NIGHT.map((s,i)=>`<button class="step ${i<done?'done':''} ${i===done?'next':''}" data-act="nightstep" data-i="${i}"><span class="n">${i<done?ic('check','style="width:18px;height:18px"'):i+1}</span><div><b>${s.n}</b><span>${s.s}</span></div><span class="chip hot">${chiles(s.lvl)}</span></button>`).join('')}</div>`;
+};
+
+/* dados */
+V.dados = () => {
+  const g=S.g; g.sel = g.sel || ['accion','zona','modo'];
+  const res = g.res;
+  return head('Dados calientes','Elige los dados y tira. Quien tira, lo hace a la otra persona.') + `
+  <div class="dice-pick" role="group" aria-label="Dados">${DICE_ORDER.map(k=>`<button class="dp ${g.sel.includes(k)?'on':''}" data-act="dtoggle" data-k="${k}" aria-pressed="${g.sel.includes(k)}">${ic('dice')}${DICE[k].name}</button>`).join('')}</div>
+  <div class="table" style="margin-top:14px">
+    <div class="row" style="justify-content:space-between">${turnPill()}</div>
+    ${res?`<div class="dice">${res.map(r=>`<div class="die"><span class="face roll">${esc(r.v.replace(/^(el|la|los|las|un|una|solo|con) /i,'').slice(0,2).toUpperCase())}</span><div class="die-l"><small>${DICE[r.k].name}</small><b>${esc(r.v)}</b></div></div>`).join('')}</div>
+    <p class="card-text" style="font-size:22px">${esc(sentence(res))}</p>
+    ${timerHTML(parseSecs((res.find(r=>r.k==='tiempo')||{}).v||''))}`
+    :`<p class="muted">Pulsa tirar para empezar.</p>`}
+  </div>
+  <div class="act"><button class="btn hot" data-act="roll">${res?'Siguiente tirada':'Tirar dados'}</button></div>`;
+};
+function sentence(res){
+  const m={}; res.forEach(r=>m[r.k]=r.v);
+  let s = `${A()}: `;
+  if(m.accion) s += m.accion.toLowerCase(); else s += 'acaricia';
+  if(m.zona) s += ' ' + m.zona; else s += ' donde quieras';
+  s += ` de ${B()}`;
+  if(m.textura) s += ` con ${m.textura}`;
+  if(m.modo) s += `, ${m.modo}`;
+  if(m.lugar) s += `, en ${m.lugar}`;
+  if(m.tiempo) s += ` (${m.tiempo})`;
+  return s+'.';
+}
+
+/* charlas */
+V.charlas = () => {
+  const g=S.g; g.mode = g.mode||'normal';
+  if(g.mode==='buzon') return vBuzon();
+  if(!g.deck){ g.deck = shuffle([...lv(CHARLAS), ...PAREJA]); g.i=0; }
+  const q = g.deck[g.i % g.deck.length];
+  return head('Charlas para calentar','Sin acciones, solo hablar. Responde quien tiene el turno; el otro puede pedir "cuéntame más" una vez.') + `
+  <div class="toggles" style="margin-bottom:14px"><button class="tg on">Preguntas</button><button class="tg" data-act="cmode" data-m="buzon">Buzón de fantasías${S.buzon.length?` (${S.buzon.length})`:''}</button></div>
+  ${deck('c'+g.i+q, `<div>${turnPill().replace('›','responde ›')}</div><p class="card-text">${esc(q)}</p><span class="small">Pregunta ${g.i+1}</span>`, {label:'Charla', kind:'charla'})}
+  <div class="act"><button class="btn ghost" data-act="cnext" data-swap="0">Otra pregunta</button><button class="btn hot" data-act="cnext" data-swap="1">Respondida</button></div>`;
+};
+function vBuzon(){
+  const g=S.g;
+  const mine = S.buzon.filter(x=>x.by===S.turn).length;
+  return head('Buzón de fantasías','Cada uno escribe en secreto 3 fantasías, curiosidades o preguntas que nunca se ha atrevido a decir. Luego salen al azar. Se responde con honestidad y sin juzgar.') + `
+  <div class="toggles" style="margin-bottom:14px"><button class="tg" data-act="cmode" data-m="normal">Preguntas</button><button class="tg on">Buzón de fantasías (${S.buzon.length})</button></div>
+  ${g.draw!=null && S.buzon[g.draw] ? deck('b'+g.draw+(g.drawN||0), `<span class="eyebrow">Sacado del buzón</span><p class="card-text">${esc(S.buzon[g.draw].t)}</p><span class="small">Nadie sabe quién lo escribió… salvo que quiera decirlo.</span>`, {label:'Del buzón', kind:'buzon'}) + `
+    <div class="act"><button class="btn ghost" data-act="bdel">Quitar del buzón</button><button class="btn hot" data-act="bdraw">Sacar otro</button></div>`
+  : `<div class="table"><div>Escribe ${esc(A())} <span class="small">(sin que mire ${esc(B())})</span></div>
+      <textarea class="field" id="bz" placeholder="Algo que te gustaría probar, preguntar o confesar…"></textarea>
+      <div class="row" style="justify-content:space-between"><span class="small">${esc(A())} ha escrito ${mine} de 3</span><button class="btn sm ghost" data-act="badd">Guardar en el buzón</button></div></div>
+    <div class="act"><button class="btn ghost" data-act="bswap">Pasar el móvil a ${esc(B())}</button><button class="btn hot" data-act="bdraw" ${S.buzon.length?'':'disabled'}>Sacar del buzón</button></div>`}`;
+}
+
+/* verdad o reto */
+V.verdad = () => {
+  const g=S.g;
+  return head('Verdad o reto',`Quien tiene el turno elige. Si se niega, paga: ${CASTIGO[0].toLowerCase()}`) + `
+  ${g.card? deck('v'+g.card, `<div>${turnPill()}</div><span class="eyebrow">${g.kind==='v'?'Verdad':'Reto'} para ${esc(A())}</span><p class="card-text">${esc(g.card)}</p>`, {label:g.kind==='v'?'Verdad':'Reto', kind:g.kind==='v'?'verdad':'reto'})
+    : `<div class="table"><div>${turnPill()}</div><p class="card-text">¿${esc(A())} elige verdad o reto?</p></div>`}
+  ${g.card?`<div class="act"><button class="btn ghost" data-act="vpass">Me niego (castigo)</button><button class="btn hot" data-act="vdone">Hecho, cambio de turno</button></div>${g.pen?`<p class="small" style="margin-top:10px">Castigo: ${esc(g.pen)}</p>`:''}`
+  :`<div class="act"><button class="btn ghost" data-act="vpick" data-k="v">Verdad</button><button class="btn hot" data-act="vpick" data-k="r">Reto</button></div>`}`;
+};
+
+/* tablero */
+const SPECIAL = {5:'Prenda fuera',9:'Retrocede 3',13:'Cambio de turno',17:'Tú eliges el reto',22:'Prenda fuera',26:'Retrocede 3'};
+function zoneLevel(i){ const base = i<=10?1:i<=20?2:3; return Math.min(4, Math.max(base, S.level>3?base+1:base)); }
+V.tablero = () => {
+  const g=S.g; g.pos = g.pos||[0,0];
+  let cells='';
+  for(let i=1;i<=30;i++){
+    const z = i<=10?1:i<=20?2:3;
+    const t=[]; if(g.pos[0]===i) t.push('<i class="a"></i>'); if(g.pos[1]===i) t.push('<i class="b"></i>');
+    cells += `<div class="sq z${z} ${SPECIAL[i]?'sp':''} ${i===30?'goal':''}" title="${SPECIAL[i]||''}">${i===30?'Meta':i}${SPECIAL[i]?'<span style="font-size:9px">★</span>':''}${t.length?`<span class="tok">${t.join('')}</span>`:''}</div>`;
+  }
+  return head('El tablero','Casillas 1–10: calentar. 11–20: más picante. 21–30: muy picante. La meta es una postura sorpresa.') + `
+  <div class="board" aria-label="Tablero">${cells}</div>
+  <div class="row" style="margin-top:10px;gap:14px"><span class="small"><span class="dot a" style="width:12px;height:12px;display:inline-block;vertical-align:-1px"></span> ${esc(S.names[0])}: ${g.pos[0]||'salida'}</span><span class="small"><span class="dot b" style="width:12px;height:12px;display:inline-block;vertical-align:-1px"></span> ${esc(S.names[1])}: ${g.pos[1]||'salida'}</span></div>
+  <div class="table" style="margin-top:14px;min-height:180px"><div>${turnPill()}</div>${g.msg?`<span class="eyebrow">${esc(g.msgTitle||'')}</span><p class="card-text" style="font-size:24px">${esc(g.msg)}</p>`:`<p class="muted">Tira el dado para avanzar.</p>`}</div>
+  <div class="act">${g.win?`<button class="btn hot" data-act="breset">Jugar otra vez</button>`:`<button class="btn hot" data-act="broll">${g.msg?'Hecho · siguiente turno':'Tirar dado'}</button>`}</div>`;
+};
+
+/* posturas */
+function posFig(p){
+  // siluetas abstractas propias: dos formas redondeadas que cambian de inclinación según la postura
+  const h = [...p.n].reduce((a,c)=>a+c.charCodeAt(0),0);
+  const r1 = (h%60)-30, r2 = ((h*7)%80)-40, dx = 16 + (h%20);
+  return `<svg viewBox="0 0 160 100" aria-hidden="true"><g transform="translate(${80-dx},50) rotate(${r1})"><rect x="-10" y="-34" width="20" height="62" rx="10" fill="var(--chile)"/><circle cx="0" cy="-44" r="9" fill="var(--chile)"/></g><g transform="translate(${80+dx},52) rotate(${r2})"><rect x="-10" y="-34" width="20" height="62" rx="10" fill="var(--chile-2)" opacity=".9"/><circle cx="0" cy="-44" r="9" fill="var(--chile-2)" opacity=".9"/></g></svg>`;
+}
+function posPool(){ const max = S.level>=3? (S.volcan&&S.level===4?4:3) : 2; return POS.filter(p=>p.l<=Math.max(2,max)).filter(p=>ok(p.n+' '+p.t)); }
+V.posturas = () => {
+  const g=S.g; g.mode=g.mode||'azar';
+  const tabs = `<div class="toggles" style="margin-bottom:14px">${[['azar','Carta al azar'],['ruleta','Ruleta con tiempo'],['coleccion','Colección']].map(([k,n])=>`<button class="tg ${g.mode===k?'on':''}" data-act="pmode" data-m="${k}">${n}</button>`).join('')}</div>`;
+  if(g.mode==='coleccion'){
+    const tried = Object.keys(S.tried).length;
+    return head('Posturas',`Habéis probado ${tried} de ${POS.length}. Toca una para verla.`)+tabs+`<div class="list">${POS.map((p,i)=>`<button class="li" data-act="pshow" data-i="${i}"><div><b>${esc(p.n)}</b><br><span>${DIF[p.d]} · ${chiles(p.l)}</span></div><span>${S.fav[i]?'♥':''} ${S.tried[i]?'✓':''}</span></button>`).join('')}</div>`;
+  }
+  if(g.i==null){ const pool=posPool(); g.i = POS.indexOf(pick(pool)); }
+  const p = POS[g.i];
+  return head('Posturas', g.mode==='ruleta'?'Suena una señal y cambia la postura. Elige cada cuánto.':'Descripciones propias. Si no os convence, pasad a la siguiente.')+tabs+`
+  ${g.mode==='ruleta'?`<div class="toggles" style="margin-bottom:12px">${[120,180,300].map(s=>`<button class="tg ${ (g.every||180)===s?'on':''}" data-act="pevery" data-s="${s}">Cada ${s/60} min</button>`).join('')}</div>`:''}
+  ${deck('p'+g.i, `
+    <div class="pos-fig">${posFig(p)}</div>
+    <div class="row" style="justify-content:space-between"><h3>${esc(p.n)}</h3><span class="stars">${DIF[p.d]}</span></div>
+    <p class="muted" style="font-size:17px">${esc(p.t)}</p>
+    <div class="row"><button class="tg ${S.fav[g.i]?'on':''}" data-act="pfav">♥ Favorita</button><button class="tg ${S.tried[g.i]?'on':''}" data-act="ptried">✓ Probada</button></div>
+    ${g.mode==='ruleta'?timerHTML(g.every||180).replace('data-act="timer"','data-act="pruleta"'):''}`, {label:'Postura', kind:'postura', auto:g.mode==='ruleta'})}
+  <div class="act"><button class="btn hot" data-act="pnext">Siguiente postura</button></div>`;
+};
+
+/* contrarreloj */
+V.reloj = () => {
+  const g=S.g; g.sc = g.sc||[0,0];
+  if(!g.c) g.c = pick(lv(Object.fromEntries(Object.entries(RELOJ).map(([k,v])=>[k,v.map(x=>x[0]+'|'+x[1])])))).split('|');
+  return head('Contrarreloj','Quien tiene el turno provoca. La otra persona tiene que aguantar la regla hasta que acabe el tiempo.') + `
+  <div class="score"><div><span class="small">${esc(S.names[0])}</span><b>${g.sc[0]}</b></div><div><span class="small">${esc(S.names[1])}</span><b>${g.sc[1]}</b></div></div>
+  <div style="margin-top:12px">${deck('r'+g.c[0]+S.turn, `<div>${turnPill()}</div><span class="eyebrow">${esc(A())} provoca, ${esc(B())} aguanta</span><p class="card-text">${esc(g.c[0])}.</p>${timerHTML(+g.c[1])}`, {label:'Contrarreloj', kind:'reloj'})}</div>
+  <div class="act"><button class="btn ghost" data-act="rres" data-w="0">${esc(B())} cedió</button><button class="btn hot" data-act="rres" data-w="1">${esc(B())} aguantó</button></div>
+  <p class="small" style="margin-top:10px">Quien aguanta gana un punto. Quien cede, paga: ${esc(pick(CASTIGO).toLowerCase())}</p>`;
+};
+
+/* rituales */
+V.rituales = () => head('Rituales de conexión','Lentos y sin puntos. Para bajar el ritmo y conectar antes de subir el picante.') + `
+  <div class="list">${Object.entries(RITUALS).map(([k,r])=>`<button class="li" data-go="ritual" data-arg="${k}"><div><b>${r.n}</b><br><span>${Math.round(r.secs/60)} min</span></div>${ic('hand','style="width:22px;height:22px;color:var(--chile-2)"')}</button>`).join('')}</div>`;
+V.ritual = () => {
+  const r = RITUALS[S.g.arg||'besos'];
+  return `<button class="back" data-go="${S.night!=null?'noche':'rituales'}">${ic('left')}${S.night!=null?'Noche guiada':'Rituales'}</button>
+  <div class="stack" style="margin-bottom:16px"><h2>${r.n}</h2><p class="muted">${r.desc}</p></div>
+  <div class="table">
+    ${S.g.arg==='respirar'?`<div class="breath" id="breath">Inhala</div>`:''}
+    ${r.cues.length?`<p class="card-text" id="cue" style="font-size:23px">${esc(r.cues[0])}</p>`:''}
+    ${timerHTML(r.secs).replace('data-act="timer"','data-act="ritualgo"')}
+  </div>
+  ${S.night!=null?`<div class="act"><button class="btn hot" data-act="nightnext">Siguiente paso</button></div>`:''}`;
+};
+
+/* sí no quizás */
+V.ynm = () => {
+  const g=S.g; g.ans = g.ans||[{},{}]; g.who = g.who??0; g.i = g.i||0;
+  const items = YNM.filter(x=>x[0]<=Math.max(S.level, 2) && (x[0]<4||S.volcan)).filter(x=>ok(x[1]));
+  if(g.phase==='pass') return head('Sí, no, quizás','') + `<div class="table" style="text-align:center;align-items:center"><p class="card-text">Pasa el móvil a ${esc(S.names[1])}</p><p class="muted">Sin mirar sus respuestas. Las tuyas están ocultas.</p></div><div class="act"><button class="btn hot" data-act="ynmgo">Soy ${esc(S.names[1])}, empezar</button></div>`;
+  if(g.phase==='result'){
+    const m = items.filter(x=>{const a=g.ans[0][x[1]],b=g.ans[1][x[1]]; return a&&b&&a!=='n'&&b!=='n';});
+    return head('Vuestras coincidencias', m.length?'Solo aparece lo que os apetece a los dos. Los "no" nunca se muestran.':'Esta vez no hubo coincidencias. Probad con otro nivel.') + `<div class="list">${m.map(x=>{const both=g.ans[0][x[1]]==='y'&&g.ans[1][x[1]]==='y';return `<div class="match"><span class="m ${both?'':'q'}">${both?'Los dos':'Quizás'}</span><span>${esc(x[1])}</span></div>`}).join('')}</div><div class="act"><button class="btn ghost" data-act="ynmreset">Volver a jugar</button></div>`;
+  }
+  if(g.i>=items.length){ if(g.who===0){ g.phase='pass'; g.who=1; g.i=0; return V.ynm(); } g.phase='result'; return V.ynm(); }
+  const it = items[g.i];
+  return head('Sí, no, quizás',`Responde ${esc(S.names[g.who])} en secreto. Al final solo se ven las coincidencias.`) + `
+  <div class="table"><span class="small">${g.i+1} de ${items.length} · ${esc(S.names[g.who])}</span><p class="card-text">${esc(it[1])}</p><span class="chip hot" style="align-self:flex-start">${chiles(it[0])}</span></div>
+  <div class="ynm" style="margin-top:16px"><button class="btn ghost" data-act="ynm" data-v="n">No</button><button class="btn ghost" data-act="ynm" data-v="q">Quizás</button><button class="btn hot" data-act="ynm" data-v="y">Sí</button></div>`;
+};
+
+/* quiz */
+V.quiz = () => {
+  const g=S.g; g.sc=g.sc||[0,0];
+  if(!g.deck){ g.deck=shuffle(QUIZ); g.i=0; }
+  const q=g.deck[g.i%g.deck.length];
+  return head('¿Me conoces?',`${esc(A())} responde sobre ${esc(B())}. ${esc(B())} dice si acertó. Si falla, se quita una prenda; sin ropa, ${esc(B())} elige un reto de premio.`) + `
+  <div class="score"><div><span class="small">${esc(S.names[0])}</span><b>${g.sc[0]}</b></div><div><span class="small">${esc(S.names[1])}</span><b>${g.sc[1]}</b></div></div>
+  <div style="margin-top:12px">${deck('q'+g.i, `<div>${turnPill()}</div><p class="card-text">${esc(q)}</p><span class="small">Pregunta de ${esc(B())} para ${esc(A())}</span>`, {label:'¿Me conoces?', kind:'quiz'})}</div>
+  <div class="act"><button class="btn ghost" data-act="qres" data-w="0">Falló · prenda fuera</button><button class="btn hot" data-act="qres" data-w="1">Acertó</button></div>`;
+};
+
+/* rol */
+V.rol = () => {
+  const g=S.g; if(g.i==null) g.i=Math.floor(Math.random()*ROL.length);
+  const r=ROL[g.i]; g.show = g.show??-1;
+  return head('Escenas de rol','Cada uno lee su regla secreta sin que el otro la vea. Luego, a jugar el papel.') + `
+  ${deck('rol'+g.i, `<span class="eyebrow">Escena</span><p class="card-text">${esc(r.t)}</p>
+    ${[0,1].map(w=>`<div class="secret">${g.show===w?`<b>${esc(S.names[w])}:</b> ${esc(w?r.b:r.a)}<br><button class="btn sm ghost" style="margin-top:10px" data-act="rhide">Ocultar</button>`:`<button class="btn sm ghost" data-act="rshow" data-w="${w}">Ver la regla secreta de ${esc(S.names[w])}</button>`}</div>`).join('')}`, {label:'Escena', kind:'rol'})}
+  <div class="act"><button class="btn hot" data-act="rnext">Otra escena</button></div>`;
+};
+
+/* sin picante */
+V.mente = () => {
+  const g=S.g; g.cat=g.cat||'mezcla';
+  if(!g.deck){ const src = g.cat==='mezcla' ? Object.entries(MENTE).flatMap(([k,c])=>c.q.map(q=>[k,q])) : MENTE[g.cat].q.map(q=>[g.cat,q]); g.deck=shuffle(src); g.i=0; }
+  const [k,q]=g.deck[g.i%g.deck.length];
+  return `<button class="back" data-go="home">${ic('left')}Juegos</button>
+  <div class="stack" style="margin-bottom:16px"><h2>Preguntas sin picante</h2><p class="muted">Para una cena, un viaje en coche o cuando no apetece nada más. Responded los dos y defended vuestra respuesta.</p></div>
+  <div class="toggles" style="margin-bottom:14px">${[['mezcla','Mezcla'],...Object.entries(MENTE).map(([k,c])=>[k,c.n])].map(([kk,n])=>`<button class="tg ${g.cat===kk?'on':''}" data-act="mcat" data-k="${kk}">${n}</button>`).join('')}</div>
+  ${deck('m'+g.i+q, `<div>${turnPill().replace('›','empieza ›')}</div><span class="eyebrow">${esc(MENTE[k].n)}</span><p class="card-text">${esc(q)}</p><span class="small">${g.i%g.deck.length+1} de ${g.deck.length}</span>`, {label:MENTE[k].n, kind:'mente', cool:true})}
+  <div class="act"><button class="btn ghost" data-act="mnext" data-swap="0">Saltar</button><button class="btn hot" data-act="mnext" data-swap="1">Siguiente</button></div>`;
+};
+
+/* ajustes */
+V.ajustes = () => `<button class="back" data-go="home">${ic('left')}Juegos</button>
+  <div class="stack" style="margin-bottom:16px"><h2>Ajustes</h2><p class="muted">Todo se guarda solo en este móvil.</p></div>
+  <div class="set">
+    <div class="row" style="align-items:flex-start"><div style="flex:1;min-width:140px"><label class="lab" for="n0">Jugador 1</label><input class="field" id="n0" value="${esc(S.names[0])}"></div><div style="flex:1;min-width:140px"><label class="lab" for="n1">Jugador 2</label><input class="field" id="n1" value="${esc(S.names[1])}"></div></div>
+    <button class="switch ${S.volcan?'on':''}" data-act="volcan" aria-pressed="${S.volcan}"><div><b>Activar nivel Volcán</b><br><span class="small">Ataduras suaves, juguetes, rol y dominación ligera. Activadlo solo si los dos estáis de acuerdo.</span></div><i></i></button>
+    <div><label class="lab" for="avoid">Cosas que no queremos ver nunca</label><textarea class="field" id="avoid" placeholder="Por ejemplo: hielo, nalgadas, balcón">${esc(S.avoid)}</textarea><p class="small" style="margin-top:6px">Separadas por comas. Cualquier carta que contenga esas palabras desaparece de todos los juegos.</p></div>
+    <button class="btn hot" data-act="save">Guardar</button>
+    <button class="btn ghost" data-act="wipe">Borrar favoritas, buzón y progreso</button>
+  </div>`;
+
+/* ================= render y acciones ================= */
+function render(){
+  renderHeat();
+  const fn = V[S.view] || V.home;
+  $('#main').innerHTML = fn();
+}
+function go(view, arg){
+  stopTimer();
+  S.view=view; S.g={}; if(arg) S.g.arg=arg;
+  if(view==='home'){ S.night=null; }
+  render(); window.scrollTo(0,0);
+}
+
+document.addEventListener('click', e=>{
+  const el = e.target.closest('[data-go],[data-act]'); if(!el) return;
+  if(el.dataset.act==='flip'){
+    el.classList.add('on'); el.removeAttribute('data-act'); el.removeAttribute('role'); el.removeAttribute('tabindex'); S.g.revealed=true;
+    el.querySelector('.back')?.setAttribute('aria-hidden','true'); el.querySelector('.front')?.setAttribute('aria-hidden','false');
+    document.querySelectorAll('.hint span').forEach((sp,i)=>sp.classList.toggle('now',i===1));
+    return;
+  }
+  const OUT=['cnext','bdraw','vdone','rres','qres','rnext','mnext','pnext'];
+  if(OUT.includes(el.dataset.act) && $('#deal') && !el.dataset.went && !matchMedia('(prefers-reduced-motion: reduce)').matches){
+    const d=$('#deal'); d.classList.remove('enter'); void d.offsetWidth; d.classList.add('out');
+    el.dataset.went='1'; setTimeout(()=>el.click(),300); return;
+  }
+  if(el.dataset.go){ go(el.dataset.go, el.dataset.arg); return; }
+  const a = el.dataset.act, g=S.g;
+  switch(a){
+    case 'level': {
+      const l=+el.dataset.l; if(l===4&&!S.volcan) return;
+      S.level=l; store.set('level',l);
+      // reiniciar barajas para que cambie el contenido
+      delete g.deck; delete g.card; delete g.c; if(S.view==='posturas'&&g.mode!=='coleccion') g.i=null;
+      if(S.view==='ynm'){ S.g={}; }
+      render(); toast(`${LEVELS[l]}: ${['','calentar','más picante','muy picante','sin frenos'][l]}`); break;
+    }
+    case 'timer': startTimer(+el.dataset.s); break;
+    case 'timerstop': stopTimer(); { const b=$('#tbtn'); if(b){ b.textContent='Seguir'; b.dataset.act='timer'; b.dataset.s=parseSecs('0s')||b.dataset.s; } } break;
+    /* dados */
+    case 'dtoggle': { const k=el.dataset.k; g.sel = g.sel.includes(k)? g.sel.filter(x=>x!==k) : [...g.sel,k]; if(!g.sel.length) g.sel=['accion']; g.sel = DICE_ORDER.filter(x=>g.sel.includes(x)); render(); break; }
+    case 'roll': { if(g.res) nextTurn(); g.res = g.sel.map(k=>({k, v: pick(lv(DICE[k].faces))})); render(); break; }
+    /* charlas */
+    case 'cmode': g.mode=el.dataset.m; g.draw=null; render(); break;
+    case 'cnext': g.i++; if(el.dataset.swap==='1') nextTurn(); render(); break;
+    case 'badd': { const t=$('#bz').value.trim(); if(!t){ toast('Escribe algo primero'); return; } S.buzon.push({t,by:S.turn}); store.set('buzon',S.buzon); toast('Guardado en el buzón'); render(); break; }
+    case 'bswap': nextTurn(); render(); break;
+    case 'bdraw': { if(!S.buzon.length) return; let n; do{ n=Math.floor(Math.random()*S.buzon.length);}while(S.buzon.length>1&&n===g.draw); g.draw=n; g.drawN=(g.drawN||0)+1; render(); break; }
+    case 'bdel': S.buzon.splice(g.draw,1); store.set('buzon',S.buzon); g.draw=null; render(); break;
+    /* verdad o reto */
+    case 'vpick': g.kind=el.dataset.k; g.card=pick(lv(g.kind==='v'?VERDAD:RETO)); g.pen=null; render(); break;
+    case 'vpass': g.pen=pick(CASTIGO); render(); break;
+    case 'vdone': g.card=null; g.pen=null; nextTurn(); render(); break;
+    /* tablero */
+    case 'broll': {
+      if(g.msg){ g.msg=null; nextTurn(); render(); return; }
+      const d=1+Math.floor(Math.random()*6); const p=S.turn;
+      let pos=Math.min(30,(g.pos[p]||0)+d); let title=`Sacaste un ${d} · casilla ${pos}`; let msg;
+      if(pos===30){ const ps=posPool(); const pp=pick(ps.length?ps:POS); msg=`¡Meta! Postura sorpresa: ${pp.n}. ${pp.t}`; g.win=true; }
+      else if(SPECIAL[pos]==='Retrocede 3'){ pos=Math.max(1,pos-3); msg=`Retrocede 3 casillas. Mientras tanto, dale un beso largo a ${B()}.`; }
+      else if(SPECIAL[pos]==='Cambio de turno'){ msg=`Cambio de turno: ahora ${B()} te hace a ti este reto: ${pick(lv(RETO,zoneLevel(pos)))}`; }
+      else if(SPECIAL[pos]==='Tú eliges el reto'){ msg=`Tú eliges: inventa un reto para ${B()} y cúmplelo con ganas.`; }
+      else if(SPECIAL[pos]==='Prenda fuera'){ msg=`Prenda fuera. ${B()} elige cuál te quitas.`; }
+      else { msg = pick(lv(RETO,zoneLevel(pos))); }
+      g.pos[p]=pos; g.msg=msg; g.msgTitle=title; render(); break;
+    }
+    case 'breset': S.g={}; render(); break;
+    /* posturas */
+    case 'pmode': g.mode=el.dataset.m; if(g.mode!=='coleccion'&&g.i==null) g.i=null; stopTimer(); render(); break;
+    case 'pshow': g.mode='azar'; g.i=+el.dataset.i; render(); window.scrollTo(0,0); break;
+    case 'pnext': { const pool=posPool().map(p=>POS.indexOf(p)).filter(i=>i!==g.i); g.i=pick(pool.length?pool:[0]); stopTimer(); render(); break; }
+    case 'pfav': S.fav[g.i]=!S.fav[g.i]; if(!S.fav[g.i]) delete S.fav[g.i]; store.set('fav',S.fav); render(); break;
+    case 'ptried': S.tried[g.i]=!S.tried[g.i]; if(!S.tried[g.i]) delete S.tried[g.i]; store.set('tried',S.tried); render(); break;
+    case 'pevery': g.every=+el.dataset.s; stopTimer(); render(); break;
+    case 'pruleta': {
+      const every=g.every||180;
+      const loop=()=>startTimer(every,{onEnd:()=>{ const pool=posPool().map(p=>POS.indexOf(p)).filter(i=>i!==g.i); g.i=pick(pool.length?pool:[0]); render(); setTimeout(loop,50); }});
+      loop(); break;
+    }
+    /* contrarreloj */
+    case 'rres': { const w=+el.dataset.w; const receiver=1-S.turn; if(w) g.sc[receiver]++; else g.sc[S.turn]++; g.c=null; nextTurn(); stopTimer(); render(); break; }
+    /* rituales */
+    case 'ritualgo': {
+      const r=RITUALS[g.arg]; const br=$('#breath');
+      startTimer(r.secs,{onTick:(el)=>{
+        if(br){ const phase=Math.floor(el/4)%2; br.classList.toggle('in',phase===0); br.textContent=phase===0?'Inhala':'Exhala'; }
+        if(r.cues.length){ const idx=Math.min(r.cues.length-1,Math.floor(el/(r.secs/r.cues.length))); const c=$('#cue'); if(c&&c.dataset.i!=idx){ c.dataset.i=idx; c.textContent=r.cues[idx]; if(idx>0) beep(); } }
+      }});
+      break;
+    }
+    /* sí no quizás */
+    case 'ynm': { const items = YNM.filter(x=>x[0]<=Math.max(S.level,2)&&(x[0]<4||S.volcan)).filter(x=>ok(x[1])); g.ans[g.who][items[g.i][1]]=el.dataset.v; g.i++; render(); break; }
+    case 'ynmgo': g.phase=null; render(); break;
+    case 'ynmreset': S.g={}; render(); break;
+    /* quiz */
+    case 'qres': { if(+el.dataset.w) g.sc[S.turn]++; g.i++; nextTurn(); render(); break; }
+    /* rol */
+    case 'rshow': g.show=+el.dataset.w; render(); break;
+    case 'rhide': g.show=-1; render(); break;
+    case 'rnext': { let n; do{ n=Math.floor(Math.random()*ROL.length);}while(n===g.i); S.g={i:n}; render(); break; }
+    /* noche */
+    case 'nightstep': { const i=+el.dataset.i; const s=NIGHT[i]; S.night=i; S.level=Math.min(s.lvl, S.volcan?4:3); store.set('level',S.level); const done=S.g.nightDone||0; stopTimer(); S.view=s.go; S.g={arg:s.arg}; S._nightDone=Math.max(done,i); if(s.go==='posturas'){ S.g.mode='ruleta'; } render(); window.scrollTo(0,0); break; }
+    case 'nightnext': { S.view='noche'; S.g={nightDone:(S.night??0)+1}; S._nightDone=S.g.nightDone; stopTimer(); render(); window.scrollTo(0,0); break; }
+    case 'endnight': S.night=null; go('home'); break;
+    case 'mcat': S.g={cat:el.dataset.k}; render(); break;
+    case 'mnext': g.i++; if(el.dataset.swap==='1') nextTurn(); render(); break;
+    /* ajustes */
+    case 'volcan': S.volcan=!S.volcan; store.set('volcan',S.volcan); if(!S.volcan&&S.level>3){S.level=3;store.set('level',3);} render(); break;
+    case 'save': {
+      S.names=[($('#n0').value.trim()||'Jugador 1'),($('#n1').value.trim()||'Jugador 2')]; S.avoid=$('#avoid').value;
+      store.set('names',S.names); store.set('avoid',S.avoid); toast('Guardado'); go('home'); break;
+    }
+    case 'wipe': S.fav={}; S.tried={}; S.buzon=[]; store.set('fav',{}); store.set('tried',{}); store.set('buzon',[]); toast('Borrado'); break;
+  }
+});
+/* volver a la noche guiada desde un juego marca el paso como hecho */
+const _go = go;
+go = function(view,arg){ if(view==='noche' && S.night!=null){ const d=(S.night??0)+1; stopTimer(); S.view='noche'; S.g={nightDone:Math.max(d,S._nightDone||0)}; render(); window.scrollTo(0,0); return; } _go(view,arg); };
+document.addEventListener('keydown', e=>{ if((e.key==='Enter'||e.key===' ') && e.target.id==='flip' && e.target.dataset.act==='flip'){ e.preventDefault(); e.target.click(); } });
+render();
+</script>
+
+</body></html>
