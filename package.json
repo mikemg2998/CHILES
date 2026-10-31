@@ -1,0 +1,1 @@
+{"name":"pollo-a-la-brasa","private":true,"type":"module","scripts":{"test":"node tests/simulate.js"}}
