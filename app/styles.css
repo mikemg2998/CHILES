@@ -111,6 +111,21 @@ body.level-4 .round .phrase{font-size:32px;line-height:1.28}
 .round.show .note{animation:rise .42s ease-out .3s forwards}
 @keyframes rise{to{opacity:1;transform:none}}
 .note{margin:12px 0 0;font:400 13px/1.4 var(--sans);color:var(--red-text)}
+/* temporizador: una línea discreta bajo la frase; toca para empezar, toca para parar; final sutil */
+.timer{position:relative;display:inline-flex;align-items:baseline;gap:10px;margin:14px 0 0;padding:6px 0 8px;border:0;background:transparent;color:var(--cream-dim);font:500 13px/1 var(--sans);letter-spacing:.14em;cursor:pointer;opacity:0;transform:translateY(8px)}
+.round.show .timer{animation:rise .42s ease-out .4s forwards}
+.timer .t{font:400 18px/1 var(--serif);letter-spacing:.06em;color:var(--cream-dim);font-variant-numeric:tabular-nums;transition:color var(--t)}
+.timer .hint{font-size:10px;text-transform:uppercase;letter-spacing:.16em;opacity:.7;transition:opacity var(--t)}
+.timer .bar{position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--red-text);transform-origin:0 50%;transform:scaleX(0);opacity:.75}
+.timer::before{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--line-2)}
+.timer.running .t{color:var(--cream)}
+.timer.running .hint{opacity:0}
+.timer.done .t{color:var(--red-text)}
+.timer.done .hint{opacity:0}
+.timer.done .bar{animation:barfade 1.6s ease-out forwards}
+@keyframes barfade{0%{opacity:.75}100%{opacity:0}}
+body.level-4 .timer{opacity:0}
+body.level-4 .round.show .timer{animation:rise .42s ease-out .4s forwards}
 .fav{width:36px;height:36px;margin:-8px -8px -8px 0;border:0;background:none;color:var(--cream-dim);display:inline-flex;align-items:center;justify-content:center;border-radius:12px;transition:color var(--t),transform var(--t)}
 .fav:active{transform:scale(.9)}
 .fav.on{color:var(--red-text)}

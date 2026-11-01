@@ -5,13 +5,14 @@
    desaparece al cerrar. No hay telemetría. */
 import { GameEngine } from '../engine/engine.js';
 import { PreferenceManager } from '../engine/prefs.js';
-import { GROUPS, LEVELS, LEVEL_KEYS, LEVEL_BY_KEY } from '../engine/catalog.js';
+import { GROUPS, LEVELS, LEVEL_KEYS, LEVEL_BY_KEY } from '../engine/grammar.js';
+import { formatDuration } from '../engine/duration.js';
 import { MOODS, AVOIDS, PREF_STATES, PREF_LABEL, LEVEL_COPY } from '../engine/session.js';
 
 const KEY = 'pab.v2';
 const $ = s => document.querySelector(s);
-const DICE = ['action', 'zone', 'method', 'cond'];
-const IDLE_FACE = { action: 'Acción', zone: 'Zona', method: 'Forma', cond: 'Condición' };
+const DICE = ['action', 'zone', 'style', 'duration'];
+const IDLE_FACE = { action: 'Acción', zone: 'Zona', style: 'Estilo', duration: 'Tiempo' };
 const DEBUG = new URLSearchParams(location.search).has('debug');
 
 /* ---------- estado persistente (solo preferencias) ---------- */
@@ -218,6 +219,7 @@ function showRound(r) {
   current = r;
   welcome.hidden = true; endingBox.hidden = true; roundBox.hidden = false; roundBox.classList.remove('show');
   phraseNode(r.phrase, $('#phrase'));
+  setTimer(r.seconds);
   const note = $('#note');
   const msg = engine.session.lastMessage; engine.session.lastMessage = null;
   if (msg) { note.hidden = false; note.textContent = msg; } else note.hidden = true;
@@ -228,12 +230,36 @@ function showRound(r) {
 function renderDebug() {
   const el = $('#debug'); if (!DEBUG) { el.hidden = true; return; }
   const d = engine.lastDebug; if (!d) return; el.hidden = false;
-  const S = engine.session;
+  const S = engine.session, r = current;
   const topW = Object.entries(d.candidateWeights || {}).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k, v]) => `${k} ${v}`).join(', ');
-  el.textContent = `purpose ${d.selectedPurpose} (${d.purposeReason}) · blueprint ${d.selectedBlueprint} · pattern ${d.selectedPattern} · target ${d.target} · family ${d.selectedFamily} · complexity ${d.positionComplexity} · quality ${d.finalQualityScore}${d.fallback ? ' · FALLBACK' : ''}\n` +
-    `blueprints: ${Object.entries(d.blueprintWeights || {}).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k, v]) => `${k} ${v}`).join(', ')}\nweights: ${topW}\nrejected: ${JSON.stringify(d.rejectionReasons)}\ncandidates: ${(d.candidates || []).map(c => `${c.quality} ${c.phrase}`).join(' | ')}\n` +
+  el.textContent = `purpose ${d.selectedPurpose} (${d.purposeReason}) · target ${d.target} · band ${d.band} · ${d.selected} · pattern ${d.pattern} · tier ${r && r.tier} · style ${r && r.style} · ${r && r.seconds}s · shape ${d.shape} · human ${r && r.humanLikeness} · quality ${d.finalQualityScore}${d.fallback ? ' · FALLBACK' : ''} · guided p ${d.guidedChance && d.guidedChance.toFixed(2)}\n` +
+    `weights: ${topW}\nrejected: ${JSON.stringify(d.rejectionReasons)}\ncandidates: ${(d.candidates || []).map(c => `${c.quality}/${c.human} ${c.text}`).join(' | ')}\n` +
     `session: level ${S.level} · rounds ${S.rounds} · intraLevel ${S.intraLevelIntensity.toFixed(2)} · calm ${S.calm()} · pressure ${S.pressure.toFixed(2)} · pace ${S.pace.toFixed(2)} · familyScore ${JSON.stringify(S.familyScore)}`;
 }
+/* ---------- temporizador: discreto, un toque para empezar, fácil de ignorar, final sutil ---------- */
+const timerEl = $('#timer'); let timer = null;
+function setTimer(seconds) {
+  stopTimer();
+  if (!seconds) { timerEl.hidden = true; return; }
+  timerEl.hidden = false; timerEl.dataset.total = seconds; timerEl.classList.remove('running', 'done');
+  timerEl.querySelector('.t').textContent = formatDuration(seconds); timerEl.querySelector('.bar').style.transform = 'scaleX(0)';
+  timerEl.setAttribute('aria-label', `Temporizador de ${seconds} segundos. Toca para empezar`);
+}
+function stopTimer() { if (timer) { cancelAnimationFrame(timer.raf); timer = null; } }
+function startTimer() {
+  const total = Number(timerEl.dataset.total); if (!total) return;
+  stopTimer(); timerEl.classList.remove('done'); timerEl.classList.add('running');
+  const t0 = performance.now(); timer = { raf: 0 };
+  const tick = now => {
+    const left = Math.max(0, total - (now - t0) / 1000);
+    timerEl.querySelector('.t').textContent = formatDuration(Math.ceil(left));
+    timerEl.querySelector('.bar').style.transform = `scaleX(${(1 - left / total).toFixed(4)})`;
+    if (left > 0) timer.raf = requestAnimationFrame(tick);
+    else { timer = null; timerEl.classList.remove('running'); timerEl.classList.add('done'); buzz([12, 60, 12]); }
+  };
+  timer.raf = requestAnimationFrame(tick);
+}
+timerEl.addEventListener('click', () => { if (timerEl.classList.contains('running')) { stopTimer(); setTimer(Number(timerEl.dataset.total)); } else if (!timerEl.classList.contains('done')) startTimer(); });
 function renderFavBtn() { $('#btnFav').classList.toggle('on', !!current && engine.state.favorites.some(f => f.id === current.id)); }
 /* el botón fuerte no grita «otra vez» nada más leer: la siguiente tirada aparece suavemente, sin bloquear nada */
 function updateControls() {
@@ -353,7 +379,7 @@ function newSession() {
 }
 
 /* ---------- Lo nuestro: lo que os funciona, guardado solo en este teléfono ---------- */
-const slim = r => ({ id: r.id, performer: r.performer, action: r.action, zone: r.zone, method: r.method, cond: r.cond, alt: r.alt, intensity: r.intensity, level: r.level, levelName: r.levelName, phrase: r.phrase, performerName: r.performerName, partnerName: r.partnerName });
+const slim = r => ({ id: r.id, performer: r.performer, action: r.action, tool: r.tool, target: r.target, style: r.style, duration: r.duration, pattern: r.pattern, intensity: r.intensity, level: r.level, levelName: r.levelName, phrase: r.phrase, performerName: r.performerName, partnerName: r.partnerName });
 $('#btnFav').addEventListener('click', () => {
   if (!current) return;
   if (engine.state.favorites.some(f => f.id === current.id)) { engine.removeFavorite(current.id); toast('Quitada de Lo nuestro'); }

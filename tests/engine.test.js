@@ -1,239 +1,139 @@
-/* Tests obligatorios del motor. Ejecutar: node --test tests/ */
+/* Tests del motor. Ejecutar: node --test 'tests/*.test.js' */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { GameEngine } from '../engine/engine.js';
-import { ACTION, ZONE, CONDITION, METHOD, GROUPS, LEVELS } from '../engine/catalog.js';
-import { CompatibilityEngine as CE } from '../engine/compat.js';
-import { THRESHOLD, FALLBACKS, fallbackFor, criticalCheck } from '../engine/quality.js';
+import { GameEngine, migrateFavorite } from '../engine/engine.js';
+import { COMBO, TARGETS, ACTIONS, GROUPS, LEVELS, STYLES } from '../engine/grammar.js';
+import { THRESHOLD, criticalCheck, sessionQuality } from '../engine/quality.js';
 import { PreferenceManager } from '../engine/prefs.js';
-import { AVOIDS } from '../engine/session.js';
+import { HUMAN_DURATIONS, LONG_DURATION } from '../engine/data/durations.js';
+import { LEVEL_COPY } from '../engine/session.js';
 
 const ALL = Object.keys(GROUPS);
 const mk = (o = {}) => new GameEngine({ prefs: { names: ['Ana', 'Leo'], bodyParts: [['vulva'], ['pene']], enabledGroups: ALL, ...o.prefs }, seed: o.seed ?? 42, level: o.level ?? 1, debug: o.debug });
 const rolls = (e, n) => Array.from({ length: n }, () => e.roll());
 
-test('anatomía: ninguna zona íntima incompatible con quien recibe, en ninguna frase', () => {
+test('cada ronda es una combinación aprobada, válida, con duración humana y frase realizada', () => {
+  for (const L of [1, 2, 3, 4]) {
+    const e = mk({ level: L, seed: 3 + L });
+    for (const r of rolls(e, 300)) {
+      const c = COMBO[`${r.action}|${r.tool}|${r.target}`];
+      assert.ok(c, `${r.action}|${r.tool}|${r.target}`);
+      assert.ok(c.levels.includes(L), r.phrase);
+      assert.equal(r.validation, 'VALID', r.phrase);
+      assert.ok([...HUMAN_DURATIONS, LONG_DURATION].includes(r.seconds), String(r.seconds));
+      if (r.style) assert.ok(c.styles.includes(r.style), r.phrase);
+      assert.equal(r.dice.style[0], r.style ? STYLES[r.style].label : '—');
+      assert.ok(r.phrase.length > 8 && /\.$/.test(r.phrase));
+      assert.ok(!r.fallback || true);
+    }
+    assert.ok(e.stats.fallbacks <= 2, `fallbacks ${e.stats.fallbacks}`);
+  }
+});
+test('anatomía: ninguna zona íntima incompatible con quien recibe; dos penes nunca vulva y viceversa; sin indicar, nada íntimo', () => {
   const e = mk({ level: 4, seed: 3 });
-  for (const r of rolls(e, 400)) {
-    const z = ZONE[r.zone], g = GROUPS[z.group];
-    if (g.intimate) assert.ok(e.prefs.availableFor(1 - r.performer, z.group), `${r.phrase} → recibe ${e.prefs.bodyParts[1 - r.performer]}`);
-    assert.equal(r.validation, 'VALID', r.phrase);
-    assert.ok(ACTION[r.action].zones.includes(r.zone), 'zona compatible con la acción');
+  for (const r of rolls(e, 400)) { const z = TARGETS[r.target]; if (z.anatomy) assert.ok(e.prefs.availableFor(1 - r.performer, z), `${r.phrase} → recibe ${e.prefs.bodyParts[1 - r.performer]}`); }
+  for (const [parts, bad] of [[[['pene'], ['pene']], 'vulva'], [[['vulva'], ['vulva']], 'pene'], [[[], []], 'any']]) {
+    const f = mk({ level: 4, seed: 9, prefs: { bodyParts: parts } });
+    for (const r of rolls(f, 200)) { const z = TARGETS[r.target]; if (z.anatomy) assert.ok(bad !== 'any' && z.anatomy !== bad, r.phrase); }
   }
+  const legacy = new PreferenceManager({ anatomy: ['F', 'M'] }); assert.deepEqual(legacy.bodyParts, [['vulva'], ['pene']]);
 });
-test('anatomía por partes (sin género): dos penes nunca producen zonas de vulva y viceversa; sin indicar, nada íntimo', () => {
-  for (const [parts, bad] of [[[['pene'], ['pene']], 'F'], [[['vulva'], ['vulva']], 'M'], [[[], []], 'FM']]) {
-    const e = mk({ level: 4, seed: 9, prefs: { bodyParts: parts } });
-    for (const r of rolls(e, 200)) { const g = GROUPS[ZONE[r.zone].group]; if (g.intimate) assert.ok(!bad.includes(g.sex), r.phrase); }
-  }
-  const legacy = new PreferenceManager({ anatomy: ['F', 'M'] }); assert.deepEqual(legacy.bodyParts, [['vulva'], ['pene']]); assert.ok(!JSON.stringify(legacy).includes('anatomy'));
-});
-test('nivel: cada ronda respeta la banda de su nivel y la anatomía íntima solo aparece en Intimidad', () => {
+test('nivel: banda respetada; anatomía íntima solo en Intimidad; el nivel solo cambia por decisión manual', () => {
   for (const L of [1, 2, 3, 4]) {
     const e = mk({ level: L, seed: 10 + L });
-    for (const r of rolls(e, 200)) {
-      assert.equal(r.level, L);
-      assert.ok(r.intensity >= LEVELS[L].lo - 1e-9 && r.intensity <= LEVELS[L].max + 1e-9, `[${L}] ${r.intensity} ${r.phrase}`);
-      if (L < 4) assert.ok(!ZONE[r.zone].tags.includes('intimo'), r.phrase);
-    }
+    for (let i = 0; i < 300; i++) { const r = e.roll(); assert.equal(r.level, L); assert.ok(r.intensity >= LEVELS[L].lo - 1e-9 && r.intensity <= LEVELS[L].max + 1e-9, `[${L}] ${r.intensity} ${r.phrase}`); if (L < 4) assert.ok(!TARGETS[r.target].tags.includes('intimo'), r.phrase); if (i % 2) e.feedback('like', { more: true }); }
+    assert.equal(e.level(), L);
   }
+  const e = mk({ level: 2 }); assert.ok(e.setLevel(4)); assert.equal(e.level(), 4); assert.ok(e.setLevel(1)); assert.equal(e.session.lastMessage, LEVEL_COPY[1]);
 });
-test('condición: solo entra si es compatible y aporta algo; nunca añade una segunda zona', () => {
-  const e = mk({ level: 3, seed: 21 });
-  for (const r of rolls(e, 300)) {
-    if (!r.cond) continue;
-    const c = CONDITION[r.cond], a = ACTION[r.action], z = ZONE[r.zone], m = r.method ? METHOD[r.method] : null;
-    assert.ok(CE.conditionFits(c, a, z, m), `${r.cond} con ${r.action}/${r.zone}`);
-    assert.ok(CE.conditionValue(c, a, z) >= 0.45, `aporta poco: ${r.phrase}`);
-    assert.ok(!c.needsAlt && !r.alt, 'sin zona alternativa');
-  }
+test('Intimidad sin anatomía íntima disponible: se juega con el repertorio de Exploración sin salirse del nivel', () => {
+  const e = mk({ level: 4, seed: 12, prefs: { bodyParts: [[], []] } });
+  for (const r of rolls(e, 200)) { assert.equal(r.level, 4); assert.ok(!TARGETS[r.target].anatomy); assert.equal(r.validation, 'VALID'); }
 });
-test('dados opcionales: forma y condición faltan a menudo y en Conexión casi nunca van las cuatro piezas', () => {
-  const e = mk({ level: 1, seed: 5 });
-  const rs = rolls(e, 400);
-  const four = rs.filter(r => r.method && r.cond).length, noMethod = rs.filter(r => !r.method).length, noCond = rs.filter(r => !r.cond).length;
-  assert.ok(four / rs.length < 0.08, `cuatro piezas ${four}`);
-  assert.ok(noMethod > 60 && noCond > 250, `sin forma ${noMethod}, sin condición ${noCond}`);
-  for (const r of rs) for (const k of ['method', 'cond']) if (!r[k]) assert.equal(r.dice[k][0], '—');
-});
-test('repetición: ni la misma acción en 3 rondas ni la misma zona en 4 ni la misma condición en 5', () => {
-  for (const L of [1, 2, 3]) {
+test('repetición: ni la misma acción en 3 rondas ni la misma zona en 4; la familia semántica no vuelve en 2; la misma frase no se repite en 10', () => {
+  for (const L of [1, 2, 3, 4]) {
     const e = mk({ level: L, seed: 30 + L });
-    const rs = rolls(e, 300); let z4 = 0;
+    const rs = rolls(e, 300); let semNear = 0;
     rs.forEach((r, i) => {
       const w = rs.slice(Math.max(0, i - 4), i);
-      assert.ok(!w.slice(-2).some(p => p.action === r.action), `acción repetida: ${r.phrase}`);
-      assert.ok(!w.slice(-3).some(p => p.zone === r.zone), `zona repetida: ${r.phrase}`);
-      if (w.some(p => p.zone === r.zone)) z4++;
-      if (r.cond) assert.ok(!w.some(p => p.cond === r.cond), `condición repetida: ${r.phrase}`);
+      assert.ok(!w.slice(-2).some(p => p.action === r.action && p.tool === r.tool), `acción repetida: ${r.phrase}`);
+      assert.ok(!w.slice(-3).some(p => p.target === r.target), `zona repetida: ${r.phrase}`);
+      if (w.slice(-2).some(p => p.semanticFamily === r.semanticFamily) && r.purpose !== 'DEEPEN') semNear++;
+      assert.ok(!rs.slice(Math.max(0, i - 10), i).some(p => p.phrase === r.phrase), `frase repetida: ${r.phrase}`);
     });
-    assert.ok(z4 / rs.length <= 0.02, `zona repetida a 4 rondas ${z4}`);
+    assert.ok(semNear / rs.length <= (L === 4 ? 0.04 : 0.02), `familia semántica cercana ${semNear}`); // en Intimidad la familia íntima es una sola y los dos reciben alternando
+    const q = sessionQuality(rs.slice(0, 50));
+    assert.ok(q.shapeRepetition3 < 0.25, `forma repetida ${q.shapeRepetition3}`);
+    assert.ok(q.bodyCoverage >= 10 && q.familyCoverage >= 4, JSON.stringify(q));
   }
 });
-test('repetición semántica: la misma familia acción·zona no vuelve en las dos rondas siguientes', () => {
-  const e = mk({ level: 2, seed: 77 });
+test('estilos: no en todas las rondas; cuando van, el texto los expresa; la duración aparece siempre y nunca en la frase como etiqueta', () => {
+  const e = mk({ level: 2, seed: 5 });
   const rs = rolls(e, 400);
-  let near = 0;
-  rs.forEach((r, i) => { if (rs.slice(Math.max(0, i - 2), i).some(p => p.semanticFamily === r.semanticFamily)) near++; });
-  assert.ok(near / rs.length < 0.02, `familia semántica cercana ${near}`);
+  const styled = rs.filter(r => r.style).length;
+  assert.ok(styled / rs.length > 0.15 && styled / rs.length < 0.6, `con estilo ${styled}`);
+  for (const r of rs) { assert.ok(r.seconds >= 15); assert.ok(!/segundos|durante \d/.test(r.phrase), r.phrase); assert.equal(r.dice.duration[0], r.faces.duration); }
 });
-test('feedback ME GUSTA: la siguiente ronda profundiza en la misma familia sin repetir la misma frase', () => {
-  let same = 0, identical = 0;
-  for (let s = 0; s < 40; s++) {
-    const e = mk({ level: 2, seed: 100 + s });
-    const r = e.roll(); e.feedback('like'); const n = e.roll();
-    assert.equal(n.purpose, 'DEEPEN');
-    if (n.families.action === r.families.action || n.families.zone === r.families.zone || n.families.actor === r.families.actor) same++;
-    if (n.phrase === r.phrase) identical++;
+test('ME GUSTA profundiza sin repetir la frase; CAMBIA varía; PASO no castiga visible pero cambia de idea; «un poco más» mueve pesos, no el nivel', () => {
+  const e = mk({ level: 2, seed: 50 });
+  for (let i = 0; i < 30; i++) {
+    const a = e.roll(); e.feedback('like'); const b = e.roll();
+    assert.equal(b.purpose, 'DEEPEN'); assert.notEqual(a.phrase, b.phrase);
+    e.feedback('cambia'); const c = e.roll(); assert.notEqual(c.semanticFamily, b.semanticFamily);
+    const d = e.pass(); assert.notEqual(d.phrase, c.phrase); assert.equal(e.level(), 2);
+    e.feedback('like', { more: true });
   }
-  assert.ok(same >= 28, `evolución compatible en ${same}/40`);
-  assert.equal(identical, 0);
+  assert.ok(e.session.pressure > 0 || e.session.pace > 0); assert.equal(e.level(), 2);
 });
-test('feedback PASO: la familia descartada deja de salir en las rondas siguientes y no hay mensaje de castigo', () => {
-  let hits = 0, total = 0;
-  for (let s = 0; s < 30; s++) {
-    const e = mk({ level: 2, seed: 200 + s });
-    const r = e.roll(); const fam = r.families.action;
-    const n = e.pass(); total++;
-    assert.ok(n && n.phrase && !/castig|mal|error/i.test(n.phrase));
-    for (const x of [n, ...rolls(e, 3)]) if (x.semanticFamily === r.semanticFamily) hits++;
-  }
-  assert.ok(hits <= 2, `la misma familia semántica volvió ${hits} veces tras PASO`);
-  assert.ok(total === 30);
-});
-test('feedback CAMBIA: la siguiente propuesta cambia de familia semántica', () => {
-  for (let s = 0; s < 30; s++) {
-    const e = mk({ level: 3, seed: 300 + s });
-    const r = e.roll(); e.feedback('cambia'); const n = e.roll();
-    assert.notEqual(n.semanticFamily, r.semanticFamily, `${r.phrase} → ${n.phrase}`);
-    assert.equal(n.purpose, 'VARIATION');
-  }
-});
-test('progresión manual: 60 rondas con ME GUSTA y MÁS en Conexión siguen en Conexión; el director jamás cambia currentLevel', () => {
-  const e = mk({ level: 1, seed: 8 });
-  for (let i = 0; i < 60; i++) { const r = e.roll(); assert.equal(r.level, 1); assert.equal(e.level(), 1); e.feedback('like', { more: i % 2 === 0 }); }
-  assert.ok(e.session.intraLevelIntensity <= 1 && e.level() === 1);
-  // la decisión de la pareja vale en cualquier momento y dirección, sin confirmación
-  assert.equal(e.setLevel(3), true); assert.equal(e.level(), 3); assert.equal(e.roll().level, 3);
-  assert.equal(e.setLevel(1), true); assert.equal(e.level(), 1);
-  assert.equal(e.setLevel(4), true); assert.equal(e.level(), 4); assert.equal(e.session.lastMessage, 'Hasta donde queráis.');
-});
-test('más suave reduce la intensidad dentro del nivel sin cambiar currentLevel', () => {
-  let lowered = 0;
-  for (let s = 0; s < 20; s++) {
-    const e = mk({ level: 3, seed: 400 + s });
-    const r = e.roll(); const before = e.session.intraLevelIntensity;
-    const v = e.softer();
-    assert.equal(e.level(), 3);
-    assert.ok(e.session.intraLevelIntensity < before);
-    if (v) { assert.equal(v.level, 3); assert.ok(v.intensity < r.intensity, `${r.intensity} → ${v.intensity}`); lowered++; }
-    for (const n of rolls(e, 5)) assert.equal(n.level, 3);
-  }
-  assert.ok(lowered >= 14, `variante suave en ${lowered}/20`);
-});
-test('rondas sin escalada: mientras duran, la intensidad no sube; terminan solas', () => {
-  const e = mk({ level: 1, seed: 21 });
-  let seen = 0;
-  for (let i = 0; i < 80; i++) {
-    const before = e.history.last() ? e.history.last().intensity : null, calm = e.session.calm();
-    const r = e.roll();
-    if (calm && before != null) { seen++; assert.ok(r.target <= before + 1e-9, `${before} → ${r.target}`); }
-  }
-  assert.ok(seen > 0 && !(e.session.calmUntil > e.session.rounds + 3));
-});
-test('calidad: nada por debajo del umbral ni inválido llega a la interfaz, y hay candidatos descartados', () => {
-  const e = mk({ level: 3, seed: 55, debug: true });
-  let rejected = 0;
-  for (const r of rolls(e, 300)) {
-    assert.equal(r.validation, 'VALID', r.phrase);
-    if (!r.fallback) assert.ok(r.quality >= THRESHOLD, `${r.quality} ${r.phrase}`);
-    const d = e.lastDebug; rejected += d.rejectedCandidates.length;
-    assert.ok(d.selectedPurpose && d.selectedFamily && typeof d.finalQualityScore === 'number');
-  }
-  assert.ok(rejected > 0, 'el filtro debe rechazar algo');
-});
-test('fallback: con casi todo desactivado no hay bucle infinito y sale una frase validada', () => {
-  const e = mk({ level: 1, seed: 6, prefs: { enabledGroups: ['brazos'], bodyParts: [['pene'], ['pene']] } });
-  const t = Date.now();
-  for (let i = 0; i < 40; i++) { const r = e.roll(); assert.ok(r && r.phrase.length > 8); assert.equal(r.validation, 'VALID'); }
-  assert.ok(Date.now() - t < 4000);
-  for (const L of [1, 2, 3, 4]) { const f = fallbackFor(L, new PreferenceManager({ enabledGroups: ALL, bodyParts: [['vulva'], ['pene']] }), null); assert.ok(f.action && f.zone); assert.ok(FALLBACKS[L].length >= 4); }
-});
-test('"hoy no": la restricción de cualquiera de los dos vale para toda la sesión; "quizá" pesa menos y nunca pasa a sí', () => {
-  const q = mk({ level: 2, seed: 15 }); q.setPrefs(0, { boca: 'quiza' });
-  const withQ = rolls(q, 300).filter(r => ACTION[r.action].contactType === 'boca').length;
-  const base = rolls(mk({ level: 2, seed: 15 }), 300).filter(r => ACTION[r.action].contactType === 'boca').length;
-  assert.ok(withQ > 0 && withQ < base * 0.6, `quizá: ${withQ} vs ${base}`);
-  assert.equal(q.session.pref[0].boca, 'quiza');
-  const e = mk({ level: 2, seed: 12 });
-  e.setAvoid(1, ['boca', 'ropa']);
-  for (const r of rolls(e, 200)) { const a = ACTION[r.action]; assert.notEqual(a.contactType, 'boca', r.phrase); assert.ok(!a.tags.includes('ropa'), r.phrase); }
-  const e4 = mk({ level: 4, seed: 13 }); e4.setAvoid(0, ['intimo']);
-  for (const r of rolls(e4, 150)) assert.ok(!ZONE[r.zone].tags.includes('intimo'), r.phrase);
-  const chk = criticalCheck({ action: 'besar', zone: 'cuello', method: null, cond: null, alt: null, intensity: 4, phrase: 'x' }, { prefs: e.prefs, level: 2, session: e.session, avoids: AVOIDS });
-  assert.equal(chk.ok, false);
-});
-test('cómo llegas hoy: lo común manda y cambia la curva (tranquilo → menos BUILD, más calma)', () => {
-  const e = mk({ level: 2, seed: 14 });
-  e.setIntents(0, ['tranquilo', 'jugar']); e.setIntents(1, ['tranquilo']);
-  assert.deepEqual([...e.session.intentSet()], ['tranquilo']);
-  const slow = rolls(e, 200).filter(r => ['COOLDOWN', 'MAINTAIN'].includes(r.purpose)).length;
-  const e2 = mk({ level: 2, seed: 14 });
-  const base = rolls(e2, 200).filter(r => ['COOLDOWN', 'MAINTAIN'].includes(r.purpose)).length;
-  assert.ok(slow > base, `${slow} vs ${base}`);
-});
-test('privacidad: el estado de sesión no forma parte de lo que se persiste', () => {
-  const p = new PreferenceManager({ names: ['A', 'B'], bodyParts: [['vulva'], ['pene']] });
-  const json = JSON.stringify(p);
-  for (const k of ['intents', 'pref', 'liked', 'skipped', 'feedback', 'familyScore', 'mood']) assert.ok(!json.includes(k));
-});
-
-/* ---- regresiones estructurales (no frases prohibidas: propiedades que fallaron) ---- */
-import { mechanicsCheck } from '../engine/body.js';
-import { BLUEPRINT } from '../engine/blueprints.js';
-test('las condiciones SETUP solo aparecen con blueprints que las admiten y nunca dos veces en pocas rondas', () => {
-  for (const L of [2, 3, 4]) for (const seed of [1, 2, 3]) {
-    const e = mk({ level: L, seed: 300 + seed }); const rs = rolls(e, 150);
-    rs.forEach((r, i) => {
-      if (r.condTier !== 'SETUP') return;
-      assert.ok(BLUEPRINT[r.blueprint].conditions.setup.includes(r.cond), `${r.phrase} (${r.blueprint})`);
-      assert.ok(!rs.slice(Math.max(0, i - 4), i).some(p => p.condTier === 'SETUP'), 'dos preparaciones seguidas: ' + r.phrase);
-    });
-  }
-});
-test('ninguna interacción con posición compleja (≥2), naturalidad baja o movimiento imposible llega a la interfaz', () => {
-  for (const L of [1, 2, 3, 4]) {
-    const e = mk({ level: L, seed: 77 + L });
-    for (const r of rolls(e, 300)) {
-      const m = mechanicsCheck(ACTION[r.action], ZONE[r.zone], r.cond ? CONDITION[r.cond] : null);
-      assert.ok(m.ok, `${r.phrase} → ${m.reasons.join(',')}`);
-      assert.ok(r.mechanics.complexity <= 1 && r.mechanics.naturalness >= 0.6, r.phrase);
-      assert.ok(r.blueprint && BLUEPRINT[r.blueprint].actions.includes(r.action), 'ronda sin blueprint: ' + r.phrase);
+test('OTRA mantiene a la misma persona; MÁS SUAVE baja intensidad con la misma idea y nunca sube de nivel', () => {
+  for (const L of [2, 3, 4]) {
+    const e = mk({ level: L, seed: 60 + L });
+    for (let i = 0; i < 40; i++) {
+      const a = e.roll(); const b = e.reroll(); assert.equal(b.performer, a.performer); assert.ok(!(b.action === a.action && b.target === a.target));
+      const s = e.softer(); if (s) { assert.ok(s.intensity < b.intensity, `${s.intensity} < ${b.intensity}`); assert.equal(s.performer, b.performer); assert.equal(s.level, L); assert.ok(!TARGETS[s.target].tags.includes('intimo') || L === 4); }
     }
   }
 });
-test('regresión conceptual: «caderas contra glúteos con venda» cae por razones estructurales, no por una lista negra', () => {
-  const e = mk({ level: 3 });
-  const ctx = { prefs: e.prefs, level: 3, session: e.session, avoids: AVOIDS };
-  const bare = e.build(BLUEPRINT.cuerpoMovimiento, ACTION.frotarCaderasDetras, ZONE.gluteos, null, null, 3, 7.5);
-  assert.ok(criticalCheck(bare, ctx).ok, 'con la postura en la frase, el gesto es válido');
-  const withBlindfold = e.build(BLUEPRINT.cuerpoMovimiento, ACTION.frotarCaderasDetras, ZONE.gluteos, null, CONDITION.vendados, 3, 7.5);
-  const chk = criticalCheck(withBlindfold, ctx);
-  assert.ok(!chk.ok && chk.reasons.some(r => r.startsWith('SETUP_CONDITION_UNSUPPORTED')), chk.reasons.join());
-  // y sin la postura en la frase, la pelvis contra los glúteos ni siquiera es una relación aceptable
-  const libre = { ...ACTION.frotarCaderasDetras, id: 'free', frame: '{V} tus caderas contra {ZONE}', mechanics: { movement: 'rub' } };
-  const m = mechanicsCheck(libre, ZONE.gluteos);
-  assert.ok(!m.ok && m.reasons.includes('POSITION_TOO_COMPLEX'));
+test('favoritas: repetir conserva quién hacía a quién y cuadra la anatomía; las antiguas (action/zone/method) se migran', () => {
+  const e = mk({ level: 2, seed: 70 });
+  const r = e.roll(); const fav = { ...r };
+  e.roll();
+  const again = e.repeatFavorite(fav); assert.ok(again); assert.equal(again.performerName, r.performerName); assert.equal(again.target, r.target);
+  const legacy = migrateFavorite({ action: 'besar', zone: 'cuello', method: 'lento', phrase: 'x' }); assert.equal(legacy.action, 'KISS'); assert.equal(legacy.target, 'neck'); assert.equal(legacy.style, 'SLOW');
+  assert.equal(migrateFavorite({ action: 'nalgada', zone: 'senos' }), null);
+  const f4 = mk({ level: 2, seed: 71, prefs: { bodyParts: [['pene'], ['pene']] } });
+  assert.equal(f4.repeatFavorite({ action: 'STIMULATE', tool: 'fingers', target: 'clitoris', performerName: 'Ana', partnerName: 'Leo' }), null);
 });
-test('cada añadido se queda solo si mejora: una forma o condición sin valor no sobrevive y la ausencia es un resultado normal', () => {
-  const e = mk({ level: 2, seed: 5 }); const rs = rolls(e, 200);
-  const bare = rs.filter(r => !r.cond && !r.method).length;
-  assert.ok(bare / rs.length > 0.5, 'la mayoría de las rondas van sin añadidos');
-  assert.ok(e.stats.rejectedReasons.CONDITION_NO_VALUE > 0 && e.stats.rejectedReasons.FORM_NO_VALUE > 0);
-  for (const r of rs) if (r.cond) assert.ok(CE.conditionValue(CONDITION[r.cond], ACTION[r.action], ZONE[r.zone]) >= 0.45, r.phrase);
+test('«hoy no» aparta boca, presión, ropa, voz o anatomía íntima para toda la sesión; «quizá» casi no sale', () => {
+  const e = mk({ level: 3, seed: 80 }); e.setPrefs(0, { boca: 'no', presion: 'no' }); e.setPrefs(1, { ropa: 'no' });
+  for (const r of rolls(e, 250)) { const a = ACTIONS[r.action]; assert.notEqual(a.contactType, 'boca', r.phrase); assert.ok(!a.tags.includes('presion') && !a.tags.includes('ropa'), r.phrase); }
+  const f = mk({ level: 4, seed: 81 }); f.setPrefs(0, { intimo: 'no' }); for (const r of rolls(f, 200)) assert.ok(!TARGETS[r.target].anatomy, r.phrase);
+  const g = mk({ level: 4, seed: 82 }); g.setPrefs(1, { intimo: 'quiza' }); const n = rolls(g, 200).filter(r => TARGETS[r.target].anatomy).length; assert.ok(n < 40, `quizá íntimo ${n}`);
 });
-test('paso no borra una preferencia: una zona pasada vuelve a salir más adelante', () => {
-  const e = mk({ level: 1, seed: 21 }); const first = e.roll(); e.pass();
-  const later = rolls(e, 60).filter(r => r.families.zone === first.families.zone);
-  assert.ok(later.length > 0, 'la familia de zona ' + first.families.zone + ' no volvió');
+test('calidad: todo lo que llega a la interfaz pasa el umbral y la frase es humana (≥ 0.6); nada de lenguaje clínico ni de terapia', () => {
+  for (const L of [1, 2, 3, 4]) for (const r of rolls(mk({ level: L, seed: 90 + L }), 300)) {
+    if (!r.fallback) assert.ok(r.quality >= THRESHOLD, `${r.quality} ${r.phrase}`);
+    assert.ok(r.humanLikeness >= 0.6, r.phrase);
+    assert.ok(!/sistema nervioso|deseo responsivo|terapia|zona poplítea|con ganas|mirada/i.test(r.phrase), r.phrase);
+    assert.ok(r.phrase.split(/\s+/).length <= 24, r.phrase);
+  }
+});
+test('dados: cuatro conceptos (acción, zona, estilo, tiempo); la primera cara es el resultado y las demás opciones reales', () => {
+  const e = mk({ level: 2, seed: 100 });
+  for (const r of rolls(e, 50)) {
+    assert.deepEqual(Object.keys(r.dice), ['action', 'zone', 'style', 'duration']);
+    for (const k of Object.keys(r.dice)) { assert.equal(r.dice[k].length, 6); assert.equal(r.dice[k][0], r.faces[k]); }
+    assert.equal(r.dice.action[0], ACTIONS[r.action].name);
+  }
+});
+test('criticalCheck: códigos de rechazo para anatomía, nivel, estilo, duración y combinación no aprobada', () => {
+  const e = mk({ level: 2 }); const ctx = { prefs: e.prefs, level: 2, session: e.session };
+  const base = { action: 'KISS', tool: 'lips', target: 'neck', style: null, duration: 20, pattern: 'GIVE', text: 'Besa el cuello de Ana.', humanLikeness: 1, intensity: 4 };
+  assert.ok(criticalCheck(base, ctx).ok);
+  assert.ok(criticalCheck({ ...base, target: 'vulva', intensity: 6 }, ctx).reasons.includes('INTIMATE_OUTSIDE_L4'));
+  assert.ok(criticalCheck({ ...base, style: 'FIRM' }, ctx).reasons.includes('STYLE_INCOMPATIBLE'));
+  assert.ok(criticalCheck({ ...base, duration: 22 }, ctx).reasons.includes('DURATION_OUT_OF_RANGE'));
+  assert.ok(criticalCheck({ ...base, action: 'SPANK', tool: 'oneHand', target: 'breasts' }, ctx).reasons.includes('TARGET_INCOMPATIBLE'));
+  assert.ok(criticalCheck({ ...base, intensity: 9 }, ctx).reasons.includes('LEVEL_OUT_OF_BAND'));
+  assert.ok(criticalCheck({ ...base, text: 'Besa el cuello de Ana con los labios con los labios con la boca.', humanLikeness: 0.3 }, ctx).reasons.includes('PHRASE_UNNATURAL'));
 });

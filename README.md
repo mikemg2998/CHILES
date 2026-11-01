@@ -1,7 +1,7 @@
 # Pollo a la brasa
 
 Juego privado de dados para parejas adultas. **La pareja controla la dirección; el director de sesión controla la
-calidad.** Cuatro dados (acción, zona, forma, condición) muestran lo que el director propone: cada ronda tiene un
+calidad.** Cuatro dados (acción, zona, estilo, tiempo) muestran lo que el director propone: cada ronda tiene un
 propósito, la pareja responde con ♡ o con el menú •••, y el nivel solo lo cambia la pareja desde el indicador, en
 cualquier dirección y sin confirmaciones. El motor nunca sube ni baja el nivel por su cuenta. La sesión está completa en
 cualquier nivel.
@@ -12,19 +12,47 @@ cualquier nivel.
 (cuanto más íntimo, más rojo profundo y menos interfaz). «Me gusta» no es querer más intensidad: favorece
 continuaciones compatibles dentro del nivel. «Más suave» baja la intensidad dentro del nivel; «Bajar de nivel» es otra cosa.
 
-## Arquitectura (`engine/`, sin dependencias ni build)
+## Arquitectura v6 (`engine/`, sin dependencias ni build)
 
-- `catalog.js` — base de contenido: zonas, acciones (con parte del cuerpo que actúa, patrón y familia), formas, condiciones (con nivel LIGHT / INTERACTION / SETUP y orientación).
-- `blueprints.js` — **fuente de verdad del generador**: escenas corporales que sabemos que funcionan (familia semántica, patrón, acciones, zonas admisibles, formas y condiciones que les sientan bien). El azar solo varía dentro de un blueprint; acción / zona / forma / condición son la representación en dados del resultado.
-- `body.js` — **motor de mecánica corporal**: capacidades de cada parte que actúa, relaciones de cuerpo entero en lista blanca (torso, pelvis, piernas nunca se inventan), altura y lado de cada zona, movimiento que exige cada acción, orientación, complejidad de posición (0 inmediata · 1 natural · 2 específica · 3 torpe), libertad de movimiento y equilibrio. Anatómicamente posible ≠ físicamente posible ≠ biomecánicamente natural ≠ buena interacción.
-- `meta.js` — metadatos multidimensionales derivados (intensidad física, explicitud, vulnerabilidad, proximidad, reciprocidad, control, duración) y familia semántica.
-- `session.js` — estado de sesión (nivel, intensidad dentro del nivel, rondas sin escalada, feedback), director (CONNECT · BUILD · EXPLORE · DEEPEN · MAINTAIN · VARIATION · COOLDOWN · END; nunca cambia el nivel), feedback (me gusta / cambia / paso, más / menos), check-in «¿cómo llegáis hoy?», preferencias sí / quizá / hoy no, cambio de nivel manual y cierres.
-- `compat.js` — compatibilidad entre piezas y validador de la combinación.
-- `quality.js` — comprobaciones críticas con código de rechazo (anatomía, física, biomecánica, movimiento, semántica, nivel, estado, SETUP sin blueprint), puntuación de calidad (lenguaje, novedad, valor, continuidad, naturalidad corporal, sencillez de posición, naturalidad del movimiento, valor de forma y de condición), umbral y fallback validado a mano.
-- `engine.js` — generación: director (propósito) → blueprint → acción y zona dentro del blueprint (validadas por biomecánica) → forma solo con razón → condición solo con razón de contexto y dentro del nivel que admite el blueprint → cada añadido se queda únicamente si la frase mejora sin él (remove-each-component) → filtro de calidad → frase. Las condiciones SETUP (venda, música, luz, posturas) solo salen en blueprints diseñados para ellas.
-- `history.js`, `intensity.js`, `nlg.js`, `prefs.js`, `rng.js` — memoria de sesión (anti-repetición por id y por familia semántica), intensidad, compositor de texto, preferencias (partes del cuerpo por jugador, no género), azar con semilla.
+El motor no combina piezas al azar: modela **interacciones diseñadas por personas** y las varía solo donde es seguro.
+Una frase solo puede existir si la combinación acción · herramienta · zona está en la matriz de compatibilidad con
+estado APPROVED.
 
-`app/` solo muestra y anima: dados con física que pasan a segundo plano tras el resultado, indicador de nivel, ♡ y •••, check-in, «Lo nuestro». No toca el motor.
+Datos editables, en `engine/data/`:
+
+- `targets.js` — 47 zonas con id en inglés y nombre natural en español, grupo, familia, anatomía (vulva / pene), sensibilidad, tolerancia a la presión, estilos admitidos, niveles admitidos y pesos por nivel.
+- `actorTools.js` — 29 partes del cuerpo que actúan (una mano, las dos manos, un dedo, labios, boca, lengua, aliento, caderas, muslo, cuerpo…), con su tipo y alcance.
+- `actions.js` — 24 acciones con metadatos (familia semántica, patrón, herramientas admitidas, estilos, niveles, intensidad, movimiento, presión, reglas biomecánicas). Las diez de base: FROTAR, APRETAR, MASAJEAR, LAMER, CHUPAR, ESTIMULAR, COSQUILLEAR, ROZAR, BESAR, ACARICIAR. Sin acciones casi sinónimas.
+- `styles.js` — estilos LENTO, RÁPIDO, SUAVE, FIRME, A RATOS: cambio de intensidad, dimensión (ritmo / presión) y cómo se dicen (adverbio o coletilla).
+- `durations.js` — rangos base por acción, modificadores por zona, estilo y nivel, duraciones humanas discretas (15, 20, 30, 45, 60, 75, 90, 120; 180 solo donde tiene sentido), sin azar continuo.
+- `compatibility.js` — **la matriz**: entradas `acción · herramienta → zonas` con tier EXCELLENT / GOOD / VALID / INVALID, niveles, estilos y notas. Solo lo que se validó a mano. Lo que no está es UNREVIEWED y nunca sale.
+- `shapes.js` — estructuras de frase por acción (varias por acción, con huecos para la zona, la herramienta cuando no es obvia y el estilo) y las estructuras del patrón GUIADO.
+- `legacy.js` — mapa de ids antiguos (favoritos guardados) a los nuevos.
+
+Motor:
+
+- `grammar.js` — compila y valida los datos, calcula las combinaciones elegibles (`COMBOS`), la intensidad de cada una, las que se pueden guiar, los niveles, y la lista de combinaciones sin revisar.
+- `duration.js` — motor de duraciones: rango → opciones discretas → elección ponderada.
+- `realizer.js` — convierte la interacción en una frase que suena escrita por una persona: elige estructura evitando las recientes, omite la herramienta obvia, coloca el estilo como adverbio o coletilla (nunca repite el verbo ni cuelga una segunda coletilla), añade la guía de la pareja, y puntúa `humanLikeness` (longitud, comas, palabras repetidas, nombre repetido, complementos encadenados).
+- `quality.js` — comprobaciones críticas con código de rechazo (anatomía, «hoy no», nivel, estilo, guía, duración, frase poco natural…), `qualityScore` (orden: anatomía > seguridad > biomecánica > calidad humana > nivel > sesión > novedad > diversidad), umbral y fallbacks validados a mano.
+- `engine.js` — generación: propósito del director → objetivo de intensidad (acotado a lo que el repertorio alcanza) → candidatas aprobadas en el nivel (enfriamientos por acción, zona, familia, frase) → estilo solo con razón → guía de la pareja solo si la acción lo admite → frase → comprobaciones → calidad → elección.
+- `session.js` — estado de sesión, director (CONNECT · BUILD · EXPLORE · DEEPEN · MAINTAIN · VARIATION · COOLDOWN · END; nunca cambia el nivel), feedback (solo mueve pesos, no hay perfiles), check-in y preferencias sí / quizá / hoy no.
+- `history.js`, `intensity.js`, `prefs.js`, `rng.js` — memoria de sesión, objetivos de intensidad, preferencias (partes del cuerpo por jugador, no género), azar con semilla.
+
+`app/` solo muestra y anima: dados, temporizador minimalista (toca para empezar, discreto al acabar), indicador de nivel, ♡ y •••, check-in, «Lo nuestro». No toca el motor.
+
+### Patrón GUIADO
+
+Una variante de cualquier acción manual: la pareja que recibe guía con su mano la mano de quien actúa (ritmo, presión,
+movimiento o posición). No es un dado ni una condición: el director lo propone cuando ayuda (descubrir, continuar tras
+un «me gusta», variar sin subir intensidad). Solo en acciones con mano libre, zonas frontales y frases cortas; no cambia
+el nivel.
+
+## Revisión de contenido
+
+`content-review/unreviewed.md` (generado con `node tools/review-queue.js`) lista las combinaciones que la gramática
+permitiría pero nadie ha aprobado, con la frase que saldría. Para aprobar una, se añade a `compatibility.js` con su tier;
+para rechazarla, se añade con tier INVALID. Nada entra al generador por inferencia.
 
 ## Privacidad
 
@@ -35,13 +63,15 @@ feedback, intensidad) vive en memoria y desaparece al cerrar. No hay telemetría
 ## Pruebas
 
 ```
-node --test 'tests/*.test.js'   # tests del motor, de mecánica corporal, de cobertura de blueprints y regresiones estructurales
-node tests/simulate.js 1000 --sample   # simulación por nivel; debe terminar en «✓ Todo correcto»
-node tests/stress.js 10000 --sample=100 --out=muestra.txt   # stress test: distribución, razones de rechazo y muestra legible para auditar a mano
+node tests/validate.js                 # validación estructural de los datos (falla si hay errores)
+node --test 'tests/*.test.js'          # tests de datos, duraciones, realizador, guiado y motor
+node tests/simulate.js 1000 --sample   # simulación por nivel y anatomía; debe terminar en «✓ Todo correcto»
+node tests/stress.js 10000 --audit=auditoria.txt --session=sesion.txt   # 10.000 tiradas: frecuencias, rechazos, auditoría de 200 y sesión de 50
+node tools/review-queue.js             # regenera content-review/unreviewed.md
 ```
 
 Regla de oro: no se arreglan frases, se arregla el sistema que las permitió. Una interacción mala durante una prueba real se convierte en un test sobre la propiedad que falló, nunca en una lista negra.
 
-Modo debug para desarrollo: abrir la app con `?debug` muestra propósito, patrón, familia, pesos, rechazos, intensidad dentro del nivel y puntuación de cada ronda (`window.pab` es el motor).
+Modo debug para desarrollo: abrir la app con `?debug` muestra propósito, patrón, pesos, rechazos y puntuación de cada ronda (`window.pab` es el motor).
 
 Se publica en GitHub Pages desde `main`.

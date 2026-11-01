@@ -2,7 +2,7 @@
    El director controla la calidad: qué proponer, continuidad, variedad, anti-repetición, intensidad DENTRO del nivel.
    El nivel es siempre una decisión de la pareja: nextLevel = USER_DECISION. Nunca sube solo.
    Todo este estado vive en memoria: nunca se guarda ni se envía a ningún sitio. */
-import { LEVELS, ACTION, ZONE } from './catalog.js';
+import { LEVELS, ACTIONS, TARGETS } from './grammar.js';
 import { TARGET_BUCKETS } from './intensity.js';
 
 export const PURPOSES = ['CONNECT', 'BUILD', 'EXPLORE', 'DEEPEN', 'MAINTAIN', 'VARIATION', 'COOLDOWN', 'END'];
@@ -26,12 +26,16 @@ export const PREF_STATES = ['si', 'quiza', 'no'];
 export const PREF_LABEL = { si: 'Sí', quiza: 'Quizá', no: 'Hoy no' };
 export const AVOIDS = {
   boca: { label: 'Boca y besos', contact: ['boca'] },
-  presion: { label: 'Presión y mordiscos', actionTags: ['presion'], families: ['mordisco'] },
+  presion: { label: 'Presión y mordiscos', actionTags: ['presion'], actions: ['BITE', 'SPANK', 'GRIP', 'SQUEEZE'] },
   ropa: { label: 'Apartar ropa', actionTags: ['ropa'] },
-  vista: { label: 'Vendas y ojos cerrados', condFamilies: ['vista'] },
-  voz: { label: 'Hablar en voz alta', condFamilies: ['voz'], actionTags: ['voz'] },
+  voz: { label: 'Hablar en voz alta', actionTags: ['voz'] },
+  guia: { label: 'Guiar con la mano', patterns: ['GUIDED'] },
   intimo: { label: 'Anatomía íntima', groups: ['intimaF', 'intimaM'] },
 };
+/* ¿la regla «hoy no» aparta esta acción / zona / patrón? */
+export const ruleBlocksAction = (r, a) => !!((r.contact && r.contact.includes(a.contactType)) || (r.actionTags && r.actionTags.some(t => a.tags.includes(t))) || (r.actions && r.actions.includes(a.id)));
+export const ruleBlocksTarget = (r, z) => !!(r.groups && r.groups.includes(z.group));
+export const ruleBlocksPattern = (r, p) => !!(r.patterns && r.patterns.includes(p));
 
 export class SessionState {
   constructor(level = 1) {
@@ -43,7 +47,7 @@ export class SessionState {
     this.intensityHistory = []; this.purposes = [];
     this.feedback = []; // {round, kind, more}
     this.liked = []; this.changed = []; this.skipped = [];
-    this.familyScore = {}; this.zoneScore = {}; this.semanticScore = {}; this.actorScore = {}; this.blueprintScore = {};
+    this.familyScore = {}; this.zoneScore = {}; this.semanticScore = {}; this.actorScore = {}; this.patternScore = {}; this.comboScore = {};
     this.pressure = 0; this.pace = 0; // -1 … 1 preferencias aprendidas (MÁS / MENOS)
     this.lastFeedback = null; this.deepenStreak = 0;
     this.ended = null; this.lastMessage = null;
@@ -113,74 +117,60 @@ export class SessionDirector {
   /* ---- multiplicadores por propósito, intención y feedback ---- */
   modifiers(purpose, S, history) {
     const intents = S.intentSet(), last = history.last();
-    const lastA = last ? ACTION[last.action] : null, lastZ = last ? ZONE[last.zone] : null;
+    const lastA = last ? ACTIONS[last.action] : null, lastZ = last ? TARGETS[last.target] : null;
     const famCount = {}; for (const r of history.rounds) bump(famCount, r.families && r.families.action, 1);
     const P = {
-      CONNECT: { fam: { masaje: 1.6, abrazo: 1.7, caricia: 1.3, cabello: 1.4, anticipacion: 0.4, mordisco: 0.3, presion: 0.5, ropa: 0.4 }, pattern: { MUTUAL: 1.5 }, condRole: { conexion: 1.4, interaccion: 0.7 } },
-      BUILD: { fam: { anticipacion: 1.5, beso: 1.3, ropa: 1.3, lengua: 1.2 }, pattern: { DISCOVER: 1.4 }, condRole: { interaccion: 1.2 } },
-      EXPLORE: { fam: {}, pattern: {}, condRole: { interaccion: 1.3, escena: 1.1 } },
-      DEEPEN: { fam: {}, pattern: {}, condRole: { interaccion: 1.2 } },
-      MAINTAIN: { fam: {}, pattern: {}, condRole: {} },
-      VARIATION: { fam: {}, pattern: { CHOOSE: 1.3, GUIDE: 1.3, DISCOVER: 1.3, MUTUAL: 1.2 }, condRole: { interaccion: 1.4 } },
-      COOLDOWN: { fam: { masaje: 1.6, abrazo: 1.6, caricia: 1.3, presion: 0.4, mordisco: 0.3, bocaIntima: 0.6, manoIntima: 0.6 }, pattern: { MUTUAL: 1.3 }, condRole: { conexion: 1.3, interaccion: 0.6 } },
-      END: { fam: {}, pattern: {}, condRole: {} },
-    }[purpose] || { fam: {}, pattern: {}, condRole: {} };
+      CONNECT: { fam: { masaje: 1.6, cercania: 1.7, caricia: 1.3, juego: 1.2, anticipacion: 0.4, boca: 0.3, presion: 0.4, ropa: 0.4 }, pattern: { MUTUAL: 1.5 } },
+      BUILD: { fam: { anticipacion: 1.5, beso: 1.3, ropa: 1.3, boca: 1.1 }, pattern: { DISCOVER: 1.4 } },
+      EXPLORE: { fam: {}, pattern: { GUIDED: 1.3 } },
+      DEEPEN: { fam: {}, pattern: { GUIDED: 1.3 } },
+      MAINTAIN: { fam: {}, pattern: {} },
+      VARIATION: { fam: {}, pattern: { GUIDED: 1.4, DISCOVER: 1.3, MUTUAL: 1.2 } },
+      COOLDOWN: { fam: { masaje: 1.6, cercania: 1.6, caricia: 1.3, presion: 0.4, boca: 0.4, intimo: 0.6 }, pattern: { MUTUAL: 1.3 } },
+      END: { fam: {}, pattern: {} },
+    }[purpose] || { fam: {}, pattern: {} };
     const F = S.familyScore, Zs = S.zoneScore, Sem = S.semanticScore, maybe = S.maybeSet();
-    const MAYBE = 0.15; // «quizá»: puede salir, pero no se asume
-    const maybeAction = a => [...maybe].some(k => { const r = AVOIDS[k]; return (r.contact && r.contact.includes(a.contactType)) || (r.actionTags && r.actionTags.some(t => a.tags.includes(t))) || (r.families && r.families.includes(a.family)); }) ? MAYBE : 1;
-    const bpCount = {}; for (const r of history.rounds) bump(bpCount, r.blueprint, 1);
+    const MAYBE = 0.05; // «quizá»: puede salir, pero no se asume
+    const maybeAction = a => [...maybe].some(k => ruleBlocksAction(AVOIDS[k], a)) ? MAYBE : 1;
+    const maybeTarget = z => [...maybe].some(k => ruleBlocksTarget(AVOIDS[k], z)) ? MAYBE : 1;
     return {
-      purpose, maybeAction,
-      /* blueprint: familia y patrón según el propósito, continuidad o variación respecto al último, humor de hoy y feedback */
-      blueprint: b => {
-        let w = (P.fam[b.family] || 1) * (P.pattern[b.pattern] || 1);
-        if (purpose === 'DEEPEN' && last) w *= b.id === last.blueprint ? 4 : 0.5;
-        if ((purpose === 'MAINTAIN' || purpose === 'VARIATION') && last && b.id === last.blueprint) w *= 0.3;
-        if (purpose === 'EXPLORE') w *= 1 / (1 + 0.5 * (bpCount[b.id] || 0));
-        if (intents.has('cuidar') && ['masaje', 'abrazo', 'cabello'].includes(b.family)) w *= 1.6;
-        if (intents.has('cerca') && b.pattern === 'MUTUAL') w *= 1.4;
-        if (intents.has('curiosidad') && b.pattern === 'DISCOVER') w *= 1.4;
-        if (intents.has('jugar') && ['caricia', 'aCiegas', 'mordisco'].includes(b.family)) w *= 1.3;
-        if (intents.has('tranquilo') && ['cuerpo', 'presion', 'mordisco'].includes(b.family)) w *= 0.5;
-        return w * scoreMul(S.blueprintScore, b.id);
-      },
-      /* factor «quizá» de una combinación completa (acción, zona, condición): también pesa al elegir entre candidatos */
-      maybe: (a, z, c) => maybeAction(a) * (maybe.has('intimo') && z.tags.includes('intimo') ? MAYBE : 1) * (c && [...maybe].some(k => AVOIDS[k].condFamilies && AVOIDS[k].condFamilies.includes(c.family)) ? MAYBE : 1),
-      action: a => {
-        let w = (P.fam[a.family] || 1) * (P.pattern[a.pattern] || 1) * maybeAction(a);
-        if (purpose === 'DEEPEN' && lastA) w *= a.family === lastA.family ? 5 : a.actor === lastA.actor ? 2 : 0.45;
-        if (purpose === 'EXPLORE') w *= 1 / (1 + 0.5 * (famCount[a.family] || 0)); // lo que menos ha salido
-        if ((purpose === 'MAINTAIN' || purpose === 'VARIATION') && lastA && a.family === lastA.family) w *= 0.3;
-        if (purpose === 'VARIATION' && lastA && a.pattern === lastA.pattern) w *= 0.6;
-        if (intents.has('jugar') && (a.concepts.includes('juego') || ['dibujar', 'tamborilear', 'soplar', 'trazarNombre', 'mordisquear', 'besitos'].includes(a.id))) w *= 1.6;
-        if (intents.has('cerca') && a.pattern === 'MUTUAL') w *= 1.4;
-        if (intents.has('cuidar') && ['masaje', 'abrazo', 'cabello'].includes(a.family)) w *= 1.6;
-        if (intents.has('curiosidad') && a.pattern === 'DISCOVER') w *= 1.4;
-        return w * scoreMul(F, a.family) * scoreMul(S.actorScore, a.actor, 1.15);
-      },
-      zone: (z, a) => {
-        let w = 1;
-        if (purpose === 'DEEPEN' && lastZ) w *= z.family === lastZ.family ? 4 : z.group === lastZ.group ? 1.6 : 0.6;
+      purpose, maybeAction, maybeTarget,
+      /* combinación completa: familia y patrón según el propósito, continuidad o variación respecto a la última, humor de hoy y feedback */
+      combo: c => {
+        const a = ACTIONS[c.action], z = TARGETS[c.target];
+        let w = (P.fam[a.semanticFamily] || 1) * (P.pattern[a.pattern] || 1) * maybeAction(a) * maybeTarget(z);
+        if (purpose === 'DEEPEN' && lastA) w *= a.semanticFamily === lastA.semanticFamily ? 4 : a.id === lastA.id ? 3 : 0.5;
+        if (purpose === 'DEEPEN' && lastZ) w *= z.family === lastZ.family ? 3 : z.group === lastZ.group ? 1.5 : 0.6;
+        if ((purpose === 'MAINTAIN' || purpose === 'VARIATION') && lastA && a.semanticFamily === lastA.semanticFamily) w *= 0.3;
         if ((purpose === 'MAINTAIN' || purpose === 'VARIATION') && lastZ && z.family === lastZ.family) w *= 0.4;
-        if (maybe.has('intimo') && z.tags.includes('intimo')) w *= MAYBE;
-        if (purpose === 'EXPLORE') { const seen = history.rounds.filter(r => r.families && r.families.zone === z.family).length; w *= 1 / (1 + 0.4 * seen); }
-        return w * scoreMul(Zs, z.family) * scoreMul(Sem, `${a.family}·${z.family}`, 1.4);
+        if (purpose === 'EXPLORE') { w *= 1 / (1 + 0.5 * (famCount[a.semanticFamily] || 0)); const seen = history.rounds.filter(r => r.families && r.families.target === z.family).length; w *= 1 / (1 + 0.4 * seen); }
+        if (intents.has('cuidar') && ['masaje', 'cercania', 'juego'].includes(a.semanticFamily)) w *= 1.6;
+        if (intents.has('cerca') && a.pattern === 'MUTUAL') w *= 1.4;
+        if (intents.has('curiosidad') && a.pattern === 'DISCOVER') w *= 1.4;
+        if (intents.has('jugar') && (a.semanticFamily === 'juego' || ['BITE', 'BLOW', 'BRUSH'].includes(a.id))) w *= 1.4;
+        if (intents.has('tranquilo') && ['cuerpo', 'presion', 'boca'].includes(a.semanticFamily)) w *= 0.5;
+        return w * scoreMul(F, a.semanticFamily) * scoreMul(Zs, z.family) * scoreMul(Sem, `${a.semanticFamily}·${z.family}`, 1.4) * scoreMul(S.comboScore, c.key, 1.5, 0.15, 3);
       },
-      method: m => {
+      /* estilo: lo que la pareja pidió con «un poco más / menos» y el humor de hoy */
+      style: st => {
         let w = 1;
-        if (m.dim === 'presion') w *= m.mod > 0 ? 1 + 0.8 * S.pressure : 1 - 0.8 * S.pressure;
-        if (m.dim === 'ritmo' || m.dim === 'dinamica') w *= m.mod > 0.3 ? 1 + 0.8 * S.pace : 1 - 0.5 * S.pace;
-        if (intents.has('tranquilo')) w *= m.concepts.includes('lento') || m.id === 'pausado' ? 1.6 : m.concepts.includes('variable') ? 0.5 : 1;
-        if (purpose === 'COOLDOWN') w *= m.mod <= 0 ? 1.5 : 0.6;
+        if (st.dim === 'pressure') w *= st.dir > 0 ? 1 + 0.8 * S.pressure : 1 - 0.8 * S.pressure;
+        if (st.dim === 'pace') w *= st.dir > 0 ? 1 + 0.8 * S.pace : st.dir < 0 ? 1 - 0.5 * S.pace : 1;
+        if (intents.has('tranquilo')) w *= st.id === 'SLOW' || st.id === 'SOFT' ? 1.6 : st.id === 'FAST' ? 0.4 : 1;
+        if (purpose === 'COOLDOWN') w *= st.intensityMod <= 0 ? 1.5 : 0.6;
         return Math.max(0.05, w);
       },
-      cond: c => {
-        let w = P.condRole[c.role] || 1;
-        if ([...maybe].some(k => AVOIDS[k].condFamilies && AVOIDS[k].condFamilies.includes(c.family))) w *= MAYBE;
-        if (intents.has('cuidar') && ['GUIDE', 'CHOOSE'].includes(c.pattern)) w *= 1.5;
-        if (intents.has('cerca') && c.family === 'vista' && c.id === 'mirandose') w *= 1.4;
-        if (intents.has('tranquilo') && c.family === 'pausa') w *= 1.3;
-        return w * scoreMul(S.familyScore, 'cond:' + c.family);
+      /* GUIDED: ¿hay una razón para que quien recibe guíe con la mano? Nunca al azar sobre cualquier cosa. */
+      guided: () => {
+        if ([...S.avoidSet()].some(k => ruleBlocksPattern(AVOIDS[k], 'GUIDED'))) return 0;
+        const fb = S.lastFeedback, likedLast = fb && last && fb.round === last.n && fb.kind === 'like';
+        let p = { DEEPEN: likedLast ? 0.5 : 0.22, EXPLORE: 0.35, VARIATION: 0.4, BUILD: 0.18, MAINTAIN: 0.18, CONNECT: 0.1, COOLDOWN: 0.12 }[purpose] || 0.12;
+        if (last && last.pattern === 'GUIDED') return 0; // nunca dos guiadas seguidas
+        if (history.rounds.slice(0, 3).some(r => r.pattern === 'GUIDED')) p *= 0.3; // ni casi
+        if (intents.has('cuidar') || intents.has('curiosidad')) p *= 1.4;
+        if (S.pressure !== 0 || S.pace !== 0) p *= 1.3; // la pareja ya ha pedido ajustes: que los marque con la mano
+        if ([...maybe].some(k => ruleBlocksPattern(AVOIDS[k], 'GUIDED'))) p *= MAYBE;
+        return Math.min(0.6, p * scoreMul(S.patternScore, 'GUIDED'));
       },
     };
   }
@@ -193,24 +183,25 @@ export class SessionDirector {
     S.deepenStreak = round.purpose === 'DEEPEN' ? S.deepenStreak + 1 : 0;
   }
 
-  /* ---- feedback: ME GUSTA / CAMBIA / PASO (+ MÁS / MENOS) ---- */
+  /* ---- feedback: ME GUSTA / CAMBIA / PASO (+ MÁS / MENOS). Señales suaves sobre pesos, nunca un perfil. ---- */
   feedback(S, round, kind, extra = {}) {
     if (!round) return;
-    const a = ACTION[round.action], z = ZONE[round.zone];
-    const sem = `${a.family}·${z.family}`;
+    const a = ACTIONS[round.action], z = TARGETS[round.target];
+    const sem = `${a.semanticFamily}·${z.family}`, key = `${round.action}|${round.tool}|${round.target}`;
     S.feedback.push({ round: round.n, kind, more: extra.more ?? null });
     S.lastFeedback = { round: round.n, kind };
     if (kind === 'like') {
-      S.liked.push(round.id); bump(S.familyScore, a.family, 1); bump(S.zoneScore, z.family, 0.8); bump(S.semanticScore, sem, 0.5); bump(S.actorScore, a.actor, 0.5); bump(S.blueprintScore, round.blueprint, 1);
-      if (round.cond) bump(S.familyScore, 'cond:' + round.families.cond, 0.6);
-      if (extra.more === true) { if (a.tags.includes('presion') || (round.families.method === 'presion')) S.pressure = Math.min(1, S.pressure + 0.35); else S.pace = Math.min(1, S.pace + 0.35); S.intraLevelIntensity = Math.min(1, S.intraLevelIntensity + 0.3); }
-      if (extra.more === false) { if (a.tags.includes('presion') || (round.families.method === 'presion')) S.pressure = Math.max(-1, S.pressure - 0.35); else S.pace = Math.max(-1, S.pace - 0.35); S.intraLevelIntensity = Math.max(-1, S.intraLevelIntensity - 0.3); }
+      S.liked.push(round.id); bump(S.familyScore, a.semanticFamily, 1); bump(S.zoneScore, z.family, 0.8); bump(S.semanticScore, sem, 0.5); bump(S.actorScore, round.tool, 0.5); bump(S.comboScore, key, 0.6);
+      if (round.pattern === 'GUIDED') bump(S.patternScore, 'GUIDED', 0.8);
+      const pressureLike = round.style ? ['SOFT', 'FIRM'].includes(round.style) : a.tags.includes('presion');
+      if (extra.more === true) { if (pressureLike) S.pressure = Math.min(1, S.pressure + 0.35); else S.pace = Math.min(1, S.pace + 0.35); S.intraLevelIntensity = Math.min(1, S.intraLevelIntensity + 0.3); }
+      if (extra.more === false) { if (pressureLike) S.pressure = Math.max(-1, S.pressure - 0.35); else S.pace = Math.max(-1, S.pace - 0.35); S.intraLevelIntensity = Math.max(-1, S.intraLevelIntensity - 0.3); }
     } else if (kind === 'cambia') {
-      S.changed.push(round.id); bump(S.semanticScore, sem, -1.2); bump(S.familyScore, a.family, -0.3); bump(S.blueprintScore, round.blueprint, -1);
-      if (round.cond) bump(S.familyScore, 'cond:' + round.families.cond, -0.5);
+      S.changed.push(round.id); bump(S.semanticScore, sem, -1.2); bump(S.familyScore, a.semanticFamily, -0.3); bump(S.comboScore, key, -1);
+      if (round.pattern === 'GUIDED') bump(S.patternScore, 'GUIDED', -0.5);
     } else if (kind === 'paso') { // «esta no, ahora»: no se infiere una preferencia íntima de un solo evento
-      S.skipped.push(round.id); bump(S.familyScore, a.family, -0.5); bump(S.semanticScore, sem, -1.5); bump(S.blueprintScore, round.blueprint, -0.6);
-      if (round.cond) bump(S.familyScore, 'cond:' + round.families.cond, -0.6);
+      S.skipped.push(round.id); bump(S.familyScore, a.semanticFamily, -0.5); bump(S.semanticScore, sem, -1.5); bump(S.comboScore, key, -1.2);
+      if (round.pattern === 'GUIDED') bump(S.patternScore, 'GUIDED', -0.6);
     }
   }
 

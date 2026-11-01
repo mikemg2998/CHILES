@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="app/styles.css?v=8">
+<link rel="stylesheet" href="app/styles.css?v=9">
 </head>
 <body class="idle">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -45,8 +45,8 @@
   <section class="dice" id="dice">
     <div class="die" data-k="action"><div class="cube"><div class="f f1"></div><div class="f f2"></div><div class="f f3"></div><div class="f f4"></div><div class="f f5"></div><div class="f f6"></div></div></div>
     <div class="die" data-k="zone"><div class="cube"><div class="f f1"></div><div class="f f2"></div><div class="f f3"></div><div class="f f4"></div><div class="f f5"></div><div class="f f6"></div></div></div>
-    <div class="die" data-k="method"><div class="cube"><div class="f f1"></div><div class="f f2"></div><div class="f f3"></div><div class="f f4"></div><div class="f f5"></div><div class="f f6"></div></div></div>
-    <div class="die" data-k="cond"><div class="cube"><div class="f f1"></div><div class="f f2"></div><div class="f f3"></div><div class="f f4"></div><div class="f f5"></div><div class="f f6"></div></div></div>
+    <div class="die" data-k="style"><div class="cube"><div class="f f1"></div><div class="f f2"></div><div class="f f3"></div><div class="f f4"></div><div class="f f5"></div><div class="f f6"></div></div></div>
+    <div class="die" data-k="duration"><div class="cube"><div class="f f1"></div><div class="f f2"></div><div class="f f3"></div><div class="f f4"></div><div class="f f5"></div><div class="f f6"></div></div></div>
   </section>
 
   <section class="result">
@@ -55,6 +55,7 @@
     </div>
     <div class="round" id="roundBox" hidden>
       <p class="phrase" id="phrase"></p>
+      <button class="timer" id="timer" type="button" hidden><span class="t">00:30</span><span class="hint">toca para empezar</span><span class="bar"></span></button>
       <p class="note" id="note" hidden></p>
       <div class="feedback" id="feedback">
         <button class="chip like" id="fbLike" aria-label="Me gusta"><svg><use href="#i-heart"/></svg><span>Me gusta</span></button>
@@ -124,6 +125,6 @@
 </section>
 
 <div class="toast" id="toast" role="status"></div>
-<script type="module" src="app/app.js?v=8"></script>
+<script type="module" src="app/app.js?v=9"></script>
 </body>
 </html>
