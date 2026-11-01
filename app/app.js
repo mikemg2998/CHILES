@@ -76,26 +76,43 @@ function renderTurn() {
 
 /* ---------- dados ---------- */
 const dieEls = Object.fromEntries(DICE.map(k => [k, document.querySelector(`.die[data-k="${k}"]`)]));
-function setFace(k, text) { const f = dieEls[k].querySelector('.face'); const free = text === '—'; f.textContent = free ? 'Libre' : text; f.classList.toggle('free', free); }
-function idleDice() { for (const k of DICE) setFace(k, IDLE_FACE[k]); }
+const REST = 'rotateX(-12deg) rotateY(16deg)';
+const RX = -12, RY = 16;
+/* tamaño real del cubo → profundidad de las caras */
+const ro = new ResizeObserver(entries => { for (const e of entries) e.target.style.setProperty('--hs', (e.contentRect.width / 2) + 'px'); });
+for (const k of DICE) ro.observe(dieEls[k].querySelector('.cube'));
+function paint(faceEl, text) {
+  const blank = !text || text === '—';
+  faceEl.classList.toggle('blank', blank);
+  faceEl.innerHTML = ''; if (!blank) { const sp = document.createElement('span'); sp.textContent = text; faceEl.appendChild(sp); }
+}
+function setFace(k, text) { paint(dieEls[k].querySelector('.f1'), text); }
+function setFaces(k, faces) { for (let i = 0; i < 6; i++) paint(dieEls[k].querySelector('.f' + (i + 1)), faces[i]); }
+function idleDice() { for (const k of DICE) setFaces(k, [IDLE_FACE[k], '', '', '', '', '']); }
 const wait = ms => new Promise(r => setTimeout(r, ms));
-/* ~1 s: las caras pasan rápido y frenan; solo se muestran caras válidas del nivel (round.dice) y se posa en el resultado */
+/* ~1 s: el cubo se eleva, gira sobre dos ejes con las seis caras reales del nivel y frena hasta posarse en el resultado (cara frontal) */
 async function animateDie(k, faces, delay) {
   await wait(delay);
-  const el = dieEls[k]; el.classList.remove('settle'); el.classList.add('rolling');
-  const steps = [60, 70, 80, 95, 115, 140, 170];
-  let last = -1;
-  for (const ms of steps) {
-    let i; do { i = 1 + Math.floor(Math.random() * 5); } while (i === last && faces.length > 2); last = i;
-    setFace(k, faces[i] || faces[0]);
-    await wait(ms);
-  }
-  setFace(k, faces[0]);
+  const el = dieEls[k], cube = el.querySelector('.cube');
+  setFaces(k, faces);
+  el.classList.remove('settle'); el.classList.add('rolling');
+  const sx = Math.random() < 0.5 ? 1 : -1, sy = Math.random() < 0.5 ? 1 : -1;
+  const tx = 720 * sx + (Math.random() < 0.5 ? 0 : 360 * sx), ty = 360 * sy + (Math.random() < 0.5 ? 0 : 360 * sy);
+  const lift = 14 + (cube.clientWidth || 80) * 0.18;
+  const frames = [
+    { transform: `translateY(0px) ${REST}` },
+    { transform: `translateY(${-lift}px) rotateX(${RX + tx * 0.35}deg) rotateY(${RY + ty * 0.3}deg)`, offset: 0.32 },
+    { transform: `translateY(${-lift * 0.35}px) rotateX(${RX + tx * 0.78}deg) rotateY(${RY + ty * 0.76}deg)`, offset: 0.72 },
+    { transform: `translateY(0px) rotateX(${RX + tx}deg) rotateY(${RY + ty}deg)` },
+  ];
+  const a = cube.animate(frames, { duration: 1000, easing: 'cubic-bezier(.22,.7,.18,1)', fill: 'forwards' });
+  await a.finished.catch(() => {});
+  cube.style.transform = REST; a.cancel();
   el.classList.remove('rolling'); el.classList.add('settle'); buzz(6);
 }
 async function rollDice(round) {
-  await Promise.all(DICE.map((k, i) => animateDie(k, round.dice[k], i * 70)));
-  await wait(90);
+  await Promise.all(DICE.map((k, i) => animateDie(k, round.dice[k], i * 60)));
+  await wait(80);
 }
 
 /* ---------- ronda ---------- */

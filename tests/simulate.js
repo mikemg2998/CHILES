@@ -42,12 +42,12 @@ const setups = [
 let seed = 11;
 for (const s of setups) {
   const eng = new GameEngine({ prefs: { names: ['Ana', 'Leo'], mode: s.mode, enabledGroups: s.groups }, seed: seed++ });
-  const st = { n: N, invalid: 0, quest: 0, zone: {}, act: {}, meth: {}, cond: {}, cat: {}, lvl: {}, sum: 0, repZone4: 0, repAct3: 0, repCond3: 0, phrases: new Set(), seq: [], samples: [] };
+  const st = { n: N, struct: {}, invalid: 0, quest: 0, zone: {}, act: {}, meth: {}, cond: {}, cat: {}, lvl: {}, sum: 0, repZone4: 0, repAct3: 0, repCond3: 0, phrases: new Set(), seq: [], samples: [] };
   for (let i = 0; i < N; i++) {
     const r = eng.roll();
     if (r.validation === 'INVALID') { st.invalid++; if (st.invalid < 4) console.log('  INVALID', r.phrase); }
     if (r.validation === 'QUESTIONABLE') st.quest++;
-    count(st.zone, r.zone); count(st.act, r.action); count(st.meth, r.method || '—'); count(st.cond, r.cond || '—'); count(st.cat, r.category); count(st.lvl, r.level);
+    count(st.zone, r.zone); count(st.act, r.action); count(st.meth, r.method || '—'); count(st.cond, r.cond || '—'); count(st.cat, r.category); count(st.lvl, r.level); count(st.struct, 'A+Z' + (r.method ? '+F' : '') + (r.cond ? '+C' : ''));
     st.sum += r.intensity; st.phrases.add(r.phrase);
     const prev = st.seq.slice(-4);
     if (prev.some(p => p.zone === r.zone)) st.repZone4++;
@@ -62,6 +62,8 @@ for (const s of setups) {
   console.log(`  inválidas ${st.invalid} · cuestionables ${st.quest} · intensidad media ${st.mean.toFixed(2)} · frases distintas ${st.phrases.size}`);
   console.log(`  rechazadas por el validador antes de mostrar: ${st.rejected} (${Object.entries(st.rejectedReasons).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([k, v]) => `${k} ${v}`).join(', ')})`);
   console.log(`  zona repetida en 4 rondas ${pct(st.repZone4, N)} · acción repetida en 3 ${pct(st.repAct3, N)} · condición repetida en 3 ${pct(st.repCond3, N)}`);
+  console.log(`  estructura: ${top(st.struct, 4, N)}`);
+  if (s.mode === 'relajado' && ((st.struct['A+Z+F+C'] || 0) / N > 0.08 || ((st.struct['A+Z+C'] || 0) + (st.struct['A+Z+F+C'] || 0)) / N > 0.3)) { console.log('  ✗ Relajado demasiado recargado'); fail++; }
   console.log(`  zonas: ${top(st.zone, 8, N)}`);
   console.log(`  acciones: ${top(st.act, 8, N)}`);
   console.log(`  formas: ${top(st.meth, 6, N)}`);
@@ -103,7 +105,7 @@ if (SAMPLE) {
   const eng = new GameEngine({ prefs: { names: ['Ana', 'Leo'], mode: 'atrevido', enabledGroups: ALL }, seed: 5 });
   for (let i = 0; i < 4; i++) { const r = eng.roll(); console.log(`  [${r.intensity.toFixed(1)}] ${r.phrase}`); const s = eng.softer(); console.log(`    ↓ [${s ? s.intensity.toFixed(1) : '-'}] ${s ? s.phrase : 'sin variante'}`); const h = eng.harder(); console.log(`    ↑ [${h ? h.intensity.toFixed(1) : '-'}] ${h ? h.phrase : 'sin variante'}`); }
   console.log('\n== Volver a lanzar (cambian ≥3 componentes) ==');
-  let same = 0; for (let i = 0; i < 300; i++) { const r = eng.roll(); const q = eng.reroll(); const k = (r.action === q.action) + (r.zone === q.zone) + (r.method === q.method) + (r.cond === q.cond); if (k > 1) same++; }
+  let same = 0; for (let i = 0; i < 300; i++) { const r = eng.roll(); const q = eng.reroll(); const k = (r.action === q.action) + (r.zone === q.zone) + (!!r.method && r.method === q.method) + (!!r.cond && r.cond === q.cond); if (k > 1) same++; }
   console.log(`  tiradas donde cambiaron menos de 3 componentes: ${same}/300`);
 }
 console.log(fail ? `\n✗ ${fail} comprobaciones fallidas` : '\n✓ Todo correcto');

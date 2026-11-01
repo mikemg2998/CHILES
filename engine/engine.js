@@ -9,6 +9,9 @@ import { NaturalLanguageGenerator as NLG } from './nlg.js';
 
 const near = (v, t, k = 1) => Math.exp(-k * Math.abs(v - t));
 const COOL = { action: 3, zone: 4, method: 2, cond: 3 };
+/* Densidad por nivel: probabilidad de que la ronda intente usar forma y condición.
+   Los dados son la mecánica; la frase manda. Relajado va limpio; Atrevido admite más condiciones porque forman parte del picante. */
+const DENSITY = { 1: { method: .6, cond: .2, both: .35 }, 2: { method: .7, cond: .45, both: .6 }, 3: { method: .65, cond: .6, both: .7 } };
 
 export class GameEngine {
   constructor({ prefs, seed } = {}) {
@@ -75,8 +78,14 @@ export class GameEngine {
       if (!action) continue;
       const zone = keep.zone ? ZONE[keep.zone] : this.pickZone(action, level, target, avoid, relax);
       if (!zone) continue;
-      const method = this.pickMethod(action, zone, level, target, avoid, relax);
-      let cond = this.pickCondition(action, zone, method, level, target, avoid, relax);
+      // estructura de la ronda: qué dados entran. Nunca por obligación.
+      const D = DENSITY[level];
+      let wantMethod = this.rng.chance(action.manner === 'baja' ? D.method * .45 : D.method);
+      let wantCond = this.rng.chance(D.cond);
+      if (wantMethod && wantCond && !this.rng.chance(D.both)) { if (this.rng.chance(.5)) wantMethod = false; else wantCond = false; }
+      if (keep.method !== undefined) wantMethod = !!keep.method;
+      const method = wantMethod ? this.pickMethod(action, zone, level, target, avoid, relax) : null;
+      let cond = wantCond ? this.pickCondition(action, zone, method, level, target, avoid, relax) : null;
       let alt = null;
       if (cond && cond.needsAlt) { const alts = CE.altZones(cond, action, zone, level, prefs); if (!alts.length) cond = null; else alt = this.rng.pick(alts).id; }
       const intensity = combinationIntensity(action, zone, method, cond);
@@ -132,7 +141,7 @@ export class GameEngine {
     const items = CE.conditionsFor(action, zone, method, level).map(c => {
       if (avoid && avoid.cond === c.id) return null;
       if (!relax && H.cooling('cond', c.id, COOL.cond)) return null;
-      return { item: c, weight: c.levels[level] * near(base + c.mod, target, 1.2) * H.novelty('cond', c.id, 10, 1) };
+      return { item: c, weight: c.levels[level] * CE.conditionValue(c, action, zone) * near(base + c.mod, target, 1.2) * H.novelty('cond', c.id, 10, 1) };
     }).filter(Boolean);
     return items.length ? this.rng.weighted(items) : null;
   }
@@ -163,7 +172,7 @@ export class GameEngine {
             if (CombinationValidator.validate({ ...combo, phrase: this.previewPhrase(combo), names: prefs.names }, prefs).status !== 'VALID') continue;
             if (combo.action === last.action && combo.method === last.method && combo.cond === last.cond) continue;
             const changed = (combo.action !== last.action) + (combo.method !== last.method) + (combo.cond !== last.cond);
-            cands.push({ item: combo, weight: near(v, dir < 0 ? last.intensity - 1.5 : last.intensity + 1.5, 1) * (combo.action === last.action ? 1.6 : 1) / (1 + 0.3 * changed) });
+            cands.push({ item: combo, weight: near(v, dir < 0 ? last.intensity - 1.5 : last.intensity + 1.5, 1) * (combo.action === last.action ? 1.6 : 1) / (1 + 0.3 * changed) * (m && c ? 0.5 : 1) });
           }
         }
       }

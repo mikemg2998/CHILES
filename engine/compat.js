@@ -25,8 +25,20 @@ export const CompatibilityEngine = {
   methodsFor(action, zone, level) {
     return METHODS.filter(m => m.levels[level] && this.methodFits(m, action, zone));
   },
+  /* Cuánto aporta la condición a esta acción y zona (0 = relleno). */
+  conditionValue(c, action, zone) {
+    const ap = c.aporta || { base: .7 };
+    let v = ap.base;
+    const mul = (table, tags) => { if (!table) return; for (const t of tags) if (table[t] != null) v *= table[t]; };
+    mul(ap.action, action.tags);
+    if (ap.zone) { const hit = zone.tags.filter(t => ap.zone[t] != null); if (hit.length) mul(ap.zone, hit); else if (ap.zoneElse != null) v *= ap.zoneElse; }
+    if (ap.contact && ap.contact[action.contactType] != null) v *= ap.contact[action.contactType];
+    if (ap.duration && ap.duration[action.durationType] != null) v *= ap.duration[action.durationType];
+    return v;
+  },
   conditionFits(c, action, zone, method) {
     if (action.denyConditions.includes(c.id)) return false;
+    if (this.conditionValue(c, action, zone) < 0.45) return false; // no aporta nada: fuera
     if (c.needsZoneTags.length && !c.needsZoneTags.every(t => has(zone.tags, t))) return false;
     if (c.denyZoneTags.some(t => has(zone.tags, t))) return false;
     if (c.needsActionTags.length && !c.needsActionTags.some(t => has(action.tags, t))) return false;
@@ -97,9 +109,13 @@ export const CombinationValidator = {
     if (combo.phrase) {
       const words = combo.phrase.split(/\s+/).length;
       if (words > 30) return { status: 'QUESTIONABLE', reasons: ['frase demasiado larga'] };
+      if (combo.level === 1 && words > 22) return { status: 'QUESTIONABLE', reasons: ['frase recargada para Relajado'] };
       const names = (combo.names || []).filter(Boolean);
       for (const n of names) { const k = combo.phrase.split(n).length - 1; if (k > 2) return { status: 'QUESTIONABLE', reasons: ['nombre repetido'] }; }
     }
+    if (combo.level === 1 && m && c && c.role === 'atmosfera') return { status: 'QUESTIONABLE', reasons: ['condición decorativa sobre una frase ya completa'] };
+    if (m && c && m.pos !== 'adv' && ['tail', 'end'].includes(c.slot)) return { status: 'QUESTIONABLE', reasons: ['demasiadas coletillas encadenadas'] };
+    if (m && c && a.manner === 'baja' && c.role === 'atmosfera') return { status: 'QUESTIONABLE', reasons: ['demasiados añadidos para una acción simple'] };
     if (z.intensity >= 8.5 && a.intensity <= 2.5) return { status: 'QUESTIONABLE', reasons: ['acción muy suave en zona íntima'] };
     return { status: 'VALID', reasons: [] };
   },
