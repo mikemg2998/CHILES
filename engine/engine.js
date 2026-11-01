@@ -118,7 +118,7 @@ export class GameEngine {
       if (!zs.length) continue;
       const d = Math.min(...zs.map(z => Math.abs(pairIntensity(a, z) - target)));
       if (d > 1.6) continue;
-      items.push({ item: a, weight: a.levels[level] * near(d, 0, 1.2) * H.novelty('action', a.id, 10, 1.2) * H.familyWeight('action', a.family, { strength: 1 }) });
+      items.push({ item: a, weight: a.levels[level] * near(d, 0, 1.2) * H.novelty('action', a.id, 10, 1.2) * H.familyWeight('action', a.family, { strength: 1 }) * H.familyWeight('actor', a.actor, { strength: 0.6, hunger: 99 }) });
     }
     return items.length ? this.rng.weighted(items) : null;
   }
@@ -129,7 +129,7 @@ export class GameEngine {
       if (!relax && (H.cooling('zone', z.id, COOL.zone) || H.familyCooling('zone', z.family, FAM_COOL.zone))) return null;
       const d = Math.abs(pairIntensity(action, z) - target);
       if (d > 1.6) return null;
-      return { item: z, weight: z.levels[level] * near(d, 0, 1.5) * H.novelty('zone', z.id, 10, 1.5) * H.familyWeight('zone', z.family, { strength: 1.5 }) };
+      return { item: z, weight: z.levels[level] * near(d, 0, 1.5) * H.novelty('zone', z.id, 10, 2) * H.familyWeight('zone', z.family, { strength: 1.5 }) };
     }).filter(Boolean);
     return items.length ? this.rng.weighted(items) : null;
   }
@@ -216,7 +216,7 @@ export class GameEngine {
       action: combo.action, zone: combo.zone, method: combo.method, cond: combo.cond, alt: combo.alt || null,
       seconds: m && m.seconds ? m.seconds : (c && c.id === 'esperar' ? 5 : null),
       performer, performerName, partnerName: partner, phrase, faces: NLG.faces(combo), dice: this.diceFaces(combo, level),
-      families: { action: a.family, zone: z.family, cond: c ? c.family : null, method: m ? m.dim : null },
+      families: { action: a.family, actor: a.actor || null, zone: z.family, cond: c ? c.family : null, method: m ? m.dim : null },
       variant: opts.variant || null, kept: combo.kept || null,
       validation: CombinationValidator.validate({ ...combo, intensity, level: opts.fromFavorite ? null : level, phrase, names }, this.prefs).status,
     };

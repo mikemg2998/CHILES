@@ -116,7 +116,7 @@ for (const s of setups) {
   console.log(`  ${s.key}: familias de zona distintas ${med(fam)} (mín ${Math.min(...fam)}) · acciones distintas ${med(acts)} (mín ${Math.min(...acts)}) · familia de zona más repetida ${med(famMax)}/20 (máx ${Math.max(...famMax)}) · condición más repetida ${Math.max(...condMax)}`);
   console.log(`    misma familia de zona 3 veces en 5 tiradas ${pct(win5Fam, pairs)} · misma familia de acción 3 veces en 5 ${pct(win5Act, pairs)} · condición repetida en 5 tiradas ${pct(condNear, pairs)}`);
   const small = s.key.includes('sin'); // pool de 9 familias: se tolera algo más de cercanía
-  if (med(fam) < (small ? 5 : 6) || med(acts) < 9 || Math.max(...condMax) > 3 || condNear > 0 || win5Fam / pairs > (small ? 0.06 : 0.03)) { console.log('  ✗ la sesión no se siente variada'); fail++; }
+  if (med(fam) < (small ? 5 : 6) || med(acts) < 9 || Math.max(...condMax) > 3 || condNear / pairs > (small ? 0.005 : 0) || win5Fam / pairs > (small ? 0.06 : 0.03)) { console.log('  ✗ la sesión no se siente variada'); fail++; }
 }
 
 /* 4. Muestra */

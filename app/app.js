@@ -141,6 +141,17 @@ function throwDice(round) {
         b.x += b.vx * dt; b.y += b.vy * dt;
         if (b.x < 0) { b.x = 0; b.vx = -b.vx * 0.6; b.wz += rnd(-0.4, 0.4); } else if (b.x > W - size) { b.x = W - size; b.vx = -b.vx * 0.6; b.wz += rnd(-0.4, 0.4); }
         if (b.y < 0) { b.y = 0; b.vy = -b.vy * 0.6; } else if (b.y > H - size) { b.y = H - size; b.vy = -b.vy * 0.6; }
+        // choque con otros dados que estén a la misma altura
+        for (const o of bodies) {
+          if (o === b || o.done || t < o.t0 || Math.abs(o.z - b.z) > size * 0.6) continue;
+          const dx = (o.x - b.x), dy = (o.y - b.y), d = Math.hypot(dx, dy), min = size * 0.92;
+          if (d > 0 && d < min) {
+            const nx = dx / d, ny = dy / d, push = (min - d) / 2;
+            b.x -= nx * push; b.y -= ny * push; o.x += nx * push; o.y += ny * push;
+            const rv = (b.vx - o.vx) * nx + (b.vy - o.vy) * ny; // velocidad relativa en la normal
+            if (rv > 0) { const j = rv * 0.75; b.vx -= j * nx; b.vy -= j * ny; o.vx += j * nx; o.vy += j * ny; b.wz += rnd(-0.5, 0.5); o.wz += rnd(-0.5, 0.5); }
+          }
+        }
         b.rx += b.wx * dt; b.ry += b.wy * dt; b.rz += b.wz * dt;
         const speed = Math.hypot(b.vx, b.vy), spin = Math.abs(b.wx) + Math.abs(b.wy) + Math.abs(b.wz);
         const age = t - b.t0;

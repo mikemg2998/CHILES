@@ -88,6 +88,7 @@ export const CombinationValidator = {
     if (m && !CompatibilityEngine.methodFits(m, a, z)) reasons.push(`forma ${m.id} no compatible`);
     if (c && !CompatibilityEngine.conditionFits(c, a, z, m)) reasons.push(`condición ${c.id} no compatible`);
     if (c && c.needsAlt && !combo.alt) reasons.push('condición sin zona alternativa');
+    if (combo.alt && prefs && !prefs.zoneEnabled(ZONE[combo.alt])) reasons.push('zona alternativa fuera de la anatomía de quien recibe'); // ninguna parte de la frase puede contradecir la anatomía
     // redundancia: el mismo concepto en dos elementos distintos
     const cs = conceptsOf(combo);
     for (let i = 0; i < cs.length; i++) for (let j = i + 1; j < cs.length; j++) {
