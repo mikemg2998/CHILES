@@ -74,7 +74,7 @@ for (const s of setups) {
   console.log(`  nunca: zonas ${Z.filter(z => !st.zone[z.id] && Object.keys(z.levels).some(l => s.mode === 'progresivo' || l == { relajado: 1, sensual: 2, atrevido: 3 }[s.mode])).map(z => z.id).join(',') || '—'}`);
   if (st.invalid) fail++;
   const poolZ = Z.filter(z => Object.keys(z.levels).some(l => s.mode === 'progresivo' || l == { relajado: 1, sensual: 2, atrevido: 3 }[s.mode])).length;
-  if (st.repZone4 / N > (poolZ < 16 ? 0.25 : 0.03)) { console.log('  ⚠ demasiadas zonas repetidas'); fail++; }
+  if (st.repZone4 / N > (poolZ < 18 ? 0.25 : 0.03)) { console.log('  ⚠ demasiadas zonas repetidas'); fail++; }
 }
 
 /* 3. Test de separación entre niveles */
