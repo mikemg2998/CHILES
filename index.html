@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="app/styles.css?v=6">
+<link rel="stylesheet" href="app/styles.css?v=7">
 </head>
 <body class="idle">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -23,6 +23,8 @@
   <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
   <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 8.5M20 4v4.5h-4.5M20 12a8 8 0 0 1-13.7 5.6L4 15.5M4 20v-4.5h4.5"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.5s-7.5-4.6-7.5-10A4.2 4.2 0 0 1 12 8a4.2 4.2 0 0 1 7.5 2.5c0 5.4-7.5 10-7.5 10z"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M8 10l4 4 4-4"/></symbol>
   <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6.3 6.3l2.2 2.2M15.5 15.5l2.2 2.2M6.3 17.7l2.2-2.2M15.5 8.5l2.2-2.2"/></symbol>
 </svg>
 
@@ -35,35 +37,32 @@
     </div>
   </header>
 
-  <nav class="levels" id="levels" role="tablist"></nav>
+  <button class="level-ind" id="levelBtn" type="button" aria-label="Cambiar de nivel"><span class="num" id="levelNum">01</span><span class="name" id="levelName">Conexión</span><svg><use href="#i-chev"/></svg></button>
   <p class="tagline" id="tagline"></p>
 
   <div class="turn" id="turn"><b id="turnA"></b><i>→</i><b id="turnB"></b></div>
 
   <section class="dice" id="dice">
-    <div class="die" data-k="action"><div class="cube"><div class="f f1"></div><div class="f f2"></div><div class="f f3"></div><div class="f f4"></div><div class="f f5"></div><div class="f f6"></div></div><span class="lab">Acción</span></div>
-    <div class="die" data-k="zone"><div class="cube"><div class="f f1"></div><div class="f f2"></div><div class="f f3"></div><div class="f f4"></div><div class="f f5"></div><div class="f f6"></div></div><span class="lab">Zona</span></div>
-    <div class="die" data-k="method"><div class="cube"><div class="f f1"></div><div class="f f2"></div><div class="f f3"></div><div class="f f4"></div><div class="f f5"></div><div class="f f6"></div></div><span class="lab">Forma</span></div>
-    <div class="die" data-k="cond"><div class="cube"><div class="f f1"></div><div class="f f2"></div><div class="f f3"></div><div class="f f4"></div><div class="f f5"></div><div class="f f6"></div></div><span class="lab">Condición</span></div>
+    <div class="die" data-k="action"><div class="cube"><div class="f f1"></div><div class="f f2"></div><div class="f f3"></div><div class="f f4"></div><div class="f f5"></div><div class="f f6"></div></div></div>
+    <div class="die" data-k="zone"><div class="cube"><div class="f f1"></div><div class="f f2"></div><div class="f f3"></div><div class="f f4"></div><div class="f f5"></div><div class="f f6"></div></div></div>
+    <div class="die" data-k="method"><div class="cube"><div class="f f1"></div><div class="f f2"></div><div class="f f3"></div><div class="f f4"></div><div class="f f5"></div><div class="f f6"></div></div></div>
+    <div class="die" data-k="cond"><div class="cube"><div class="f f1"></div><div class="f f2"></div><div class="f f3"></div><div class="f f4"></div><div class="f f5"></div><div class="f f6"></div></div></div>
   </section>
 
   <section class="result">
     <div class="welcome" id="welcome">
-      <p class="meta">Una sesión</p>
-      <p class="phrase">Cuatro dados y una sola instrucción escrita para los dos. La sesión está completa en cualquier nivel: subir es algo que decidís juntos, en privado.</p>
+      <p class="phrase">Una sola frase para los dos. Hasta dónde llegáis lo decidís vosotros; el juego solo propone.</p>
     </div>
     <div class="round" id="roundBox" hidden>
-      <div class="meta"><span id="metaText"></span><button class="fav" id="btnFav" aria-label="Guardar en favoritas"><svg><use href="#i-mark"/></svg></button></div>
       <p class="phrase" id="phrase"></p>
       <p class="note" id="note" hidden></p>
       <div class="feedback" id="feedback">
-        <button class="chip" id="fbLike">Me gusta</button>
-        <button class="chip" id="fbMore" hidden>Más</button>
-        <button class="chip" id="fbLess" hidden>Menos</button>
+        <button class="chip like" id="fbLike" aria-label="Me gusta"><svg><use href="#i-heart"/></svg><span>Me gusta</span></button>
+        <button class="chip more" id="btnMore" aria-label="Más opciones">•••</button>
+        <button class="fav" id="btnFav" aria-label="Guardar en Lo nuestro"><svg><use href="#i-mark"/></svg></button>
       </div>
     </div>
     <div class="ending" id="ending" hidden>
-      <p class="meta">Sesión</p>
       <p class="phrase" id="endingText"></p>
     </div>
     <pre class="debug" id="debug" hidden></pre>
@@ -72,40 +71,33 @@
   <div class="actions">
     <button class="btn primary" id="btnRoll">Lanzar los dados</button>
     <button class="btn primary" id="btnNew" hidden>Nueva sesión</button>
-    <div class="row" id="secondary">
-      <button class="btn" id="btnPass">Pasar</button>
-      <button class="btn" id="btnReroll">Otra</button>
-      <button class="btn" id="btnSofter">Suave</button>
-      <button class="btn" id="btnHarder">Subir</button>
-    </div>
   </div>
 </div>
+
+<div class="level-flash" id="levelFlash" hidden><span class="num" id="flashNum"></span><b id="flashName"></b><p id="flashCopy"></p></div>
 
 <div class="backdrop" id="backdrop" hidden></div>
 
 <section class="sheet" id="sheetStart" aria-hidden="true">
-  <div class="sheet-head"><h2>Esta noche quiero…</h2><button class="ib" data-close aria-label="Cerrar"><svg><use href="#i-x"/></svg></button></div>
-  <p class="hint">Cada uno elige lo que le apetezca. La sesión usa lo que tenéis en común. Nada de esto se guarda.</p>
+  <div class="sheet-head"><h2>¿Cómo llegáis hoy?</h2><button class="ib" data-close aria-label="Cerrar"><svg><use href="#i-x"/></svg></button></div>
+  <p class="hint">No hace falta saber hasta dónde vais a llegar. Marcad lo que os apetezca ahora; nada de esto se guarda.</p>
   <div class="two" id="intents"></div>
-  <details class="quiet"><summary>Hoy no…</summary><p class="hint">Si uno de los dos aparta algo, queda fuera para toda la sesión. Nadie pregunta por qué.</p><div class="two" id="avoids"></div></details>
+  <details class="quiet" id="prefsBox"><summary>Hoy: sí, quizá o no</summary><p class="hint">«Quizá» no se da por hecho: puede salir poco y nunca pasa a «sí» por sí solo. «Hoy no» queda fuera de la sesión.</p><div class="prefs" id="prefs"></div></details>
   <button class="btn primary" id="btnStart">Empezar</button>
 </section>
 
-<section class="sheet gate" id="sheetGate" aria-hidden="true">
-  <div class="sheet-head"><h2 id="gateTitle">Un momento para los dos</h2></div>
-  <div id="gateStep">
-    <p class="gate-who" id="gateWho"></p>
-    <p class="hint">Elige en privado. Solo se verá la decisión conjunta, nunca quién eligió qué.</p>
-    <div class="gate-opts" id="gateOpts"></div>
-  </div>
-  <div id="gateResult" hidden>
-    <p class="gate-msg" id="gateMsg"></p>
-    <button class="btn primary" id="btnGateGo">Seguir</button>
-  </div>
+<section class="sheet menu" id="sheetMenu" aria-hidden="true">
+  <div class="menu-list" id="menuList"></div>
+</section>
+
+<section class="sheet" id="sheetLevel" aria-hidden="true">
+  <div class="sheet-head"><h2>Nivel</h2><button class="ib" data-close aria-label="Cerrar"><svg><use href="#i-x"/></svg></button></div>
+  <p class="hint">Lo decidís vosotros, cuando queráis y en cualquier dirección. Una sesión está completa en cualquier nivel.</p>
+  <div class="level-list" id="levelList"></div>
 </section>
 
 <section class="sheet" id="sheetFavs" aria-hidden="true">
-  <div class="sheet-head"><h2>Favoritas</h2><button class="ib" data-close aria-label="Cerrar"><svg><use href="#i-x"/></svg></button></div>
+  <div class="sheet-head"><h2>Lo nuestro</h2><button class="ib" data-close aria-label="Cerrar"><svg><use href="#i-x"/></svg></button></div>
   <div class="cards" id="favList"></div>
 </section>
 
@@ -113,24 +105,25 @@
   <div class="sheet-head"><h2>Ajustes</h2><button class="ib" data-close aria-label="Cerrar"><svg><use href="#i-x"/></svg></button></div>
   <p class="lab">Nombres</p>
   <div class="names">
-    <div class="player"><input id="name0" maxlength="16" placeholder="Jugador 1" autocomplete="off" autocapitalize="words"><div class="anat" data-p="0"><button type="button" data-a="F">Femenina</button><button type="button" data-a="M">Masculina</button></div></div>
-    <div class="player"><input id="name1" maxlength="16" placeholder="Jugador 2" autocomplete="off" autocapitalize="words"><div class="anat" data-p="1"><button type="button" data-a="F">Femenina</button><button type="button" data-a="M">Masculina</button></div></div>
+    <div class="player"><input id="name0" maxlength="16" placeholder="Jugador 1" autocomplete="off" autocapitalize="words"><div class="anat" data-p="0"><button type="button" data-a="vulva">Vulva</button><button type="button" data-a="pene">Pene</button></div></div>
+    <div class="player"><input id="name1" maxlength="16" placeholder="Jugador 2" autocomplete="off" autocapitalize="words"><div class="anat" data-p="1"><button type="button" data-a="vulva">Vulva</button><button type="button" data-a="pene">Pene</button></div></div>
   </div>
-  <p class="hint">La anatomía de cada uno decide qué zonas íntimas pueden salir cuando le toca recibir.</p>
+  <p class="hint">Solo partes del cuerpo, no género: así el juego sabe qué puede recibir cada uno en Intimidad. Se guarda únicamente en este teléfono.</p>
   <p class="lab">Zonas del cuerpo</p>
   <div class="list" id="groups"></div>
   <p class="lab">Anatomía íntima</p>
-  <p class="hint">Solo entra en juego en Intimidad, según la anatomía de quien recibe. Todo se guarda únicamente en este teléfono.</p>
+  <p class="hint">Solo entra en juego en Intimidad, según las partes disponibles de quien recibe.</p>
   <div class="list" id="groupsIntimate"></div>
   <p class="lab">Dispositivo</p>
   <div class="list"><label class="sw"><span>Vibración al lanzar</span><input type="checkbox" id="swVibe"><i></i></label></div>
+  <button class="btn primary" id="btnSetupDone" hidden>Listo</button>
   <div class="danger">
-    <button class="btn" id="btnReset">Empezar partida nueva</button>
-    <button class="link" id="btnClearFavs">Borrar favoritas</button>
+    <button class="btn" id="btnReset">Empezar sesión nueva</button>
+    <button class="link" id="btnClearFavs">Borrar Lo nuestro</button>
   </div>
 </section>
 
 <div class="toast" id="toast" role="status"></div>
-<script type="module" src="app/app.js?v=6"></script>
+<script type="module" src="app/app.js?v=7"></script>
 </body>
 </html>

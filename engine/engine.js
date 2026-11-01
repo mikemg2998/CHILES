@@ -9,7 +9,7 @@ import { HistoryManager } from './history.js';
 import { PreferenceManager } from './prefs.js';
 import { NaturalLanguageGenerator as NLG } from './nlg.js';
 import { interactionMeta } from './meta.js';
-import { SessionState, SessionDirector, AVOIDS, INTENTS } from './session.js';
+import { SessionState, SessionDirector, AVOIDS, MOODS } from './session.js';
 import { criticalCheck, qualityScore, fallbackFor, THRESHOLD } from './quality.js';
 
 const near = (v, t, k = 1) => Math.exp(-k * Math.abs(v - t));
@@ -34,22 +34,15 @@ export class GameEngine {
   /* ---------- sesión ---------- */
   level() { return this.session.level; }
   levelInfo() { return LEVELS[this.session.level]; }
-  /* nivel de arranque: antes de la primera ronda vale cualquiera; después solo se baja. Subir es cosa de la puerta. */
-  setLevel(level) {
-    level = Math.max(1, Math.min(4, Number(level) || 1));
-    if (this.state.round === 0 || level <= this.session.level) { this.session.level = level; this.session.roundsInLevel = 0; this.session.stayHere = false; return true; }
-    return false;
-  }
-  setIntents(player, list) { this.session.intents[player] = [...new Set(list.filter(k => INTENTS[k]))]; }
-  setAvoid(player, list) { this.session.avoid[player] = [...new Set(list.filter(k => AVOIDS[k]))]; }
+  /* el nivel lo decide la pareja, en cualquier dirección y en cualquier momento; el motor nunca lo cambia solo */
+  setLevel(level) { this.director.setLevel(this.session, level); return this.session.level === Math.max(1, Math.min(4, Number(level) || 1)); }
+  setIntents(player, list) { this.session.intents[player] = [...new Set(list.filter(k => MOODS[k]))]; }
+  /* preferencias de sesión: {clave: 'si' | 'quiza' | 'no'} */
+  setPrefs(player, map) { const out = {}; for (const k in map) if (AVOIDS[k] && (map[k] === 'quiza' || map[k] === 'no')) out[k] = map[k]; this.session.pref[player] = out; }
+  setAvoid(player, list) { const m = { ...this.session.pref[player] }; for (const k in m) if (m[k] === 'no') delete m[k]; for (const k of list) if (AVOIDS[k]) m[k] = 'no'; this.session.pref[player] = m; }
   newSession(level) { this.history.reset(); this.state.round = 0; this.state.performer = 0; this.session = new SessionState(level || this.session.level); this.stats = { rejected: 0, rejectedReasons: {}, fallbacks: 0 }; }
   ended() { return this.session.ended; }
   feedback(kind, extra) { this.director.feedback(this.session, this.history.last(), kind, extra); }
-  gateDue() { return this.director.gateDue(this.session); }
-  canOpenGate() { return this.director.canOpenGate(this.session); }
-  openGate() { return this.director.openGate(this.session); }
-  vote(player, choice) { return this.director.vote(this.session, player, choice); }
-  lowerLevel() { return this.director.lower(this.session); }
   endSession(how) { return this.director.end(this.session, how); }
 
   /* ---------- API de rondas ---------- */
@@ -63,13 +56,14 @@ export class GameEngine {
     this.aim(false);
     const last = this.history.last();
     if (last) this.feedback('cambia');
-    const combo = this.generate({ purpose: 'EXPLORE', target: last ? last.target : null, avoid: last });
+    const combo = this.generate({ purpose: 'VARIATION', target: last ? last.target : null, avoid: last });
     return this.round(combo, { advanceTurn: false, target: last ? last.target : null });
   }
-  /* SUAVE: la misma idea, más suave, sin cambiar de persona */
+  /* MÁS SUAVE: la misma idea con menos intensidad, sin cambiar de persona ni de nivel; además baja la intensidad del nivel para lo que venga */
   softer() {
     const last = this.history.last(); if (!last || this.session.ended) return null;
     this.aim(false);
+    this.director.softer(this.session);
     const combo = this.getVariant(last);
     if (!combo) return null;
     return this.round(combo, { advanceTurn: false, target: combo.intensity, variant: 'softer' });
@@ -102,7 +96,7 @@ export class GameEngine {
     purpose = P.purpose === 'END' ? 'MAINTAIN' : P.purpose;
     if (target == null) target = this.director.target(purpose, S, H);
     const mods = this.director.modifiers(purpose, S, H);
-    const dbg = { selectedPurpose: purpose, purposeReason: P.reason, target, level, selectedFamily: null, weights: {}, recencyPenalty: {}, diversityBoost: {}, feedbackModifier: {}, progressionModifier: {}, rejectedCandidates: [], rejectionReasons: {}, candidates: [], finalQualityScore: null, fallback: false };
+    const dbg = { selectedPurpose: purpose, purposeReason: P.reason, selectedPattern: null, target, level, intraLevelIntensity: S.intraLevelIntensity, calm: S.calm(), selectedFamily: null, candidateWeights: {}, recencyPenalty: {}, diversityBoost: {}, feedbackModifier: {}, intensityModifier: {}, anatomyModifier: {}, rejectedCandidates: [], rejectionReasons: {}, candidates: [], finalQualityScore: null, fallback: false };
     const candidates = [];
     const ctxBase = { prefs, level, session: S, avoids: AVOIDS, history: H, target, purpose };
     for (let attempt = 0; attempt < MAX_ATTEMPTS && candidates.length < MAX_CANDIDATES; attempt++) {
@@ -133,7 +127,7 @@ export class GameEngine {
     }
     let combo;
     if (candidates.length) {
-      combo = this.rng.weighted(candidates.map(c => ({ item: c, weight: Math.exp(8 * c.quality) * (purpose === 'DEEPEN' ? c.qualityParts.continuity ** 2 : 1) }))); // calidad manda, con un poco de azar
+      combo = this.rng.weighted(candidates.map(c => ({ item: c, weight: Math.exp(8 * c.quality) * (purpose === 'DEEPEN' ? c.qualityParts.continuity ** 2 : 1) * mods.maybe(ACTION[c.action], ZONE[c.zone], c.cond ? CONDITION[c.cond] : null) }))); // calidad manda, con un poco de azar
     } else {
       const f = fallbackFor(level, prefs, H.last() ? H.last().action + ':' + H.last().zone : null, c => criticalCheck({ ...c, phrase: '' }, ctxBase).ok);
       combo = this.build(ACTION[f.action], ZONE[f.zone], f.method ? METHOD[f.method] : null, null, level, target);
@@ -141,7 +135,7 @@ export class GameEngine {
     }
     combo.purpose = purpose;
     dbg.candidates = candidates.map(c => ({ phrase: c.phrase, quality: c.quality }));
-    dbg.selectedFamily = combo.meta.semanticFamily; dbg.finalQualityScore = combo.quality;
+    dbg.selectedFamily = combo.meta.semanticFamily; dbg.selectedPattern = combo.meta.pattern; dbg.finalQualityScore = combo.quality;
     this.lastDebug = dbg;
     return combo;
   }
@@ -180,7 +174,7 @@ export class GameEngine {
       const recency = H.novelty('action', a.id, 10, 1.2) * H.familyWeight('action', a.family, { strength: mods.purpose === 'DEEPEN' ? 0.2 : 1, soft: mods.purpose === 'DEEPEN' }) * H.familyWeight('actor', a.actor, { strength: 0.6, hunger: 99 });
       const prog = near(d, 0, 1.2), pm = mods.action(a);
       const w = a.levels[level] * prog * recency * pm;
-      if (this.debug) { dbg.weights[a.id] = Math.round(w * 1000) / 1000; dbg.recencyPenalty[a.id] = Math.round(recency * 100) / 100; dbg.progressionModifier[a.id] = Math.round(prog * 100) / 100; dbg.feedbackModifier[a.id] = Math.round(pm * 100) / 100; }
+      if (this.debug) { dbg.candidateWeights[a.id] = Math.round(w * 1000) / 1000; dbg.recencyPenalty[a.id] = Math.round(recency * 100) / 100; dbg.intensityModifier[a.id] = Math.round(prog * 100) / 100; dbg.feedbackModifier[a.id] = Math.round(pm * 100) / 100; dbg.anatomyModifier[a.id] = zs.length / Math.max(1, a.zones.length); }
       items.push({ item: a, weight: w });
     }
     return items.length ? this.rng.weighted(items) : null;
@@ -288,7 +282,6 @@ export class GameEngine {
     };
     this.history.push(round);
     this.director.afterRound(this.session, round);
-    round.gateDue = this.gateDue();
     return round;
   }
 
@@ -305,4 +298,4 @@ export class GameEngine {
     return { action: [f.action, ...others(actNames, f.action)], zone: [f.zone, ...others(zoneNames, f.zone)], method: [f.method, ...others(methodNames, f.method)], cond: [f.cond, ...others(condNames, f.cond)] };
   }
 }
-export { CombinationValidator, PreferenceManager, HistoryManager, NLG, combinationIntensity, SessionState, SessionDirector, INTENTS, AVOIDS };
+export { CombinationValidator, PreferenceManager, HistoryManager, NLG, combinationIntensity, SessionState, SessionDirector, MOODS, AVOIDS };

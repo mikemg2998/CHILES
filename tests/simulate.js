@@ -14,7 +14,7 @@ const pct = (n, t) => (100 * n / t).toFixed(1) + '%';
 const count = (m, k) => { m[k] = (m[k] || 0) + 1; };
 const top = (m, n, t) => Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, n).map(([k, v]) => `${k} ${pct(v, t)}`).join(' · ');
 const ALL = Object.keys(GROUPS);
-const BASE = { names: ['Ana', 'Leo'], anatomy: ['F', 'M'], enabledGroups: ALL };
+const BASE = { names: ['Ana', 'Leo'], bodyParts: [['vulva'], ['pene']], enabledGroups: ALL };
 
 /* 1. Espacio del catálogo por nivel */
 console.log('== Catálogo ==');
@@ -34,10 +34,10 @@ for (const L of [1, 2, 3, 4]) {
 
 /* 2. Sesiones largas por nivel */
 const results = {};
-const setups = [1, 2, 3, 4].map(L => ({ key: LEVELS[L].key, level: L })).concat([{ key: 'intimidad (sin anatomía indicada)', level: 4, anatomy: ['', ''] }]);
+const setups = [1, 2, 3, 4].map(L => ({ key: LEVELS[L].key, level: L })).concat([{ key: 'intimidad (dos penes)', level: 4, bodyParts: [['pene'], ['pene']] }]);
 let seed = 11;
 for (const s of setups) {
-  const eng = new GameEngine({ prefs: { ...BASE, anatomy: s.anatomy || BASE.anatomy }, seed: seed++, level: s.level });
+  const eng = new GameEngine({ prefs: { ...BASE, bodyParts: s.bodyParts || BASE.bodyParts }, seed: seed++, level: s.level });
   const st = { struct: {}, invalid: 0, lowQ: 0, fallback: 0, zone: {}, act: {}, meth: {}, cond: {}, purpose: {}, pattern: {}, sum: 0, repZone4: 0, repAct3: 0, repCond3: 0, phrases: new Set(), seq: [], levelDrift: 0 };
   for (let i = 0; i < N; i++) {
     const r = eng.roll();
@@ -102,7 +102,7 @@ console.log('\n== Sesiones reales (40 partidas × 20 tiradas) ==');
 for (const s of setups) {
   const S = 40, Rn = 20; const fam = [], acts = [], famMax = [], condMax = []; let win5Fam = 0, win5Act = 0, condNear = 0, semNear = 0, pairsN = 0;
   for (let k = 0; k < S; k++) {
-    const eng = new GameEngine({ prefs: { ...BASE, anatomy: s.anatomy || BASE.anatomy }, seed: 1000 + k, level: s.level });
+    const eng = new GameEngine({ prefs: { ...BASE, bodyParts: s.bodyParts || BASE.bodyParts }, seed: 1000 + k, level: s.level });
     const rs = []; for (let i = 0; i < Rn; i++) rs.push(eng.roll());
     const zf = {}, cc = {}; const A = new Set();
     rs.forEach((r, i) => {

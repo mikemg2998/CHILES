@@ -1,57 +1,61 @@
-/* SESSION DIRECTOR. La sesión no es una lista de tiradas: tiene un propósito en cada ronda, aprende del feedback
-   de la pareja y decide cuándo ofrecer una puerta. La intensidad respira; el nivel solo cambia cuando los dos
-   lo deciden en privado. Todo este estado vive en memoria: nunca se guarda ni se envía a ningún sitio. */
+/* SESSION DIRECTOR. La pareja controla la dirección (empezar, seguir, pasar, otra, más suave, subir, bajar, terminar).
+   El director controla la calidad: qué proponer, continuidad, variedad, anti-repetición, intensidad DENTRO del nivel.
+   El nivel es siempre una decisión de la pareja: nextLevel = USER_DECISION. Nunca sube solo.
+   Todo este estado vive en memoria: nunca se guarda ni se envía a ningún sitio. */
 import { LEVELS, ACTION, ZONE } from './catalog.js';
 import { TARGET_BUCKETS } from './intensity.js';
 
-export const PURPOSES = ['CONNECT', 'BUILD', 'EXPLORE', 'DEEPEN', 'MAINTAIN', 'COOLDOWN', 'END'];
-export const PURPOSE_LABEL = { CONNECT: 'Conectar', BUILD: 'Construir', EXPLORE: 'Explorar', DEEPEN: 'Profundizar', MAINTAIN: 'Mantener', COOLDOWN: 'Bajar el ritmo', END: 'Cerrar' };
+export const PURPOSES = ['CONNECT', 'BUILD', 'EXPLORE', 'DEEPEN', 'MAINTAIN', 'VARIATION', 'COOLDOWN', 'END'];
+export const PURPOSE_LABEL = { CONNECT: 'Conectar', BUILD: 'Construir', EXPLORE: 'Explorar', DEEPEN: 'Profundizar', MAINTAIN: 'Mantener', VARIATION: 'Variar', COOLDOWN: 'Bajar el ritmo', END: 'Cerrar' };
+/* copy breve al cambiar de nivel (decisión de la pareja, sin confirmación) */
+export const LEVEL_COPY = { 1: 'No tenemos que llegar a ningún sitio.', 2: 'Un poco más cerca.', 3: 'Esto nos está gustando.', 4: 'Hasta donde queráis.' };
 
-/* "Esta noche quiero…" (intención ligera, por jugador). Se usa la intersección de los dos; si está vacía, la unión. */
-export const INTENTS = {
-  cerca: { label: 'Sentirme cerca' },
-  desconectar: { label: 'Desconectar' },
-  jugar: { label: 'Jugar' },
-  despacio: { label: 'Ir despacio' },
-  sorprender: { label: 'Sorprenderme' },
-  llevar: { label: 'Dejarme llevar' },
+/* "¿Cómo llegas hoy?": estado de disponibilidad, no una declaración sobre sexo. Por jugador; se usa lo común, si no, la unión. */
+export const MOODS = {
+  cerca: { label: 'Quiero sentirme cerca' },
+  cuidar: { label: 'Me apetece que me cuiden' },
+  curiosidad: { label: 'Tengo curiosidad' },
+  jugar: { label: 'Quiero jugar' },
+  abierto: { label: 'Abro la puerta a ver qué surge' },
+  tranquilo: { label: 'Hoy, algo tranquilo' },
 };
-/* "Hoy no…" (configuración discreta). El no de cualquiera de los dos vale para la sesión entera. */
+export const INTENTS = MOODS; // compatibilidad
+/* Preferencias de la sesión con tres estados: sí (por defecto) · quizá (no se asume; pesa menos y nunca pasa a sí solo) · hoy no (fuera).
+   El «hoy no» de cualquiera de los dos vale para toda la sesión. */
+export const PREF_STATES = ['si', 'quiza', 'no'];
+export const PREF_LABEL = { si: 'Sí', quiza: 'Quizá', no: 'Hoy no' };
 export const AVOIDS = {
-  boca: { label: 'Nada con la boca', contact: ['boca'] },
-  presion: { label: 'Nada de presión ni mordiscos', actionTags: ['presion'], families: ['mordisco'] },
-  ropa: { label: 'La ropa se queda donde está', actionTags: ['ropa'] },
-  vista: { label: 'Sin vendas ni ojos cerrados', condFamilies: ['vista'] },
-  voz: { label: 'Sin hablar en voz alta', condFamilies: ['voz'], actionTags: ['voz'] },
-  intimo: { label: 'Sin anatomía íntima', groups: ['intimaF', 'intimaM'] },
+  boca: { label: 'Boca y besos', contact: ['boca'] },
+  presion: { label: 'Presión y mordiscos', actionTags: ['presion'], families: ['mordisco'] },
+  ropa: { label: 'Apartar ropa', actionTags: ['ropa'] },
+  vista: { label: 'Vendas y ojos cerrados', condFamilies: ['vista'] },
+  voz: { label: 'Hablar en voz alta', condFamilies: ['voz'], actionTags: ['voz'] },
+  intimo: { label: 'Anatomía íntima', groups: ['intimaF', 'intimaM'] },
 };
-/* opciones de la puerta, de menor a mayor. El resultado es la menor de las dos; nunca se dice quién eligió qué. */
-export const GATE_OPTIONS = ['PARAR', 'QUEDARNOS', 'SEGUIR', 'SUBIR'];
-export const GATE_LABEL = { PARAR: 'Parar', QUEDARNOS: 'Quedarnos aquí', SEGUIR: 'Seguir', SUBIR: 'Subir', SOLOS: 'Seguir sin el juego' };
 
 export class SessionState {
   constructor(level = 1) {
     this.level = level; this.startLevel = level;
-    this.intents = [[], []]; this.avoid = [[], []];
-    this.rounds = 0; this.roundsInLevel = 0; this.sinceGate = 0; this.gatesOffered = 0;
+    this.intents = [[], []]; this.pref = [{}, {}]; // pref[player][key] = 'quiza' | 'no' (sí = ausente)
+    this.intraLevelIntensity = 0; // -1 … 1: más suave / más / menos, siempre dentro del nivel
+    this.calmUntil = 0; this.lastCalm = -99; // rondas sin escalada
+    this.rounds = 0; this.roundsInLevel = 0;
     this.intensityHistory = []; this.purposes = [];
     this.feedback = []; // {round, kind, more}
     this.liked = []; this.changed = []; this.skipped = [];
     this.familyScore = {}; this.zoneScore = {}; this.semanticScore = {}; this.actorScore = {};
     this.pressure = 0; this.pace = 0; // -1 … 1 preferencias aprendidas (MÁS / MENOS)
-    this.lastFeedback = null; this.deepenStreak = 0; this.stayHere = false;
-    this.gate = null; this.gateResults = []; this.ended = null; this.lastMessage = null;
+    this.lastFeedback = null; this.deepenStreak = 0;
+    this.ended = null; this.lastMessage = null;
   }
+  get avoid() { return this.pref.map(p => Object.keys(p).filter(k => p[k] === 'no')); }
+  maybeSet() { const out = new Set(); for (const p of this.pref) for (const k in p) if (p[k] === 'quiza') out.add(k); for (const k of this.avoidSet()) out.delete(k); return out; }
   intentSet() {
     const [a, b] = this.intents; if (!a.length) return new Set(b); if (!b.length) return new Set(a);
     const inter = a.filter(x => b.includes(x)); return new Set(inter.length ? inter : [...a, ...b]);
   }
-  avoidSet() { return new Set([...this.avoid[0], ...this.avoid[1]]); }
-  readiness() { // -1 … 1: cuánto está funcionando el nivel actual
-    const n = Math.max(1, this.roundsInLevel); let s = 0;
-    for (const f of this.feedback.slice(-n)) s += f.kind === 'like' ? 1 : f.kind === 'paso' ? -1 : -0.3;
-    return Math.max(-1, Math.min(1, s / n));
-  }
+  avoidSet() { const [a, b] = this.avoid; return new Set([...a, ...b]); }
+  calm() { return this.rounds < this.calmUntil; }
 }
 
 const bump = (map, k, d) => { if (k) map[k] = (map[k] || 0) + d; };
@@ -66,21 +70,24 @@ export class SessionDirector {
     const L = LEVELS[S.level], last = history.last(), fb = S.lastFeedback;
     if (fb && last && fb.round === last.n) {
       if (fb.kind === 'like' && S.deepenStreak < 2) return { purpose: 'DEEPEN', reason: 'me gusta: evolución compatible' };
-      if (fb.kind === 'cambia') return { purpose: 'EXPLORE', reason: 'cambia: otra familia' };
+      if (fb.kind === 'cambia') return { purpose: 'VARIATION', reason: 'cambia: otra experiencia' };
       if (fb.kind === 'paso') return { purpose: 'MAINTAIN', reason: 'paso: se descarta sin castigo' };
     }
     if (S.roundsInLevel < 2) return { purpose: S.level === 1 ? 'CONNECT' : 'BUILD', reason: 'primeras rondas del nivel' };
+    const intents = S.intentSet();
+    // rondas sin escalada: de vez en cuando (sobre todo en Conexión) el director se compromete a no subir durante unas tiradas
+    if (!S.calm() && S.rounds - S.lastCalm >= 7 && this.rng.chance(S.level === 1 ? 0.3 : 0.12)) { S.calmUntil = S.rounds + 3; S.lastCalm = S.rounds; }
+    if (S.calm()) return { purpose: this.rng.pick(['MAINTAIN', 'MAINTAIN', 'COOLDOWN', S.level === 1 ? 'CONNECT' : 'VARIATION']), reason: 'ronda sin escalada' };
     const rec = S.intensityHistory;
     const peak = rec.length && rec[0] >= L.max - 0.6;
     const rising = rec.length >= 2 && rec[0] > rec[1] + 0.3;
     if ((peak || (rising && rec.length >= 3 && rec[1] > rec[2] + 0.3)) && this.rng.chance(0.7)) return { purpose: 'COOLDOWN', reason: 'después de un pico, descanso' };
-    const intents = S.intentSet();
-    const w = { BUILD: 0.4, EXPLORE: 0.3, MAINTAIN: 0.2, COOLDOWN: 0.1, CONNECT: S.level === 1 ? 0.3 : 0 };
-    if (S.stayHere) { w.MAINTAIN *= 2; w.BUILD *= 0.5; }
-    if (intents.has('despacio')) { w.BUILD *= 0.6; w.COOLDOWN *= 1.8; w.MAINTAIN *= 1.4; }
-    if (intents.has('sorprender')) { w.EXPLORE *= 1.8; }
+    const w = { BUILD: 0.35, EXPLORE: 0.25, MAINTAIN: 0.2, VARIATION: 0.1, COOLDOWN: 0.1, CONNECT: S.level === 1 ? 0.3 : 0 };
+    if (intents.has('tranquilo')) { w.BUILD *= 0.6; w.COOLDOWN *= 1.8; w.MAINTAIN *= 1.4; }
+    if (intents.has('curiosidad') || intents.has('abierto')) { w.EXPLORE *= 1.6; w.VARIATION *= 1.3; }
     if (intents.has('cerca')) { w.CONNECT *= 2; w.COOLDOWN *= 1.3; }
-    if (intents.has('desconectar')) { w.COOLDOWN *= 1.6; w.CONNECT *= 1.6; }
+    if (intents.has('cuidar')) { w.COOLDOWN *= 1.5; w.CONNECT *= 1.6; w.BUILD *= 0.7; }
+    if (S.intraLevelIntensity < -0.3) { w.BUILD *= 0.6; w.MAINTAIN *= 1.3; }
     const p = this.rng.weighted(Object.entries(w).map(([k, v]) => ({ item: k, weight: v })));
     return { purpose: p, reason: 'curva de la sesión' };
   }
@@ -95,10 +102,11 @@ export class SessionDirector {
       case 'CONNECT': case 'COOLDOWN': t = B[0].lo + this.rng.next() * (B[Math.min(1, B.length - 1)].lo - B[0].lo + 0.5); break;
       case 'BUILD': t = li != null ? li + 0.4 + this.rng.next() * 0.9 : pick(); break;
       case 'DEEPEN': t = li != null ? li + (this.rng.next() - 0.3) * 0.8 : pick(); break;
-      case 'MAINTAIN': t = li != null ? li + (this.rng.next() - 0.5) * 0.8 : pick(); break;
+      case 'MAINTAIN': case 'VARIATION': t = li != null ? li + (this.rng.next() - 0.5) * 0.8 : pick(); break;
       default: t = pick();
     }
-    if (S.stayHere) t = Math.min(t, L.lo + (L.max - L.lo) * 0.7);
+    if (S.calm() && li != null) t = Math.min(t, li); // sin escalada: nunca por encima de la última
+    t += S.intraLevelIntensity * (L.max - L.lo) * 0.35; // más suave / más / menos, dentro del nivel
     return Math.round(Math.max(L.lo, Math.min(L.max - (S.level === 4 ? 0 : 0.5), t)) * 10) / 10;
   }
 
@@ -113,27 +121,34 @@ export class SessionDirector {
       EXPLORE: { fam: {}, pattern: {}, condRole: { interaccion: 1.3, escena: 1.1 } },
       DEEPEN: { fam: {}, pattern: {}, condRole: { interaccion: 1.2 } },
       MAINTAIN: { fam: {}, pattern: {}, condRole: {} },
+      VARIATION: { fam: {}, pattern: { CHOOSE: 1.3, GUIDE: 1.3, DISCOVER: 1.3, MUTUAL: 1.2 }, condRole: { interaccion: 1.4 } },
       COOLDOWN: { fam: { masaje: 1.6, abrazo: 1.6, caricia: 1.3, presion: 0.4, mordisco: 0.3, bocaIntima: 0.6, manoIntima: 0.6 }, pattern: { MUTUAL: 1.3 }, condRole: { conexion: 1.3, interaccion: 0.6 } },
       END: { fam: {}, pattern: {}, condRole: {} },
     }[purpose] || { fam: {}, pattern: {}, condRole: {} };
-    const F = S.familyScore, Zs = S.zoneScore, Sem = S.semanticScore;
+    const F = S.familyScore, Zs = S.zoneScore, Sem = S.semanticScore, maybe = S.maybeSet();
+    const MAYBE = 0.15; // «quizá»: puede salir, pero no se asume
+    const maybeAction = a => [...maybe].some(k => { const r = AVOIDS[k]; return (r.contact && r.contact.includes(a.contactType)) || (r.actionTags && r.actionTags.some(t => a.tags.includes(t))) || (r.families && r.families.includes(a.family)); }) ? MAYBE : 1;
     return {
       purpose,
+      /* factor «quizá» de una combinación completa (acción, zona, condición): también pesa al elegir entre candidatos */
+      maybe: (a, z, c) => maybeAction(a) * (maybe.has('intimo') && z.tags.includes('intimo') ? MAYBE : 1) * (c && [...maybe].some(k => AVOIDS[k].condFamilies && AVOIDS[k].condFamilies.includes(c.family)) ? MAYBE : 1),
       action: a => {
-        let w = (P.fam[a.family] || 1) * (P.pattern[a.pattern] || 1);
+        let w = (P.fam[a.family] || 1) * (P.pattern[a.pattern] || 1) * maybeAction(a);
         if (purpose === 'DEEPEN' && lastA) w *= a.family === lastA.family ? 5 : a.actor === lastA.actor ? 2 : 0.45;
         if (purpose === 'EXPLORE') w *= 1 / (1 + 0.5 * (famCount[a.family] || 0)); // lo que menos ha salido
-        if (purpose === 'MAINTAIN' && lastA && a.family === lastA.family) w *= 0.4;
+        if ((purpose === 'MAINTAIN' || purpose === 'VARIATION') && lastA && a.family === lastA.family) w *= 0.3;
+        if (purpose === 'VARIATION' && lastA && a.pattern === lastA.pattern) w *= 0.6;
         if (intents.has('jugar') && (a.concepts.includes('juego') || ['dibujar', 'tamborilear', 'soplar', 'trazarNombre', 'mordisquear', 'besitos'].includes(a.id))) w *= 1.6;
         if (intents.has('cerca') && a.pattern === 'MUTUAL') w *= 1.4;
-        if (intents.has('desconectar') && ['masaje', 'abrazo'].includes(a.family)) w *= 1.5;
-        if (intents.has('llevar') && a.tags.includes('presion')) w *= 1.3;
+        if (intents.has('cuidar') && ['masaje', 'abrazo', 'cabello'].includes(a.family)) w *= 1.6;
+        if (intents.has('curiosidad') && a.pattern === 'DISCOVER') w *= 1.4;
         return w * scoreMul(F, a.family) * scoreMul(S.actorScore, a.actor, 1.15);
       },
       zone: (z, a) => {
         let w = 1;
         if (purpose === 'DEEPEN' && lastZ) w *= z.family === lastZ.family ? 4 : z.group === lastZ.group ? 1.6 : 0.6;
-        if (purpose === 'MAINTAIN' && lastZ && z.family === lastZ.family) w *= 0.4;
+        if ((purpose === 'MAINTAIN' || purpose === 'VARIATION') && lastZ && z.family === lastZ.family) w *= 0.4;
+        if (maybe.has('intimo') && z.tags.includes('intimo')) w *= MAYBE;
         if (purpose === 'EXPLORE') { const seen = history.rounds.filter(r => r.families && r.families.zone === z.family).length; w *= 1 / (1 + 0.4 * seen); }
         return w * scoreMul(Zs, z.family) * scoreMul(Sem, `${a.family}·${z.family}`, 1.4);
       },
@@ -141,15 +156,16 @@ export class SessionDirector {
         let w = 1;
         if (m.dim === 'presion') w *= m.mod > 0 ? 1 + 0.8 * S.pressure : 1 - 0.8 * S.pressure;
         if (m.dim === 'ritmo' || m.dim === 'dinamica') w *= m.mod > 0.3 ? 1 + 0.8 * S.pace : 1 - 0.5 * S.pace;
-        if (intents.has('despacio')) w *= m.concepts.includes('lento') || m.id === 'pausado' ? 1.6 : m.concepts.includes('variable') ? 0.5 : 1;
+        if (intents.has('tranquilo')) w *= m.concepts.includes('lento') || m.id === 'pausado' ? 1.6 : m.concepts.includes('variable') ? 0.5 : 1;
         if (purpose === 'COOLDOWN') w *= m.mod <= 0 ? 1.5 : 0.6;
         return Math.max(0.05, w);
       },
       cond: c => {
         let w = P.condRole[c.role] || 1;
-        if (intents.has('llevar') && ['GUIDE', 'CHOOSE'].includes(c.pattern)) w *= 1.6;
+        if ([...maybe].some(k => AVOIDS[k].condFamilies && AVOIDS[k].condFamilies.includes(c.family))) w *= MAYBE;
+        if (intents.has('cuidar') && ['GUIDE', 'CHOOSE'].includes(c.pattern)) w *= 1.5;
         if (intents.has('cerca') && c.family === 'vista' && c.id === 'mirandose') w *= 1.4;
-        if (intents.has('despacio') && c.family === 'pausa') w *= 1.3;
+        if (intents.has('tranquilo') && c.family === 'pausa') w *= 1.3;
         return w * scoreMul(S.familyScore, 'cond:' + c.family);
       },
     };
@@ -157,7 +173,7 @@ export class SessionDirector {
 
   /* ---- ronda registrada ---- */
   afterRound(S, round) {
-    S.rounds++; S.roundsInLevel++; S.sinceGate++;
+    S.rounds++; S.roundsInLevel++;
     S.intensityHistory.unshift(round.intensity); if (S.intensityHistory.length > 12) S.intensityHistory.pop();
     S.purposes.unshift(round.purpose); if (S.purposes.length > 12) S.purposes.pop();
     S.deepenStreak = round.purpose === 'DEEPEN' ? S.deepenStreak + 1 : 0;
@@ -173,8 +189,8 @@ export class SessionDirector {
     if (kind === 'like') {
       S.liked.push(round.id); bump(S.familyScore, a.family, 1); bump(S.zoneScore, z.family, 0.8); bump(S.semanticScore, sem, 0.5); bump(S.actorScore, a.actor, 0.5);
       if (round.cond) bump(S.familyScore, 'cond:' + round.families.cond, 0.6);
-      if (extra.more === true) { if (a.tags.includes('presion') || (round.families.method === 'presion')) S.pressure = Math.min(1, S.pressure + 0.35); else S.pace = Math.min(1, S.pace + 0.35); }
-      if (extra.more === false) { if (a.tags.includes('presion') || (round.families.method === 'presion')) S.pressure = Math.max(-1, S.pressure - 0.35); else S.pace = Math.max(-1, S.pace - 0.35); }
+      if (extra.more === true) { if (a.tags.includes('presion') || (round.families.method === 'presion')) S.pressure = Math.min(1, S.pressure + 0.35); else S.pace = Math.min(1, S.pace + 0.35); S.intraLevelIntensity = Math.min(1, S.intraLevelIntensity + 0.3); }
+      if (extra.more === false) { if (a.tags.includes('presion') || (round.families.method === 'presion')) S.pressure = Math.max(-1, S.pressure - 0.35); else S.pace = Math.max(-1, S.pace - 0.35); S.intraLevelIntensity = Math.max(-1, S.intraLevelIntensity - 0.3); }
     } else if (kind === 'cambia') {
       S.changed.push(round.id); bump(S.semanticScore, sem, -1.2); bump(S.familyScore, a.family, -0.3);
       if (round.cond) bump(S.familyScore, 'cond:' + round.families.cond, -0.5);
@@ -184,44 +200,15 @@ export class SessionDirector {
     }
   }
 
-  /* ---- puertas ---- */
-  gateDue(S) {
-    if (S.ended || S.gate) return false;
-    const r = S.readiness();
-    const every = r > 0.4 ? 3 : r < -0.3 ? 6 : 4;
-    return S.roundsInLevel >= every && S.sinceGate >= every;
+  /* ---- nivel: siempre decisión de la pareja, en cualquier dirección, sin confirmación ---- */
+  setLevel(S, level) {
+    level = Math.max(1, Math.min(4, Number(level) || 1));
+    if (level === S.level) return null;
+    S.level = level; S.roundsInLevel = 0; S.intraLevelIntensity = 0; S.calmUntil = 0;
+    S.lastMessage = LEVEL_COPY[level];
+    return S.lastMessage;
   }
-  canOpenGate(S) { return !S.ended && !S.gate && S.rounds >= 1; }
-  openGate(S) {
-    const options = GATE_OPTIONS.slice(0, 3);
-    options.push(S.level < 4 ? 'SUBIR' : 'SOLOS');
-    S.gate = { options, votes: [null, null] };
-    S.gatesOffered++;
-    return S.gate;
-  }
-  vote(S, player, choice) {
-    if (!S.gate || !S.gate.options.includes(choice)) return null;
-    S.gate.votes[player] = choice;
-    return S.gate.votes.every(v => v) ? this.resolveGate(S) : null;
-  }
-  /* regla del mínimo común: PARAR < QUEDARNOS < SEGUIR < SUBIR/SOLOS. El mensaje habla siempre en plural. */
-  resolveGate(S) {
-    const g = S.gate; if (!g) return null;
-    const rank = v => g.options.indexOf(v);
-    const result = g.votes.reduce((m, v) => rank(v) < rank(m) ? v : m, g.votes[0]);
-    S.gate = null; S.sinceGate = 0; S.gateResults.push(result);
-    let message, levelChange = 0;
-    switch (result) {
-      case 'PARAR': S.ended = 'parar'; message = 'Hasta aquí estuvo bien.'; break;
-      case 'QUEDARNOS': S.stayHere = true; message = 'Nos quedamos aquí.'; break;
-      case 'SEGUIR': S.stayHere = false; message = 'Seguimos.'; break;
-      case 'SUBIR': S.level = Math.min(4, S.level + 1); S.roundsInLevel = 0; S.stayHere = false; levelChange = 1; message = `Subimos a ${LEVELS[S.level].name}.`; break;
-      case 'SOLOS': S.ended = 'solos'; message = 'A partir de aquí, vosotros decidís.'; break;
-    }
-    S.lastMessage = message;
-    return { result, message, levelChange, level: S.level, ended: S.ended };
-  }
-  /* bajar siempre se puede, sin puerta */
-  lower(S) { if (S.level > 1) { S.level--; S.roundsInLevel = 0; S.stayHere = false; S.lastMessage = `Bajamos a ${LEVELS[S.level].name}.`; return S.lastMessage; } return null; }
+  /* más suave: la misma dirección con menos intensidad, dentro del nivel */
+  softer(S) { S.intraLevelIntensity = Math.max(-1, S.intraLevelIntensity - 0.4); }
   end(S, how = 'parar') { S.ended = how; S.lastMessage = how === 'solos' ? 'A partir de aquí, vosotros decidís.' : 'Hasta aquí estuvo bien.'; return S.lastMessage; }
 }

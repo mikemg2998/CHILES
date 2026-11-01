@@ -9,23 +9,24 @@ import { PreferenceManager } from '../engine/prefs.js';
 import { AVOIDS } from '../engine/session.js';
 
 const ALL = Object.keys(GROUPS);
-const mk = (o = {}) => new GameEngine({ prefs: { names: ['Ana', 'Leo'], anatomy: ['F', 'M'], enabledGroups: ALL, ...o.prefs }, seed: o.seed ?? 42, level: o.level ?? 1, debug: o.debug });
+const mk = (o = {}) => new GameEngine({ prefs: { names: ['Ana', 'Leo'], bodyParts: [['vulva'], ['pene']], enabledGroups: ALL, ...o.prefs }, seed: o.seed ?? 42, level: o.level ?? 1, debug: o.debug });
 const rolls = (e, n) => Array.from({ length: n }, () => e.roll());
 
 test('anatomía: ninguna zona íntima incompatible con quien recibe, en ninguna frase', () => {
   const e = mk({ level: 4, seed: 3 });
   for (const r of rolls(e, 400)) {
     const z = ZONE[r.zone], g = GROUPS[z.group];
-    if (g.intimate) { const an = e.prefs.anatomy[1 - r.performer]; assert.ok(an.includes(g.sex), `${r.phrase} → recibe ${an}`); }
+    if (g.intimate) assert.ok(e.prefs.availableFor(1 - r.performer, z.group), `${r.phrase} → recibe ${e.prefs.bodyParts[1 - r.performer]}`);
     assert.equal(r.validation, 'VALID', r.phrase);
     assert.ok(ACTION[r.action].zones.includes(r.zone), 'zona compatible con la acción');
   }
 });
-test('anatomía: dos anatomías masculinas nunca producen zonas femeninas (y viceversa)', () => {
-  for (const [an, bad] of [[['M', 'M'], 'F'], [['F', 'F'], 'M']]) {
-    const e = mk({ level: 4, seed: 9, prefs: { anatomy: an } });
-    for (const r of rolls(e, 200)) { const g = GROUPS[ZONE[r.zone].group]; if (g.intimate) assert.notEqual(g.sex, bad, r.phrase); }
+test('anatomía por partes (sin género): dos penes nunca producen zonas de vulva y viceversa; sin indicar, nada íntimo', () => {
+  for (const [parts, bad] of [[[['pene'], ['pene']], 'F'], [[['vulva'], ['vulva']], 'M'], [[[], []], 'FM']]) {
+    const e = mk({ level: 4, seed: 9, prefs: { bodyParts: parts } });
+    for (const r of rolls(e, 200)) { const g = GROUPS[ZONE[r.zone].group]; if (g.intimate) assert.ok(!bad.includes(g.sex), r.phrase); }
   }
+  const legacy = new PreferenceManager({ anatomy: ['F', 'M'] }); assert.deepEqual(legacy.bodyParts, [['vulva'], ['pene']]); assert.ok(!JSON.stringify(legacy).includes('anatomy'));
 });
 test('nivel: cada ronda respeta la banda de su nivel y la anatomía íntima solo aparece en Intimidad', () => {
   for (const L of [1, 2, 3, 4]) {
@@ -105,32 +106,40 @@ test('feedback CAMBIA: la siguiente propuesta cambia de familia semántica', () 
     const e = mk({ level: 3, seed: 300 + s });
     const r = e.roll(); e.feedback('cambia'); const n = e.roll();
     assert.notEqual(n.semanticFamily, r.semanticFamily, `${r.phrase} → ${n.phrase}`);
-    assert.equal(n.purpose, 'EXPLORE');
+    assert.equal(n.purpose, 'VARIATION');
   }
 });
-test('progresión no automática: 60 rondas en Conexión siguen en Conexión aunque todo guste', () => {
+test('progresión manual: 60 rondas con ME GUSTA y MÁS en Conexión siguen en Conexión; el director jamás cambia currentLevel', () => {
   const e = mk({ level: 1, seed: 8 });
-  for (let i = 0; i < 60; i++) { const r = e.roll(); assert.equal(r.level, 1); e.feedback('like'); }
-  assert.ok(e.gateDue(), 'la puerta se ofrece, pero no se cruza sola');
-  assert.equal(e.level(), 1);
-});
-test('puerta: regla del mínimo y mensajes sin atribución', () => {
-  const cases = [[['SUBIR', 'SUBIR'], 'SUBIR', 2], [['SUBIR', 'QUEDARNOS'], 'QUEDARNOS', 1], [['PARAR', 'SUBIR'], 'PARAR', 1], [['SEGUIR', 'SUBIR'], 'SEGUIR', 1], [['QUEDARNOS', 'PARAR'], 'PARAR', 1]];
-  for (const [votes, expected, level] of cases) {
-    const e = mk({ level: 1, seed: 1 }); rolls(e, 4);
-    e.openGate(); assert.equal(e.vote(0, votes[0]), null, 'con un solo voto no se resuelve');
-    const res = e.vote(1, votes[1]);
-    assert.equal(res.result, expected); assert.equal(e.level(), level);
-    assert.ok(!/Ana|Leo|Jugador/.test(res.message), res.message);
-    if (expected === 'PARAR') { assert.equal(e.ended(), 'parar'); assert.equal(e.roll(), null); }
-  }
-  const e4 = mk({ level: 4, seed: 2 }); rolls(e4, 3); e4.openGate(); e4.vote(0, 'SOLOS'); const r = e4.vote(1, 'SOLOS');
-  assert.equal(r.message, 'A partir de aquí, vosotros decidís.'); assert.equal(e4.ended(), 'solos');
-});
-test('subir solo por la puerta: setLevel hacia arriba se rechaza en mitad de la sesión; bajar siempre se puede', () => {
-  const e = mk({ level: 2, seed: 4 }); rolls(e, 2);
-  assert.equal(e.setLevel(3), false); assert.equal(e.level(), 2);
+  for (let i = 0; i < 60; i++) { const r = e.roll(); assert.equal(r.level, 1); assert.equal(e.level(), 1); e.feedback('like', { more: i % 2 === 0 }); }
+  assert.ok(e.session.intraLevelIntensity <= 1 && e.level() === 1);
+  // la decisión de la pareja vale en cualquier momento y dirección, sin confirmación
+  assert.equal(e.setLevel(3), true); assert.equal(e.level(), 3); assert.equal(e.roll().level, 3);
   assert.equal(e.setLevel(1), true); assert.equal(e.level(), 1);
+  assert.equal(e.setLevel(4), true); assert.equal(e.level(), 4); assert.equal(e.session.lastMessage, 'Hasta donde queráis.');
+});
+test('más suave reduce la intensidad dentro del nivel sin cambiar currentLevel', () => {
+  let lowered = 0;
+  for (let s = 0; s < 20; s++) {
+    const e = mk({ level: 3, seed: 400 + s });
+    const r = e.roll(); const before = e.session.intraLevelIntensity;
+    const v = e.softer();
+    assert.equal(e.level(), 3);
+    assert.ok(e.session.intraLevelIntensity < before);
+    if (v) { assert.equal(v.level, 3); assert.ok(v.intensity < r.intensity, `${r.intensity} → ${v.intensity}`); lowered++; }
+    for (const n of rolls(e, 5)) assert.equal(n.level, 3);
+  }
+  assert.ok(lowered >= 14, `variante suave en ${lowered}/20`);
+});
+test('rondas sin escalada: mientras duran, la intensidad no sube; terminan solas', () => {
+  const e = mk({ level: 1, seed: 21 });
+  let seen = 0;
+  for (let i = 0; i < 80; i++) {
+    const before = e.history.last() ? e.history.last().intensity : null, calm = e.session.calm();
+    const r = e.roll();
+    if (calm && before != null) { seen++; assert.ok(r.target <= before + 1e-9, `${before} → ${r.target}`); }
+  }
+  assert.ok(seen > 0 && !(e.session.calmUntil > e.session.rounds + 3));
 });
 test('calidad: nada por debajo del umbral ni inválido llega a la interfaz, y hay candidatos descartados', () => {
   const e = mk({ level: 3, seed: 55, debug: true });
@@ -144,13 +153,18 @@ test('calidad: nada por debajo del umbral ni inválido llega a la interfaz, y ha
   assert.ok(rejected > 0, 'el filtro debe rechazar algo');
 });
 test('fallback: con casi todo desactivado no hay bucle infinito y sale una frase validada', () => {
-  const e = mk({ level: 1, seed: 6, prefs: { enabledGroups: ['brazos'], anatomy: ['M', 'M'] } });
+  const e = mk({ level: 1, seed: 6, prefs: { enabledGroups: ['brazos'], bodyParts: [['pene'], ['pene']] } });
   const t = Date.now();
   for (let i = 0; i < 40; i++) { const r = e.roll(); assert.ok(r && r.phrase.length > 8); assert.equal(r.validation, 'VALID'); }
   assert.ok(Date.now() - t < 4000);
-  for (const L of [1, 2, 3, 4]) { const f = fallbackFor(L, new PreferenceManager({ enabledGroups: ALL, anatomy: ['F', 'M'] }), null); assert.ok(f.action && f.zone); assert.ok(FALLBACKS[L].length >= 4); }
+  for (const L of [1, 2, 3, 4]) { const f = fallbackFor(L, new PreferenceManager({ enabledGroups: ALL, bodyParts: [['vulva'], ['pene']] }), null); assert.ok(f.action && f.zone); assert.ok(FALLBACKS[L].length >= 4); }
 });
-test('"hoy no": la restricción de cualquiera de los dos vale para toda la sesión', () => {
+test('"hoy no": la restricción de cualquiera de los dos vale para toda la sesión; "quizá" pesa menos y nunca pasa a sí', () => {
+  const q = mk({ level: 2, seed: 15 }); q.setPrefs(0, { boca: 'quiza' });
+  const withQ = rolls(q, 300).filter(r => ACTION[r.action].contactType === 'boca').length;
+  const base = rolls(mk({ level: 2, seed: 15 }), 300).filter(r => ACTION[r.action].contactType === 'boca').length;
+  assert.ok(withQ > 0 && withQ < base * 0.6, `quizá: ${withQ} vs ${base}`);
+  assert.equal(q.session.pref[0].boca, 'quiza');
   const e = mk({ level: 2, seed: 12 });
   e.setAvoid(1, ['boca', 'ropa']);
   for (const r of rolls(e, 200)) { const a = ACTION[r.action]; assert.notEqual(a.contactType, 'boca', r.phrase); assert.ok(!a.tags.includes('ropa'), r.phrase); }
@@ -159,17 +173,17 @@ test('"hoy no": la restricción de cualquiera de los dos vale para toda la sesi�
   const chk = criticalCheck({ action: 'besar', zone: 'cuello', method: null, cond: null, alt: null, intensity: 4, phrase: 'x' }, { prefs: e.prefs, level: 2, session: e.session, avoids: AVOIDS });
   assert.equal(chk.ok, false);
 });
-test('intención: la intersección manda y cambia la curva (despacio → menos BUILD, más calma)', () => {
+test('cómo llegas hoy: lo común manda y cambia la curva (tranquilo → menos BUILD, más calma)', () => {
   const e = mk({ level: 2, seed: 14 });
-  e.setIntents(0, ['despacio', 'jugar']); e.setIntents(1, ['despacio']);
-  assert.deepEqual([...e.session.intentSet()], ['despacio']);
+  e.setIntents(0, ['tranquilo', 'jugar']); e.setIntents(1, ['tranquilo']);
+  assert.deepEqual([...e.session.intentSet()], ['tranquilo']);
   const slow = rolls(e, 200).filter(r => ['COOLDOWN', 'MAINTAIN'].includes(r.purpose)).length;
   const e2 = mk({ level: 2, seed: 14 });
   const base = rolls(e2, 200).filter(r => ['COOLDOWN', 'MAINTAIN'].includes(r.purpose)).length;
   assert.ok(slow > base, `${slow} vs ${base}`);
 });
 test('privacidad: el estado de sesión no forma parte de lo que se persiste', () => {
-  const p = new PreferenceManager({ names: ['A', 'B'], anatomy: ['F', 'M'] });
+  const p = new PreferenceManager({ names: ['A', 'B'], bodyParts: [['vulva'], ['pene']] });
   const json = JSON.stringify(p);
-  for (const k of ['intents', 'avoid', 'liked', 'skipped', 'feedback', 'familyScore']) assert.ok(!json.includes(k));
+  for (const k of ['intents', 'pref', 'liked', 'skipped', 'feedback', 'familyScore', 'mood']) assert.ok(!json.includes(k));
 });

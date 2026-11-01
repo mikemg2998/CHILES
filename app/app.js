@@ -1,10 +1,12 @@
-/* Interfaz de Pollo a la brasa. El motor (engine/) dirige la sesión; aquí solo se muestra, se pregunta y se anima.
-   Privacidad: en el teléfono solo se guardan nombres, anatomía, zonas activas, favoritas y vibración. La sesión
-   (intención, "hoy no", feedback, puertas) vive en memoria y desaparece al cerrar. No hay telemetría. */
+/* Interfaz de Pollo a la brasa. El motor (engine/) dirige la calidad de cada propuesta; la pareja dirige la sesión.
+   Aquí solo se muestra, se pregunta lo mínimo y se anima. Motor complejo, interfaz simple.
+   Privacidad: en el teléfono solo se guardan nombres, partes del cuerpo, zonas activas, "Lo nuestro", vibración y si la
+   configuración inicial está hecha. La sesión (cómo llegáis hoy, sí/quizá/hoy no, feedback, nivel) vive en memoria y
+   desaparece al cerrar. No hay telemetría. */
 import { GameEngine } from '../engine/engine.js';
 import { PreferenceManager } from '../engine/prefs.js';
-import { GROUPS, LEVELS, LEVEL_KEYS, LEVEL_BY_KEY, CATEGORIES, ZONE } from '../engine/catalog.js';
-import { INTENTS, AVOIDS, GATE_LABEL, PURPOSE_LABEL } from '../engine/session.js';
+import { GROUPS, LEVELS, LEVEL_KEYS, LEVEL_BY_KEY } from '../engine/catalog.js';
+import { MOODS, AVOIDS, PREF_STATES, PREF_LABEL, LEVEL_COPY } from '../engine/session.js';
 
 const KEY = 'pab.v2';
 const $ = s => document.querySelector(s);
@@ -20,12 +22,13 @@ if (!LEVEL_BY_KEY[prefs.mode]) prefs.mode = 'conexion';
 prefs.mode = LEVELS[LEVEL_BY_KEY[prefs.mode]].key; // claves antiguas → nuevas
 const engine = new GameEngine({ prefs, debug: DEBUG });
 engine.state.favorites = Array.isArray(saved.favorites) ? saved.favorites : [];
-const ui = { vibrate: saved.vibrate !== false, started: false, intents: [[], []], avoid: [[], []] };
-let current = null, busy = false;
+/* la configuración inicial cuenta como hecha si ya había preferencias guardadas de una versión anterior */
+const ui = { vibrate: saved.vibrate !== false, setupDone: !!saved.setupDone || !!saved.prefs, started: false, moods: [[], []], pref: {} };
+let current = null, busy = false, ctaTimer = 0;
 if (DEBUG) window.pab = engine;
 
 function persist() {
-  try { localStorage.setItem(KEY, JSON.stringify({ prefs: prefs.toJSON(), favorites: engine.state.favorites, vibrate: ui.vibrate })); } catch { /* sin almacenamiento: la partida sigue */ }
+  try { localStorage.setItem(KEY, JSON.stringify({ prefs: prefs.toJSON(), favorites: engine.state.favorites, vibrate: ui.vibrate, setupDone: ui.setupDone })); } catch { /* sin almacenamiento: la partida sigue */ }
 }
 const buzz = p => { if (ui.vibrate && navigator.vibrate) { try { navigator.vibrate(p); } catch { /* nada */ } } };
 
@@ -45,28 +48,45 @@ function phraseNode(text, el) {
 }
 const toastEl = $('#toast'); let toastT = 0;
 function toast(msg) { toastEl.textContent = msg; toastEl.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove('show'), 1900); }
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 
-/* ---------- nivel ---------- */
-const levelsEl = $('#levels');
-function renderLevels() {
-  levelsEl.innerHTML = '';
+/* ---------- nivel: lo decide la pareja desde el indicador, sin confirmación ---------- */
+const pad = n => String(n).padStart(2, '0');
+function renderLevel() {
+  const L = LEVELS[engine.level()];
+  $('#levelNum').textContent = pad(L.id); $('#levelName').textContent = L.name;
+  $('#tagline').textContent = L.tagline;
+  for (const k of [1, 2, 3, 4]) document.body.classList.toggle('level-' + k, k === L.id);
+}
+function renderLevelList() {
+  const list = $('#levelList'); list.innerHTML = '';
   const cur = engine.level();
   for (const key of LEVEL_KEYS) {
     const L = LEVELS[LEVEL_BY_KEY[key]];
-    const b = document.createElement('button'); b.type = 'button'; b.role = 'tab'; b.textContent = L.name;
-    if (cur === L.id) { b.classList.add('on'); b.setAttribute('aria-selected', 'true'); }
+    const b = el('button', 'lv' + (L.id === cur ? ' on' : '')); b.type = 'button';
+    b.append(el('span', 'num', pad(L.id)), el('b', null, L.name), el('small', null, L.tagline));
+    b.setAttribute('aria-pressed', String(L.id === cur));
     b.addEventListener('click', () => chooseLevel(L.id));
-    levelsEl.appendChild(b);
+    list.appendChild(b);
   }
-  $('#tagline').textContent = LEVELS[cur].tagline;
 }
-/* antes de empezar se elige libremente; en mitad de la sesión bajar es inmediato y subir pasa por la puerta */
-function chooseLevel(id) {
+async function chooseLevel(id) {
+  closeSheets();
   if (busy || id === engine.level()) return;
-  if (engine.state.round === 0) { engine.setLevel(id); prefs.mode = LEVELS[id].key; persist(); renderLevels(); buzz(6); return; }
-  if (id < engine.level()) { const msg = engine.lowerLevel(); while (engine.level() > id) engine.lowerLevel(); renderLevels(); toast(msg || `Bajamos a ${LEVELS[id].name}.`); updateControls(); return; }
-  if (engine.canOpenGate()) openGate('Subir es cosa de los dos.'); else toast('Para subir, antes una ronda.');
+  engine.setLevel(id); prefs.mode = LEVELS[id].key; persist();
+  engine.session.lastMessage = null; // la transición ya lo dice
+  renderLevel(); updateControls(); buzz(8);
+  await levelFlash(id);
 }
+/* transición breve y elegante entre niveles; no bloquea nada */
+function levelFlash(id) {
+  const f = $('#levelFlash'), L = LEVELS[id];
+  $('#flashNum').textContent = pad(id); $('#flashName').textContent = L.name; $('#flashCopy').textContent = LEVEL_COPY[id];
+  f.hidden = false; void f.offsetWidth; f.classList.add('show');
+  return wait(1500).then(() => { f.classList.remove('show'); return wait(380); }).then(() => { f.hidden = true; });
+}
+$('#levelBtn').addEventListener('click', () => { if (busy) return; renderLevelList(); open($('#sheetLevel')); });
 
 /* ---------- turno ---------- */
 function renderTurn() {
@@ -90,7 +110,6 @@ function paint(faceEl, text) {
 }
 function setFaces(k, faces) { for (let i = 0; i < 6; i++) paint(dieEls[k].querySelector('.f' + (i + 1)), faces[i]); }
 function idleDice() { for (const k of DICE) setFaces(k, [IDLE_FACE[k], '', '', '', '', '']); }
-const wait = ms => new Promise(r => setTimeout(r, ms));
 
 /* Cuatro dados lanzados sobre una mesa invisible: impulso, gravedad, rebotes, fricción, giro independiente en X/Y/Z,
    desaceleración y asentamiento en la cara del resultado. Cada dado con parámetros distintos; nunca sincronizados. */
@@ -168,18 +187,29 @@ function throwDice(round) {
     requestAnimationFrame(step);
   });
 }
-/* tras asentarse, vuelven con suavidad a su sitio para que ACCIÓN · ZONA · FORMA · CONDICIÓN se lean en orden */
+/* ANTICIPACIÓN → ESPECTÁCULO → RESULTADO → EXPERIENCIA: tras asentarse, los dados vuelven a su sitio, los que no
+   intervienen se retiran y el conjunto pasa a segundo plano para que la frase sea la protagonista */
 async function rollDice(round) {
   await throwDice(round);
-  regroup(); // la frase aparece ya; los dados vuelven a su sitio mientras tanto
+  regroup(round); // la frase aparece ya; los dados vuelven a su sitio mientras tanto
 }
-async function regroup() {
+async function regroup(round) {
   await wait(140);
   diceSec.classList.add('regroup');
   for (const k of DICE) { const el = dieEls[k]; el.style.transform = ''; el.querySelector('.cube').style.transform = REST; el.style.setProperty('--lift', '0'); }
   await wait(430);
   diceSec.classList.remove('throwing', 'regroup'); diceSec.style.minHeight = '';
   for (const k of DICE) dieEls[k].style.zIndex = '';
+  await wait(700);
+  if (!round || current !== round) return;
+  for (const k of DICE) dieEls[k].classList.toggle('unused', !round.dice[k][0] || round.dice[k][0] === '—');
+  diceSec.classList.add('settled');
+}
+/* antes de un lanzamiento, todos los dados vuelven a primer plano y a su tamaño para medir bien los huecos */
+async function wakeDice() {
+  diceSec.classList.remove('settled');
+  for (const k of DICE) dieEls[k].classList.remove('unused');
+  await wait(60);
 }
 
 /* ---------- ronda ---------- */
@@ -187,45 +217,34 @@ const roundBox = $('#roundBox'), welcome = $('#welcome'), endingBox = $('#ending
 function showRound(r) {
   current = r;
   welcome.hidden = true; endingBox.hidden = true; roundBox.hidden = false; roundBox.classList.remove('show');
-  const extra = r.variant === 'softer' ? ' · más suave' : '';
-  $('#metaText').textContent = `${LEVELS[r.level].name} · ${CATEGORIES[r.category] || PURPOSE_LABEL[r.purpose] || ''}${extra}`;
   phraseNode(r.phrase, $('#phrase'));
   const note = $('#note');
   const msg = engine.session.lastMessage; engine.session.lastMessage = null;
-  if (msg) { note.hidden = false; note.textContent = msg; } else if (r.gateDue) { note.hidden = false; note.textContent = 'Cuando terminéis, una pregunta rápida para los dos.'; } else note.hidden = true;
-  renderFeedback(r);
+  if (msg) { note.hidden = false; note.textContent = msg; } else note.hidden = true;
+  $('#fbLike').classList.remove('on');
   void roundBox.offsetWidth; roundBox.classList.add('show');
-  renderFavBtn(); renderTurn(); renderLevels(); updateControls(); renderDebug();
-}
-function renderFeedback(r) {
-  $('#fbLike').classList.remove('on'); $('#fbLike').disabled = false;
-  $('#fbMore').hidden = true; $('#fbLess').hidden = true; $('#fbMore').classList.remove('on'); $('#fbLess').classList.remove('on');
-  $('#feedback').hidden = !r;
+  renderFavBtn(); renderTurn(); renderLevel(); updateControls(); renderDebug();
 }
 function renderDebug() {
   const el = $('#debug'); if (!DEBUG) { el.hidden = true; return; }
   const d = engine.lastDebug; if (!d) return; el.hidden = false;
-  const topW = Object.entries(d.weights).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k, v]) => `${k} ${v}`).join(', ');
-  el.textContent = `purpose ${d.selectedPurpose} (${d.purposeReason}) · target ${d.target} · family ${d.selectedFamily} · quality ${d.finalQualityScore}${d.fallback ? ' · FALLBACK' : ''}\n` +
-    `weights: ${topW}\nrejected: ${JSON.stringify(d.rejectionReasons)}\ncandidates: ${d.candidates.map(c => `${c.quality} ${c.phrase}`).join(' | ')}\n` +
-    `session: level ${engine.session.level} · rounds ${engine.session.rounds} · pressure ${engine.session.pressure.toFixed(2)} · pace ${engine.session.pace.toFixed(2)} · readiness ${engine.session.readiness().toFixed(2)} · familyScore ${JSON.stringify(engine.session.familyScore)}`;
+  const S = engine.session;
+  const topW = Object.entries(d.candidateWeights || {}).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k, v]) => `${k} ${v}`).join(', ');
+  el.textContent = `purpose ${d.selectedPurpose} (${d.purposeReason}) · pattern ${d.selectedPattern} · target ${d.target} · family ${d.selectedFamily} · quality ${d.finalQualityScore}${d.fallback ? ' · FALLBACK' : ''}\n` +
+    `weights: ${topW}\nrejected: ${JSON.stringify(d.rejectionReasons)}\ncandidates: ${(d.candidates || []).map(c => `${c.quality} ${c.phrase}`).join(' | ')}\n` +
+    `session: level ${S.level} · rounds ${S.rounds} · intraLevel ${S.intraLevelIntensity.toFixed(2)} · calm ${S.calm()} · pressure ${S.pressure.toFixed(2)} · pace ${S.pace.toFixed(2)} · familyScore ${JSON.stringify(S.familyScore)}`;
 }
 function renderFavBtn() { $('#btnFav').classList.toggle('on', !!current && engine.state.favorites.some(f => f.id === current.id)); }
-/* SUAVE solo cuando el motor tiene una variante con la misma idea; SUBIR solo abre la puerta */
+/* el botón fuerte no grita «otra vez» nada más leer: la siguiente tirada aparece suavemente, sin bloquear nada */
 function updateControls() {
-  const ended = !!engine.ended();
-  $('#btnRoll').hidden = ended; $('#btnNew').hidden = !ended;
-  $('#btnRoll').textContent = engine.state.round === 0 ? 'Lanzar los dados' : current && current.gateDue ? 'Decidir juntos' : 'Seguir';
-  const can = () => { if (!current) return false; try { return !!engine.getVariant(current); } catch { return false; } };
-  $('#btnSofter').disabled = ended || !can();
-  $('#btnHarder').disabled = ended || !engine.canOpenGate() || engine.level() === 4;
-  $('#btnPass').disabled = ended; $('#btnReroll').disabled = ended;
+  const ended = !!engine.ended(), roll = $('#btnRoll');
+  roll.hidden = ended; $('#btnNew').hidden = !ended;
+  roll.textContent = engine.state.round === 0 ? 'Lanzar los dados' : 'Siguiente tirada';
+  clearTimeout(ctaTimer);
+  if (engine.state.round > 0 && current && !ended) { roll.classList.add('soft'); ctaTimer = setTimeout(() => roll.classList.remove('soft'), 2600); }
+  else roll.classList.remove('soft');
 }
-function setBusy(v) {
-  busy = v;
-  for (const id of ['btnRoll', 'btnPass', 'btnReroll']) $(`#${id}`).disabled = v;
-  if (v) { $('#btnSofter').disabled = true; $('#btnHarder').disabled = true; }
-}
+function setBusy(v) { busy = v; $('#btnRoll').disabled = v; $('#btnMore').disabled = v; $('#levelBtn').disabled = v; }
 async function play(fn, emptyMsg) {
   if (busy) return;
   let r;
@@ -234,133 +253,130 @@ async function play(fn, emptyMsg) {
   setBusy(true); buzz(14);
   document.body.classList.remove('idle');
   roundBox.classList.remove('show'); welcome.hidden = true; endingBox.hidden = true;
+  await wakeDice();
+  current = r;
   await rollDice(r);
   showRound(r);
   setBusy(false);
 }
-/* LANZAR / SEGUIR: la primera vez pregunta la intención; cuando toca puerta, la abre */
+/* LANZAR: la primera vez pide la configuración (una sola vez) y un check-in breve; después, directo */
 function next() {
   if (busy) return;
-  if (engine.state.round === 0 && !ui.started) { openStart(); return; }
-  if (current && current.gateDue) { openGate(); return; }
+  if (engine.state.round === 0 && !ui.started) { if (!ui.setupDone) { openSetup(); return; } openStart(); return; }
   play(() => engine.roll());
 }
 $('#btnRoll').addEventListener('click', next);
-$('#btnPass').addEventListener('click', () => play(() => engine.pass()));
-$('#btnReroll').addEventListener('click', () => play(() => engine.reroll()));
-$('#btnSofter').addEventListener('click', () => play(() => engine.softer(), 'No hay una versión más suave de esta misma idea.'));
-$('#btnHarder').addEventListener('click', () => { if (engine.canOpenGate()) openGate('Subir es cosa de los dos.'); });
 $('#btnNew').addEventListener('click', () => newSession());
 
-/* ---------- feedback ---------- */
+/* ---------- ♡ y ••• ---------- */
 $('#fbLike').addEventListener('click', () => {
-  if (!current || $('#fbLike').classList.contains('on')) return;
-  engine.feedback('like'); $('#fbLike').classList.add('on'); buzz(8);
-  if (current.canMore) { $('#fbMore').hidden = false; $('#fbLess').hidden = false; }
+  if (!current || busy) return;
+  const b = $('#fbLike');
+  if (b.classList.contains('on')) return;
+  engine.feedback('like'); b.classList.add('on'); buzz(8);
 });
-for (const [id, more] of [['#fbMore', true], ['#fbLess', false]]) {
-  $(id).addEventListener('click', () => {
-    if (!current || $(id).classList.contains('on')) return;
-    engine.feedback('like', { more }); $('#fbMore').classList.toggle('on', more); $('#fbLess').classList.toggle('on', !more); buzz(6);
-  });
+function menuItem(label, hint, fn) {
+  const b = el('button', 'mi'); b.type = 'button';
+  b.appendChild(el('b', null, label)); if (hint) b.appendChild(el('small', null, hint));
+  b.addEventListener('click', () => { closeSheets(); fn(); });
+  return b;
+}
+function openMenu() {
+  if (!current || busy) return;
+  const list = $('#menuList'); list.innerHTML = '';
+  let variant = null; try { variant = engine.getVariant(current); } catch { variant = null; }
+  list.appendChild(menuItem('Otra', 'Otra propuesta para la misma persona', () => play(() => engine.reroll())));
+  if (variant) list.appendChild(menuItem('Más suave', 'La misma idea, con menos intensidad', () => play(() => engine.softer(), 'No hay una versión más suave de esta misma idea.')));
+  if (current.canMore) {
+    const liked = $('#fbLike').classList.contains('on');
+    list.appendChild(menuItem('Un poco más', 'Así, pero con más presión o ritmo', () => { if (!liked) $('#fbLike').classList.add('on'); engine.feedback('like', { more: true }); toast('Lo tengo en cuenta.'); }));
+    list.appendChild(menuItem('Un poco menos', 'Así, pero más despacio o más leve', () => { if (!liked) $('#fbLike').classList.add('on'); engine.feedback('like', { more: false }); toast('Lo tengo en cuenta.'); }));
+  }
+  list.appendChild(menuItem('Pasar', 'Esta no; seguimos con otra cosa', () => play(() => engine.pass())));
+  if (engine.level() > 1) list.appendChild(menuItem('Bajar de nivel', `A ${LEVELS[engine.level() - 1].name}`, () => chooseLevel(engine.level() - 1)));
+  list.appendChild(menuItem('Terminar la sesión', 'Hasta aquí estuvo bien', () => endSession()));
+  open($('#sheetMenu'));
+}
+$('#btnMore').addEventListener('click', openMenu);
+function endSession() {
+  engine.endSession('parar'); showEnding();
 }
 
-/* ---------- inicio de sesión: intención y "hoy no" ---------- */
-function chipCols(container, catalog, store) {
+/* ---------- check-in: ¿cómo llegáis hoy? ---------- */
+function moodCols(container) {
   container.innerHTML = '';
   for (const p of [0, 1]) {
-    const col = document.createElement('div'); col.className = 'col';
-    const h = document.createElement('h3'); h.textContent = nameOf(p); col.appendChild(h);
-    for (const [k, v] of Object.entries(catalog)) {
-      const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = v.label;
-      b.classList.toggle('on', store[p].includes(k));
-      b.addEventListener('click', () => { const i = store[p].indexOf(k); if (i >= 0) store[p].splice(i, 1); else store[p].push(k); b.classList.toggle('on'); buzz(5); });
+    const col = el('div', 'col'); col.appendChild(el('h3', null, nameOf(p)));
+    for (const [k, v] of Object.entries(MOODS)) {
+      const b = el('button', 'chip', v.label); b.type = 'button';
+      b.classList.toggle('on', ui.moods[p].includes(k));
+      b.addEventListener('click', () => { const i = ui.moods[p].indexOf(k); if (i >= 0) ui.moods[p].splice(i, 1); else ui.moods[p].push(k); b.classList.toggle('on'); buzz(5); });
       col.appendChild(b);
     }
     container.appendChild(col);
   }
 }
-function openStart() { chipCols($('#intents'), INTENTS, ui.intents); chipCols($('#avoids'), AVOIDS, ui.avoid); open($('#sheetStart')); }
+/* sí / quizá / hoy no, por tema; «quizá» nunca se convierte en «sí» por sí solo */
+function prefRows(container) {
+  container.innerHTML = '';
+  const intimateOn = prefs.enabledGroups.some(g => GROUPS[g].intimate);
+  for (const [k, v] of Object.entries(AVOIDS)) {
+    if (k === 'intimo' && !intimateOn) continue;
+    const row = el('div', 'pref'); row.appendChild(el('span', null, v.label));
+    const seg = el('div', 'seg'); seg.setAttribute('role', 'radiogroup'); seg.setAttribute('aria-label', v.label);
+    const cur = ui.pref[k] || 'si';
+    for (const s of PREF_STATES) {
+      const b = el('button', s === cur ? 'on' : '', PREF_LABEL[s]); b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', String(s === cur));
+      b.addEventListener('click', () => { if (s === 'si') delete ui.pref[k]; else ui.pref[k] = s; seg.querySelectorAll('button').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-checked', String(x === b)); }); buzz(5); });
+      seg.appendChild(b);
+    }
+    row.appendChild(seg); container.appendChild(row);
+  }
+}
+function openStart() { moodCols($('#intents')); prefRows($('#prefs')); $('#prefsBox').open = Object.keys(ui.pref).length > 0; open($('#sheetStart')); }
 $('#btnStart').addEventListener('click', () => {
-  for (const p of [0, 1]) { engine.setIntents(p, ui.intents[p]); engine.setAvoid(p, ui.avoid[p]); }
+  for (const p of [0, 1]) engine.setIntents(p, ui.moods[p]);
+  engine.setPrefs(0, ui.pref); engine.setPrefs(1, {});
   ui.started = true; closeSheets(); setTimeout(() => play(() => engine.roll()), 250);
 });
 
-/* ---------- puerta: decisión privada de los dos ---------- */
-const gate = { step: 0, title: null };
-function openGate(title) {
-  if (!engine.canOpenGate()) return;
-  engine.openGate(); gate.step = 0;
-  $('#gateTitle').textContent = title || 'Un momento para los dos';
-  $('#gateStep').hidden = false; $('#gateResult').hidden = true;
-  renderGateStep(); open($('#sheetGate'), true);
-}
-const GATE_HINT = { PARAR: 'cerramos la sesión', QUEDARNOS: 'seguimos en este nivel, sin subir', SEGUIR: 'seguimos como hasta ahora', SUBIR: 'pasamos al siguiente nivel', SOLOS: 'el juego deja de dirigir' };
-function renderGateStep() {
-  const who = $('#gateWho'); who.textContent = ''; who.appendChild(document.createTextNode('Pásale el móvil a ')); const b = document.createElement('b'); b.textContent = nameOf(gate.step); who.appendChild(b); who.appendChild(document.createTextNode('.'));
-  const opts = $('#gateOpts'); opts.innerHTML = '';
-  for (const o of engine.session.gate.options) {
-    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'btn';
-    btn.appendChild(document.createTextNode(GATE_LABEL[o])); const sm = document.createElement('small'); sm.textContent = GATE_HINT[o]; btn.appendChild(sm);
-    btn.addEventListener('click', () => vote(o));
-    opts.appendChild(btn);
-  }
-}
-function vote(o) {
-  const res = engine.vote(gate.step, o); buzz(6);
-  if (!res) { gate.step = 1; renderGateStep(); return; }
-  $('#gateStep').hidden = true; $('#gateResult').hidden = false;
-  $('#gateMsg').textContent = res.message;
-  $('#btnGateGo').textContent = res.ended ? 'Cerrar' : 'Seguir';
-  renderLevels();
-}
-$('#btnGateGo').addEventListener('click', () => {
-  closeSheets(true);
-  if (engine.ended()) { showEnding(); return; }
-  if (current) current.gateDue = false;
-  const msg = engine.session.lastMessage;
-  setTimeout(() => play(() => engine.roll()), 250);
-  if (msg) toast(msg);
-});
+/* ---------- cierre y sesión nueva ---------- */
 function showEnding() {
   current = null; roundBox.hidden = true; welcome.hidden = true; endingBox.hidden = false;
   $('#endingText').textContent = engine.session.lastMessage || 'Hasta aquí estuvo bien.';
-  document.body.classList.add('idle'); idleDice(); renderTurn(); updateControls();
+  document.body.classList.add('idle'); wakeDice(); idleDice(); renderTurn(); updateControls();
 }
 function newSession() {
-  engine.newSession(engine.level()); current = null; ui.started = false; ui.intents = [[], []]; ui.avoid = [[], []];
+  engine.newSession(engine.level()); current = null; ui.started = false; ui.moods = [[], []]; ui.pref = {};
   roundBox.hidden = true; roundBox.classList.remove('show'); endingBox.hidden = true; welcome.hidden = false;
-  document.body.classList.add('idle'); idleDice(); renderTurn(); renderLevels(); updateControls();
+  document.body.classList.add('idle'); wakeDice(); idleDice(); renderTurn(); renderLevel(); updateControls();
 }
 
-/* ---------- favoritas ---------- */
-const slim = r => ({ id: r.id, performer: r.performer, action: r.action, zone: r.zone, method: r.method, cond: r.cond, alt: r.alt, intensity: r.intensity, level: r.level, levelName: r.levelName, phrase: r.phrase, performerName: r.performerName, partnerName: r.partnerName, category: r.category });
+/* ---------- Lo nuestro: lo que os funciona, guardado solo en este teléfono ---------- */
+const slim = r => ({ id: r.id, performer: r.performer, action: r.action, zone: r.zone, method: r.method, cond: r.cond, alt: r.alt, intensity: r.intensity, level: r.level, levelName: r.levelName, phrase: r.phrase, performerName: r.performerName, partnerName: r.partnerName });
 $('#btnFav').addEventListener('click', () => {
   if (!current) return;
-  if (engine.state.favorites.some(f => f.id === current.id)) { engine.removeFavorite(current.id); toast('Quitada de favoritas'); }
-  else { engine.addFavorite(slim(current)); toast('Guardada en favoritas'); buzz(10); }
+  if (engine.state.favorites.some(f => f.id === current.id)) { engine.removeFavorite(current.id); toast('Quitada de Lo nuestro'); }
+  else { engine.addFavorite(slim(current)); toast('Guardada en Lo nuestro'); buzz(10); }
   persist(); renderFavBtn(); renderFavCount();
 });
 function renderFavCount() { const n = engine.state.favorites.length; const c = $('#favCount'); c.hidden = !n; c.textContent = n; }
 function renderFavs() {
   const list = $('#favList'); list.innerHTML = '';
   const favs = [...engine.state.favorites].reverse();
-  if (!favs.length) { const e = document.createElement('p'); e.className = 'empty'; e.textContent = 'Aún no hay favoritas. Guarda una ronda con el marcador que hay junto a la frase.'; list.appendChild(e); return; }
+  if (!favs.length) { list.appendChild(el('p', 'empty', 'Aún no hay nada. Cuando algo os funcione, guardadlo con el marcador que hay junto a la frase: el juego se inspirará en ello sin repetirlo tal cual.')); return; }
   for (const f of favs) {
-    const card = document.createElement('article'); card.className = 'card';
-    const meta = document.createElement('div'); meta.className = 'meta';
-    const ms = document.createElement('span'); ms.textContent = `${f.levelName} · ${f.performerName} → ${f.partnerName}`; meta.appendChild(ms);
-    const rm = document.createElement('button'); rm.className = 'ib'; rm.setAttribute('aria-label', 'Quitar'); rm.innerHTML = '<svg><use href="#i-x"/></svg>';
+    const card = el('article', 'card');
+    const meta = el('div', 'meta'); meta.appendChild(el('span', null, `${f.levelName} · ${f.performerName} → ${f.partnerName}`));
+    const rm = el('button', 'ib'); rm.setAttribute('aria-label', 'Quitar'); rm.innerHTML = '<svg><use href="#i-x"/></svg>';
     rm.addEventListener('click', () => { engine.removeFavorite(f.id); persist(); renderFavs(); renderFavCount(); renderFavBtn(); });
     meta.appendChild(rm); card.appendChild(meta);
-    const p = document.createElement('p'); p.className = 'phrase'; phraseNode(f.phrase, p); card.appendChild(p);
-    const acts = document.createElement('div'); acts.className = 'acts';
-    const rep = document.createElement('button'); rep.className = 'btn gold'; rep.innerHTML = '<svg><use href="#i-repeat"/></svg>Repetir';
-    rep.addEventListener('click', () => {
-      closeSheets(); play(() => engine.repeatFavorite(f), 'Esa zona no cuadra con la anatomía o está desactivada en ajustes.');
-    });
-    const ins = document.createElement('button'); ins.className = 'btn'; ins.innerHTML = '<svg><use href="#i-spark"/></svg>Inspirarse';
-    ins.addEventListener('click', () => { closeSheets(); play(() => engine.inspireFavorite(f)); });
+    const p = el('p', 'phrase'); phraseNode(f.phrase, p); card.appendChild(p);
+    const acts = el('div', 'acts');
+    const rep = el('button', 'btn gold'); rep.innerHTML = '<svg><use href="#i-repeat"/></svg>Repetir';
+    rep.addEventListener('click', () => { closeSheets(); if (!ui.started) ui.started = true; play(() => engine.repeatFavorite(f), 'Esa zona no cuadra con la anatomía o está desactivada en ajustes.'); });
+    const ins = el('button', 'btn'); ins.innerHTML = '<svg><use href="#i-spark"/></svg>Inspirarse';
+    ins.addEventListener('click', () => { closeSheets(); if (!ui.started) ui.started = true; play(() => engine.inspireFavorite(f)); });
     acts.append(rep, ins); card.appendChild(acts);
     list.appendChild(card);
   }
@@ -369,13 +385,13 @@ function renderFavs() {
 /* ---------- hojas ---------- */
 const backdrop = $('#backdrop');
 let openSheet = null;
-let sheetLocked = false; // la puerta no se cierra tocando fuera: hay que responder
-function open(sheet, locked = false) { sheetLocked = locked; openSheet = sheet; backdrop.hidden = false; void backdrop.offsetWidth; backdrop.classList.add('show'); sheet.classList.add('open'); sheet.setAttribute('aria-hidden', 'false'); }
-function closeSheets(force = false) {
-  if (!openSheet || (sheetLocked && !force)) return;
-  sheetLocked = false;
-  openSheet.classList.remove('open'); openSheet.setAttribute('aria-hidden', 'true'); openSheet = null;
+function open(sheet) { if (openSheet && openSheet !== sheet) { openSheet.classList.remove('open'); openSheet.setAttribute('aria-hidden', 'true'); } openSheet = sheet; backdrop.hidden = false; void backdrop.offsetWidth; backdrop.classList.add('show'); sheet.classList.add('open'); sheet.setAttribute('aria-hidden', 'false'); }
+function closeSheets() {
+  if (!openSheet) return;
+  const was = openSheet;
+  was.classList.remove('open'); was.setAttribute('aria-hidden', 'true'); openSheet = null;
   backdrop.classList.remove('show'); setTimeout(() => { if (!openSheet) backdrop.hidden = true; }, 300);
+  if (was === $('#sheetSettings') && setupMode) finishSetup();
 }
 backdrop.addEventListener('click', closeSheets);
 document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => closeSheets()));
@@ -383,43 +399,49 @@ $('#btnFavs').addEventListener('click', () => { renderFavs(); open($('#sheetFavs
 $('#btnSettings').addEventListener('click', () => { renderSettings(); open($('#sheetSettings')); });
 
 /* ---------- ajustes ---------- */
+let setupMode = false;
+function openSetup() { setupMode = true; renderSettings(); $('#btnSetupDone').hidden = false; open($('#sheetSettings')); }
+function finishSetup() { setupMode = false; $('#btnSetupDone').hidden = true; ui.setupDone = true; persist(); setTimeout(openStart, 320); }
+$('#btnSetupDone').addEventListener('click', () => closeSheets());
 function groupSwitch(g) {
-  const l = document.createElement('label'); l.className = 'sw';
-  const s = document.createElement('span'); s.textContent = GROUPS[g].name;
+  const l = el('label', 'sw');
+  const s = el('span', null, GROUPS[g].name);
   const i = document.createElement('input'); i.type = 'checkbox'; i.checked = prefs.enabledGroups.includes(g);
   i.addEventListener('change', () => {
     const set = new Set(prefs.enabledGroups);
     if (i.checked) set.add(g); else set.delete(g);
-    if (!set.size) { i.checked = true; toast('Deja al menos una zona activa.'); return; }
+    if (![...set].some(x => !GROUPS[x].intimate)) { i.checked = true; toast('Deja al menos una zona activa.'); return; }
     prefs.enabledGroups = [...set]; persist(); updateControls();
   });
   l.append(s, i, document.createElement('i'));
   return l;
 }
+/* partes del cuerpo, no género: cada jugador marca lo que tiene disponible */
 function renderAnatomy() {
   document.querySelectorAll('.anat').forEach(box => {
-    const i = Number(box.dataset.p), an = prefs.anatomy[i] || '';
-    box.querySelectorAll('button').forEach(b => b.classList.toggle('on', an.includes(b.dataset.a)));
+    const i = Number(box.dataset.p), parts = prefs.bodyParts[i] || [];
+    box.querySelectorAll('button').forEach(b => { const on = parts.includes(b.dataset.a); b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
   });
 }
 document.querySelectorAll('.anat button').forEach(b => b.addEventListener('click', () => {
-  const i = Number(b.closest('.anat').dataset.p), a = b.dataset.a; const an = [...(prefs.anatomy || ['', ''])];
-  const cur = an[i] || ''; an[i] = cur.includes(a) ? cur.replace(a, '') : (cur + a).split('').sort().join('');
-  prefs.anatomy = an; persist(); renderAnatomy(); updateControls(); buzz(6);
+  const i = Number(b.closest('.anat').dataset.p), a = b.dataset.a; const bp = prefs.bodyParts.map(p => [...p]);
+  const cur = bp[i] || []; bp[i] = cur.includes(a) ? cur.filter(x => x !== a) : [...cur, a];
+  prefs.bodyParts = bp; persist(); renderAnatomy(); updateControls(); buzz(6);
 }));
 function renderSettings() {
   $('#name0').value = prefs.names[0] || ''; $('#name1').value = prefs.names[1] || '';
   renderAnatomy();
   const g1 = $('#groups'), g2 = $('#groupsIntimate'); g1.innerHTML = ''; g2.innerHTML = '';
   for (const g of Object.keys(GROUPS)) if (!GROUPS[g].intimate) g1.appendChild(groupSwitch(g));
-  // un solo interruptor: la anatomía de cada jugador decide qué entra
-  const l = document.createElement('label'); l.className = 'sw';
-  const sp = document.createElement('span'); sp.textContent = 'Anatomía íntima en Intimidad';
+  // un solo interruptor: las partes disponibles de cada jugador deciden qué entra
+  const l = el('label', 'sw');
+  const sp = el('span', null, 'Anatomía íntima en Intimidad');
   const inp = document.createElement('input'); inp.type = 'checkbox'; inp.checked = prefs.enabledGroups.some(g => GROUPS[g].intimate);
   inp.addEventListener('change', () => { const base = prefs.enabledGroups.filter(g => !GROUPS[g].intimate); prefs.enabledGroups = inp.checked ? [...base, 'intimaF', 'intimaM'] : base; persist(); updateControls(); });
   l.append(sp, inp, document.createElement('i')); g2.appendChild(l);
   $('#swVibe').checked = ui.vibrate;
-  $('#btnClearFavs').classList.remove('arm'); $('#btnClearFavs').textContent = 'Borrar favoritas';
+  $('#btnSetupDone').hidden = !setupMode;
+  $('#btnClearFavs').classList.remove('arm'); $('#btnClearFavs').textContent = 'Borrar Lo nuestro';
 }
 for (const [id, i] of [['#name0', 0], ['#name1', 1]]) {
   $(id).addEventListener('input', e => { const n = [...(prefs.names || ['', ''])]; n[i] = e.target.value.trim(); prefs.names = n; persist(); renderTurn(); });
@@ -428,9 +450,9 @@ $('#swVibe').addEventListener('change', e => { ui.vibrate = e.target.checked; pe
 $('#btnReset').addEventListener('click', () => { newSession(); closeSheets(); toast('Sesión nueva'); });
 $('#btnClearFavs').addEventListener('click', e => {
   const b = e.currentTarget;
-  if (!b.classList.contains('arm')) { b.classList.add('arm'); b.textContent = '¿Seguro? Toca otra vez para borrar'; setTimeout(() => { b.classList.remove('arm'); b.textContent = 'Borrar favoritas'; }, 3000); return; }
-  engine.state.favorites = []; persist(); renderFavCount(); renderFavBtn(); b.classList.remove('arm'); b.textContent = 'Borrar favoritas'; toast('Favoritas borradas');
+  if (!b.classList.contains('arm')) { b.classList.add('arm'); b.textContent = '¿Seguro? Toca otra vez para borrar'; setTimeout(() => { b.classList.remove('arm'); b.textContent = 'Borrar Lo nuestro'; }, 3000); return; }
+  engine.state.favorites = []; persist(); renderFavCount(); renderFavBtn(); b.classList.remove('arm'); b.textContent = 'Borrar Lo nuestro'; toast('Lo nuestro borrado');
 });
 
 /* ---------- arranque ---------- */
-renderLevels(); renderTurn(); idleDice(); renderFavCount(); updateControls(); $('#feedback').hidden = true;
+renderLevel(); renderTurn(); idleDice(); renderFavCount(); updateControls();
