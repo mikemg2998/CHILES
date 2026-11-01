@@ -50,7 +50,10 @@ export const CompatibilityEngine = {
     if (c.id === 'detras' && ['abrazar', 'entrelazar', 'pegarCuerpo', 'frotar'].includes(action.id)) return false;
     if (c.id === 'frenteAFrente' && ['abrazar', 'pegarCuerpo', 'frotar', 'acercarse', 'respirarCerca'].includes(action.id)) return false;
     if (c.id === 'tumbados' && ['abrazar', 'entrelazar', 'pegarCuerpo', 'frotar', 'jugarCabello'].includes(action.id)) return false;
-    if (c.id === 'mirandose' && action.contactType === 'ninguno' && zone.id !== 'labios' && zone.id !== 'rostro') return false;
+    if (c.id === 'mirandose') { // contacto visual: solo si la postura lo permite de verdad
+      if (action.contactType === 'ninguno' && zone.id !== 'labios' && zone.id !== 'rostro') return false;
+      if (action.contactType === 'boca' && (zone.id === 'labios' || ['muslosInt', 'muslos', 'piernas', 'pies', 'pantorrillas', 'entrepierna', 'gluteos'].includes(zone.id) || zone.tags.includes('intimo'))) return false;
+    }
     return true;
   },
   conditionsFor(action, zone, method, level) {

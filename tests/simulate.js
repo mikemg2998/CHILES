@@ -94,6 +94,31 @@ if (ozRS > 0.55 || oaRS > 0.6) { console.log('  ✗ Relajado y Sensual se parece
 if (topA.some(z => ['cuello', 'nuca', 'orejas'].includes(z))) { console.log('  ✗ cuello/nuca/orejas entre las zonas principales de Atrevido'); fail++; }
 if (!(Rl.mean < 3.5 && S.mean > 3.5 && S.mean < 6.5 && A.mean > 6.5)) { console.log('  ✗ las medias no caen en sus rangos'); fail++; }
 
+/* 3b. Sesiones reales: 40 partidas de 20 tiradas por nivel. La variedad tiene que sentirse jugando. */
+console.log('\n== Sesiones reales (40 partidas × 20 tiradas) ==');
+for (const s of setups) {
+  const S = 40, R = 20; const fam = [], acts = [], famMax = [], condMax = []; let win5Fam = 0, win5Act = 0, condNear = 0, pairs = 0;
+  for (let k = 0; k < S; k++) {
+    const eng = new GameEngine({ prefs: { names: ['Ana', 'Leo'], mode: s.mode, enabledGroups: s.groups }, seed: 1000 + k });
+    const rs = []; for (let i = 0; i < R; i++) rs.push(eng.roll());
+    const zf = {}, af = {}, cc = {}; const A = new Set();
+    rs.forEach((r, i) => {
+      count(zf, r.families.zone); count(af, r.families.action); if (r.cond) count(cc, r.cond); A.add(r.action);
+      const w = rs.slice(Math.max(0, i - 4), i);
+      pairs++;
+      if (w.filter(p => p.families.zone === r.families.zone).length >= 2) win5Fam++;
+      if (w.filter(p => p.families.action === r.families.action).length >= 2) win5Act++;
+      if (r.cond && w.some(p => p.cond === r.cond)) condNear++;
+    });
+    fam.push(Object.keys(zf).length); acts.push(A.size); famMax.push(Math.max(...Object.values(zf))); condMax.push(Math.max(0, ...Object.values(cc)));
+  }
+  const med = a => a.sort((x, y) => x - y)[Math.floor(a.length / 2)];
+  console.log(`  ${s.key}: familias de zona distintas ${med(fam)} (mín ${Math.min(...fam)}) · acciones distintas ${med(acts)} (mín ${Math.min(...acts)}) · familia de zona más repetida ${med(famMax)}/20 (máx ${Math.max(...famMax)}) · condición más repetida ${Math.max(...condMax)}`);
+  console.log(`    misma familia de zona 3 veces en 5 tiradas ${pct(win5Fam, pairs)} · misma familia de acción 3 veces en 5 ${pct(win5Act, pairs)} · condición repetida en 5 tiradas ${pct(condNear, pairs)}`);
+  const small = s.key.includes('sin'); // pool de 9 familias: se tolera algo más de cercanía
+  if (med(fam) < (small ? 5 : 6) || med(acts) < 9 || Math.max(...condMax) > 3 || condNear > 0 || win5Fam / pairs > (small ? 0.06 : 0.03)) { console.log('  ✗ la sesión no se siente variada'); fail++; }
+}
+
 /* 4. Muestra */
 if (SAMPLE) {
   for (const key of ['relajado', 'sensual', 'atrevido']) {

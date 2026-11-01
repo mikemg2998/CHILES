@@ -8,10 +8,11 @@ import { PreferenceManager } from './prefs.js';
 import { NaturalLanguageGenerator as NLG } from './nlg.js';
 
 const near = (v, t, k = 1) => Math.exp(-k * Math.abs(v - t));
-const COOL = { action: 3, zone: 4, method: 2, cond: 3 };
+const COOL = { action: 3, zone: 4, method: 2, cond: 5 };
+const FAM_COOL = { action: 1, zone: 2, cond: 2 }; // la misma familia no vuelve en las rondas siguientes
 /* Densidad por nivel: probabilidad de que la ronda intente usar forma y condición.
    Los dados son la mecánica; la frase manda. Relajado va limpio; Atrevido admite más condiciones porque forman parte del picante. */
-const DENSITY = { 1: { method: .6, cond: .2, both: .35 }, 2: { method: .7, cond: .45, both: .6 }, 3: { method: .65, cond: .6, both: .7 } };
+const DENSITY = { 1: { method: .6, cond: .15, both: .3 }, 2: { method: .65, cond: .35, both: .5 }, 3: { method: .6, cond: .5, both: .6 } };
 
 export class GameEngine {
   constructor({ prefs, seed } = {}) {
@@ -39,9 +40,12 @@ export class GameEngine {
   }
 
   /* ---------- API ---------- */
-  roll() { return this.round(this.generate({ level: this.level() }), { advanceTurn: true }); }
+  /* quién recibe en la próxima ronda: decide qué anatomía íntima entra en juego */
+  aim(advance) { const next = advance && this.state.round > 0 ? 1 - this.state.performer : this.state.performer; this.prefs.partner = 1 - next; }
+  roll() { this.aim(true); return this.round(this.generate({ level: this.level() }), { advanceTurn: true }); }
   pass() { this.state.progressive.calm = 0; const last = this.history.last(); if (last) last.passed = true; return this.roll(); }
   reroll() {
+    this.aim(false);
     const last = this.history.last();
     const combo = this.generate({ level: this.level(), target: last ? last.target : null, avoid: last });
     return this.round(combo, { advanceTurn: false, target: last ? last.target : null });
@@ -50,13 +54,15 @@ export class GameEngine {
   harder() { return this.variant(+1); }
   variant(dir) {
     const last = this.history.last(); if (!last) return this.roll();
+    this.aim(false);
     if (dir < 0) this.state.progressive.calm = 0;
     const combo = this.getVariant(last, dir);
     if (!combo) return null;
     return this.round(combo, { advanceTurn: false, target: combo.intensity, variant: dir < 0 ? 'softer' : 'harder' });
   }
-  repeatFavorite(fav) { return this.round({ action: fav.action, zone: fav.zone, method: fav.method, cond: fav.cond, alt: fav.alt }, { advanceTurn: true, fromFavorite: true }); }
+  repeatFavorite(fav) { this.aim(true); return this.round({ action: fav.action, zone: fav.zone, method: fav.method, cond: fav.cond, alt: fav.alt }, { advanceTurn: true, fromFavorite: true }); }
   inspireFavorite(fav) {
+    this.aim(true);
     const keep = this.rng.chance(0.5) ? { action: fav.action } : { zone: fav.zone };
     const combo = this.generate({ level: this.level(), target: fav.intensity, keep, avoid: fav });
     return this.round(combo, { advanceTurn: true, inspired: true });
@@ -107,12 +113,12 @@ export class GameEngine {
     for (const a of ACTIONS) {
       if (!a.levels[level] || prefs.actionDisabled(a)) continue;
       if (avoid && avoid.action === a.id) continue;
-      if (!relax && H.cooling('action', a.id, COOL.action)) continue;
+      if (!relax && (H.cooling('action', a.id, COOL.action) || H.familyCooling('action', a.family, FAM_COOL.action))) continue;
       const zs = CE.zonesFor(a, level, prefs);
       if (!zs.length) continue;
       const d = Math.min(...zs.map(z => Math.abs(pairIntensity(a, z) - target)));
       if (d > 1.6) continue;
-      items.push({ item: a, weight: a.levels[level] * near(d, 0, 1.2) * H.novelty('action', a.id, 10, 1.2) });
+      items.push({ item: a, weight: a.levels[level] * near(d, 0, 1.2) * H.novelty('action', a.id, 10, 1.2) * H.familyWeight('action', a.family, { strength: 1 }) });
     }
     return items.length ? this.rng.weighted(items) : null;
   }
@@ -120,10 +126,10 @@ export class GameEngine {
     const H = this.history;
     const items = CE.zonesFor(action, level, this.prefs).map(z => {
       if (avoid && avoid.zone === z.id) return null;
-      if (!relax && H.cooling('zone', z.id, COOL.zone)) return null;
+      if (!relax && (H.cooling('zone', z.id, COOL.zone) || H.familyCooling('zone', z.family, FAM_COOL.zone))) return null;
       const d = Math.abs(pairIntensity(action, z) - target);
       if (d > 1.6) return null;
-      return { item: z, weight: z.levels[level] * near(d, 0, 1.5) * H.novelty('zone', z.id, 10, 1.5) };
+      return { item: z, weight: z.levels[level] * near(d, 0, 1.5) * H.novelty('zone', z.id, 10, 1.5) * H.familyWeight('zone', z.family, { strength: 1.5 }) };
     }).filter(Boolean);
     return items.length ? this.rng.weighted(items) : null;
   }
@@ -140,8 +146,8 @@ export class GameEngine {
     const H = this.history, base = pairIntensity(action, zone) + (method ? method.mod : 0);
     const items = CE.conditionsFor(action, zone, method, level).map(c => {
       if (avoid && avoid.cond === c.id) return null;
-      if (!relax && H.cooling('cond', c.id, COOL.cond)) return null;
-      return { item: c, weight: c.levels[level] * CE.conditionValue(c, action, zone) * near(base + c.mod, target, 1.2) * H.novelty('cond', c.id, 10, 1) };
+      if (!relax && (H.cooling('cond', c.id, COOL.cond) || H.familyCooling('cond', c.family, FAM_COOL.cond))) return null;
+      return { item: c, weight: c.levels[level] * CE.conditionValue(c, action, zone) * near(base + c.mod, target, 1.2) * H.novelty('cond', c.id, 12, 2) * H.familyWeight('cond', c.family, { strength: 2 }) };
     }).filter(Boolean);
     return items.length ? this.rng.weighted(items) : null;
   }
@@ -210,6 +216,7 @@ export class GameEngine {
       action: combo.action, zone: combo.zone, method: combo.method, cond: combo.cond, alt: combo.alt || null,
       seconds: m && m.seconds ? m.seconds : (c && c.id === 'esperar' ? 5 : null),
       performer, performerName, partnerName: partner, phrase, faces: NLG.faces(combo), dice: this.diceFaces(combo, level),
+      families: { action: a.family, zone: z.family, cond: c ? c.family : null, method: m ? m.dim : null },
       variant: opts.variant || null, kept: combo.kept || null,
       validation: CombinationValidator.validate({ ...combo, intensity, level: opts.fromFavorite ? null : level, phrase, names }, this.prefs).status,
     };

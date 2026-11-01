@@ -76,8 +76,8 @@ function renderTurn() {
 
 /* ---------- dados ---------- */
 const dieEls = Object.fromEntries(DICE.map(k => [k, document.querySelector(`.die[data-k="${k}"]`)]));
-const REST = 'rotateX(-12deg) rotateY(16deg)';
-const RX = -12, RY = 16;
+const diceSec = $('#dice');
+const RX = -8, RY = 10, REST = `rotateX(${RX}deg) rotateY(${RY}deg)`;
 /* tamaño real del cubo → profundidad de las caras */
 const ro = new ResizeObserver(entries => { for (const e of entries) e.target.style.setProperty('--hs', (e.contentRect.width / 2) + 'px'); });
 for (const k of DICE) ro.observe(dieEls[k].querySelector('.cube'));
@@ -86,33 +86,87 @@ function paint(faceEl, text) {
   faceEl.classList.toggle('blank', blank);
   faceEl.innerHTML = ''; if (!blank) { const sp = document.createElement('span'); sp.textContent = text; faceEl.appendChild(sp); }
 }
-function setFace(k, text) { paint(dieEls[k].querySelector('.f1'), text); }
 function setFaces(k, faces) { for (let i = 0; i < 6; i++) paint(dieEls[k].querySelector('.f' + (i + 1)), faces[i]); }
 function idleDice() { for (const k of DICE) setFaces(k, [IDLE_FACE[k], '', '', '', '', '']); }
 const wait = ms => new Promise(r => setTimeout(r, ms));
-/* ~1 s: el cubo se eleva, gira sobre dos ejes con las seis caras reales del nivel y frena hasta posarse en el resultado (cara frontal) */
-async function animateDie(k, faces, delay) {
-  await wait(delay);
-  const el = dieEls[k], cube = el.querySelector('.cube');
-  setFaces(k, faces);
-  el.classList.remove('settle'); el.classList.add('rolling');
-  const sx = Math.random() < 0.5 ? 1 : -1, sy = Math.random() < 0.5 ? 1 : -1;
-  const tx = 720 * sx + (Math.random() < 0.5 ? 0 : 360 * sx), ty = 360 * sy + (Math.random() < 0.5 ? 0 : 360 * sy);
-  const lift = 14 + (cube.clientWidth || 80) * 0.18;
-  const frames = [
-    { transform: `translateY(0px) ${REST}` },
-    { transform: `translateY(${-lift}px) rotateX(${RX + tx * 0.35}deg) rotateY(${RY + ty * 0.3}deg)`, offset: 0.32 },
-    { transform: `translateY(${-lift * 0.35}px) rotateX(${RX + tx * 0.78}deg) rotateY(${RY + ty * 0.76}deg)`, offset: 0.72 },
-    { transform: `translateY(0px) rotateX(${RX + tx}deg) rotateY(${RY + ty}deg)` },
-  ];
-  const a = cube.animate(frames, { duration: 1000, easing: 'cubic-bezier(.22,.7,.18,1)', fill: 'forwards' });
-  await a.finished.catch(() => {});
-  cube.style.transform = REST; a.cancel();
-  el.classList.remove('rolling'); el.classList.add('settle'); buzz(6);
+
+/* Cuatro dados lanzados sobre una mesa invisible: impulso, gravedad, rebotes, fricción, giro independiente en X/Y/Z,
+   desaceleración y asentamiento en la cara del resultado. Cada dado con parámetros distintos; nunca sincronizados. */
+function throwDice(round) {
+  return new Promise(resolve => {
+    const rect = diceSec.getBoundingClientRect();
+    const slots = DICE.map(k => { const r = dieEls[k].querySelector('.cube').getBoundingClientRect(); return { x: r.left - rect.left, y: r.top - rect.top, s: r.width }; });
+    const size = slots[0].s, W = rect.width, H = Math.max(rect.height, size * 1.7);
+    diceSec.classList.add('throwing'); diceSec.style.minHeight = H + 'px';
+    const g = 0.0048, now = performance.now();
+    const rnd = (a, b) => a + Math.random() * (b - a), sgn = () => (Math.random() < 0.5 ? -1 : 1);
+    const bodies = DICE.map((k, i) => {
+      setFaces(k, round.dice[k]);
+      const el = dieEls[k], cube = el.querySelector('.cube');
+      el.classList.remove('settle'); el.classList.add('rolling');
+      return { el, cube, k, x: slots[i].x, y: slots[i].y, z: 0, slot: slots[i],
+        vx: (i < 2 ? 1 : -1) * rnd(0.28, 0.5) * (W / 390), vy: rnd(-0.16, 0.16), vz: rnd(0.68, 0.82),
+        rx: RX, ry: RY, rz: 0, wx: rnd(1.6, 2.6) * sgn(), wy: rnd(1.2, 2.4) * sgn(), wz: rnd(-0.9, 0.9),
+        t0: now + i * rnd(30, 70), grounded: false, tween: null, done: false };
+    });
+    let last = now;
+    const paintBody = b => {
+      b.el.style.transform = `translate3d(${b.x - b.slot.x}px,${b.y - b.slot.y}px,0)`;
+      b.el.style.zIndex = String(10 + Math.round(b.y));
+      b.el.style.setProperty('--lift', Math.min(1, b.z / 70).toFixed(3));
+      b.cube.style.transform = `translateY(${-b.z}px) rotateX(${b.rx}deg) rotateY(${b.ry}deg) rotateZ(${b.rz}deg)`;
+    };
+    const step = t => {
+      const dt = Math.min(32, t - last); last = t;
+      let allDone = true;
+      for (const b of bodies) {
+        if (b.done) continue; allDone = false;
+        if (t < b.t0) continue;
+        if (b.tween) { // asentamiento: la rotación frena hasta la cara del resultado
+          const p = Math.min(1, (t - b.tween.t0) / b.tween.dur), e = 1 - Math.pow(1 - p, 3);
+          b.rx = b.tween.rx0 + (b.tween.rx1 - b.tween.rx0) * e; b.ry = b.tween.ry0 + (b.tween.ry1 - b.tween.ry0) * e; b.rz = b.tween.rz0 + (b.tween.rz1 - b.tween.rz0) * e;
+          b.x += b.vx * dt * (1 - e); b.y += b.vy * dt * (1 - e);
+          paintBody(b);
+          if (p >= 1) { b.done = true; b.el.classList.remove('rolling'); b.el.classList.add('settle'); buzz(5); }
+          continue;
+        }
+        // vuelo y rebotes
+        b.z += b.vz * dt; b.vz -= g * dt;
+        if (b.z <= 0) {
+          b.z = 0;
+          if (b.vz < -0.1) { b.vz = -b.vz * 0.42; b.vx *= 0.7; b.vy *= 0.7; b.wx *= 0.55; b.wy *= 0.55; b.wz *= 0.6; b.wz += rnd(-0.3, 0.3); }
+          else { b.vz = 0; b.grounded = true; }
+        }
+        if (b.grounded) { const f = Math.exp(-0.006 * dt); b.vx *= f; b.vy *= f; b.wx *= Math.exp(-0.004 * dt); b.wy *= Math.exp(-0.004 * dt); b.wz *= Math.exp(-0.005 * dt); }
+        b.x += b.vx * dt; b.y += b.vy * dt;
+        if (b.x < 0) { b.x = 0; b.vx = -b.vx * 0.6; b.wz += rnd(-0.4, 0.4); } else if (b.x > W - size) { b.x = W - size; b.vx = -b.vx * 0.6; b.wz += rnd(-0.4, 0.4); }
+        if (b.y < 0) { b.y = 0; b.vy = -b.vy * 0.6; } else if (b.y > H - size) { b.y = H - size; b.vy = -b.vy * 0.6; }
+        b.rx += b.wx * dt; b.ry += b.wy * dt; b.rz += b.wz * dt;
+        const speed = Math.hypot(b.vx, b.vy), spin = Math.abs(b.wx) + Math.abs(b.wy) + Math.abs(b.wz);
+        const age = t - b.t0;
+        if ((b.grounded && speed < 0.06 && spin < 0.9 && age > 480) || age > 900) {
+          const snap = (v, rest, w) => { const base = v - rest, k = Math.ceil(base / 360 + (w >= 0 ? 0.25 : -0.25)); return rest + (w >= 0 ? Math.max(k, Math.floor(base / 360) + 1) : Math.min(k, Math.ceil(base / 360) - 1)) * 360; };
+          b.tween = { t0: t, dur: rnd(220, 300), rx0: b.rx, ry0: b.ry, rz0: b.rz, rx1: snap(b.rx, RX, b.wx), ry1: snap(b.ry, RY, b.wy), rz1: Math.round(b.rz / 360) * 360 };
+        }
+        paintBody(b);
+      }
+      if (allDone) resolve(); else requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  });
 }
+/* tras asentarse, vuelven con suavidad a su sitio para que ACCIÓN · ZONA · FORMA · CONDICIÓN se lean en orden */
 async function rollDice(round) {
-  await Promise.all(DICE.map((k, i) => animateDie(k, round.dice[k], i * 60)));
-  await wait(80);
+  await throwDice(round);
+  regroup(); // la frase aparece ya; los dados vuelven a su sitio mientras tanto
+}
+async function regroup() {
+  await wait(140);
+  diceSec.classList.add('regroup');
+  for (const k of DICE) { const el = dieEls[k]; el.style.transform = ''; el.querySelector('.cube').style.transform = REST; el.style.setProperty('--lift', '0'); }
+  await wait(430);
+  diceSec.classList.remove('throwing', 'regroup'); diceSec.style.minHeight = '';
+  for (const k of DICE) dieEls[k].style.zIndex = '';
 }
 
 /* ---------- ronda ---------- */
@@ -221,10 +275,28 @@ function groupSwitch(g) {
   l.append(s, i, document.createElement('i'));
   return l;
 }
+function renderAnatomy() {
+  document.querySelectorAll('.anat').forEach(box => {
+    const i = Number(box.dataset.p), an = prefs.anatomy[i] || '';
+    box.querySelectorAll('button').forEach(b => b.classList.toggle('on', an.includes(b.dataset.a)));
+  });
+}
+document.querySelectorAll('.anat button').forEach(b => b.addEventListener('click', () => {
+  const i = Number(b.closest('.anat').dataset.p), a = b.dataset.a; const an = [...(prefs.anatomy || ['', ''])];
+  const cur = an[i] || ''; an[i] = cur.includes(a) ? cur.replace(a, '') : (cur + a).split('').sort().join('');
+  prefs.anatomy = an; persist(); renderAnatomy(); updateVariants(); buzz(6);
+}));
 function renderSettings() {
   $('#name0').value = prefs.names[0] || ''; $('#name1').value = prefs.names[1] || '';
+  renderAnatomy();
   const g1 = $('#groups'), g2 = $('#groupsIntimate'); g1.innerHTML = ''; g2.innerHTML = '';
-  for (const g of Object.keys(GROUPS)) (GROUPS[g].intimate ? g2 : g1).appendChild(groupSwitch(g));
+  for (const g of Object.keys(GROUPS)) if (!GROUPS[g].intimate) g1.appendChild(groupSwitch(g));
+  // un solo interruptor: la anatomía de cada jugador decide qué entra
+  const l = document.createElement('label'); l.className = 'sw';
+  const sp = document.createElement('span'); sp.textContent = 'Anatomía íntima en Atrevido';
+  const inp = document.createElement('input'); inp.type = 'checkbox'; inp.checked = prefs.enabledGroups.some(g => GROUPS[g].intimate);
+  inp.addEventListener('change', () => { const base = prefs.enabledGroups.filter(g => !GROUPS[g].intimate); prefs.enabledGroups = inp.checked ? [...base, 'intimaF', 'intimaM'] : base; persist(); updateVariants(); });
+  l.append(sp, inp, document.createElement('i')); g2.appendChild(l);
   $('#swVibe').checked = ui.vibrate;
   $('#btnClearFavs').classList.remove('arm'); $('#btnClearFavs').textContent = 'Borrar favoritas';
 }

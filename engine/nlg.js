@@ -4,7 +4,7 @@ import { ACTION, ZONE, METHOD, CONDITION } from './catalog.js';
 
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 const low = s => s.charAt(0).toLowerCase() + s.slice(1);
-const clean = s => s.replace(/\ba el\b/g, 'al').replace(/\bde el\b/g, 'del').replace(/\s+/g, ' ').replace(/\s+([,;:.])/g, '$1').replace(/,\s*,/g, ',').replace(/:\s*,/g, ':').replace(/,\s*\./g, '.').trim();
+const clean = s => s.replace(/\ba el\b/g, 'al').replace(/\by (h?i)/gi, 'e $1').replace(/\bde el\b/g, 'del').replace(/\s+/g, ' ').replace(/\s+([,;:.])/g, '$1').replace(/,\s*,/g, ',').replace(/:\s*,/g, ':').replace(/,\s*\./g, '.').trim();
 
 function fill(t, ctx) {
   return t.replace(/\{P\}/g, ctx.partner).replace(/\{PF\}/g, ctx.performer).replace(/\{ALT\}/g, ctx.alt).replace(/\{V\}/g, ctx.verb);
@@ -34,7 +34,7 @@ export const NaturalLanguageGenerator = {
     const partner = opts.partner || 'tu pareja', performer = opts.performer || 'tú';
     const ctx = { partner, performer, verb: a.verb, zoneBare: z.n, zonePoss: z.np, alt: combo.alt ? ZONE[combo.alt].n : '' };
     if (!c) return cap(core(a, m, ctx, false)) + '.';
-    const ct = fill(c.text, ctx).replace(/\{ZONE\}/g, ctx.zoneBare);
+    const ct = fill(a.contactType === 'boca' && c.textBoca ? c.textBoca : c.text, ctx).replace(/\{ZONE\}/g, ctx.zoneBare);
     switch (c.slot) {
       case 'intro': return clean(cap(ct) + ' ' + low(core(a, m, ctx, false)) + '.');
       case 'prep': // la preparación ya nombra a la pareja → posesivo después
