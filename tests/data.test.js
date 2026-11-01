@@ -1,8 +1,8 @@
 /* Validación estructural de los datos editables: cualquier error aquí es un fallo de la build. */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validateData, COMBOS, COMBO, INVALID_COMBOS, unreviewedCombinations, ACTIONS_LIST, TARGETS_LIST, ACTOR_TOOLS, STYLE_IDS, LEVELS, mechanics } from '../engine/grammar.js';
-import { COMPATIBILITY } from '../engine/data/compatibility.js';
+import { validateData, COMBOS, COMBO, REJECTED_COMBOS, unreviewedCombinations, ACTIONS_LIST, TARGETS_LIST, ACTOR_TOOLS, STYLE_IDS, LEVELS, mechanics, statusOf, APPROVED_STATUSES } from '../engine/grammar.js';
+import { REPERTOIRE } from '../engine/data/repertoire.js';
 import { BASE_ACTIONS } from '../engine/data/actions.js';
 import { SHAPES } from '../engine/data/shapes.js';
 
@@ -17,9 +17,9 @@ test('ids de zona normalizados: los del modelo existen y las zonas íntimas est�
   for (const t of TARGETS_LIST) { assert.ok(/^[a-z][A-Za-z]*$/.test(t.id), t.id); assert.ok(t.n && !/poplít|clínic/i.test(t.n), 'nombre natural'); }
   assert.notEqual(COMBO['CARESS|oneHand|vulva'], undefined); assert.equal(COMBO['CARESS|oneHand|vagina'], undefined);
 });
-test('solo las combinaciones APPROVED entran; INVALID nunca; lo no revisado no es elegible', () => {
-  for (const c of COMBOS) assert.ok(COMPATIBILITY.some(e => e.status === 'APPROVED' && e.action === c.action && e.tool === c.tool && e.targets[c.target] !== undefined), c.key);
-  for (const k of INVALID_COMBOS) assert.equal(COMBO[k], undefined, k);
+test('solo las combinaciones EXCELLENT / GOOD / VALID entran; REJECTED nunca; lo no revisado no es elegible', () => {
+  for (const c of COMBOS.filter(c => c.kind === 'CARTESIAN')) { const v = REPERTOIRE[c.target].approvedActions[`${c.action}|${c.tool}`]; assert.ok(v, c.key); assert.ok(APPROVED_STATUSES.includes(typeof v === 'string' ? v : v.status), c.key); assert.equal(statusOf(c.action, c.tool, c.target), c.status); }
+  for (const k of REJECTED_COMBOS) { assert.equal(COMBO[k], undefined, k); const [a, t, z] = k.split('|'); assert.equal(statusOf(a, t, z), 'REJECTED'); }
   const un = unreviewedCombinations();
   assert.ok(un.length > 0);
   for (const u of un) assert.equal(COMBO[`${u.action}|${u.tool}|${u.target}`], undefined);
@@ -36,7 +36,7 @@ test('estilos: intersección acción ∩ zona; nada FIRM sobre zonas de baja tol
   for (const c of COMBOS) { const a = ACTIONS_LIST.find(x => x.id === c.action), z = TARGETS_LIST.find(t => t.id === c.target); for (const s of c.styles) { assert.ok(a.styles.includes(s) && z.allowedStyles.includes(s), `${c.key} ${s}`); assert.ok(STYLE_IDS.includes(s)); } if (z.pressureTolerance === 'low') assert.ok(!c.styles.includes('FIRM'), c.key); }
 });
 test('biomecánica: ninguna combinación aprobada exige una posición compleja ni una herramienta que no puede hacer la acción', () => {
-  for (const c of COMBOS) { const m = mechanics(c.action, c.tool, c.target); assert.ok(m.ok, `${c.key}: ${m.code}`); assert.ok(m.complexity < 2); }
+  for (const c of COMBOS.filter(c => c.kind === 'CARTESIAN')) { const m = mechanics(c.action, c.tool, c.target); assert.ok(m.ok, `${c.key}: ${m.code}`); assert.ok(m.complexity < 2); }
   assert.equal(mechanics('LICK', 'tongue', 'feet').ok, false);
   assert.equal(mechanics('BITE', 'teeth', 'toes').ok, false);
   assert.equal(mechanics('MASSAGE', 'nose', 'back').ok, false);

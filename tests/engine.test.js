@@ -16,8 +16,8 @@ test('cada ronda es una combinación aprobada, válida, con duración humana y f
   for (const L of LEVEL_IDS) {
     const e = mk({ level: L, seed: 3 + L });
     for (const r of rolls(e, 300)) {
-      const c = COMBO[`${r.action}|${r.tool}|${r.target}`];
-      assert.ok(c, `${r.action}|${r.tool}|${r.target}`);
+      const c = COMBO[r.key];
+      assert.ok(c, r.key); assert.ok(r.kind === 'POSITIONAL' ? r.key.startsWith('POS:') : r.key === `${r.action}|${r.tool}|${r.target}`, r.key);
       assert.ok(c.levels.includes(L), r.phrase);
       assert.equal(r.validation, 'VALID', r.phrase);
       assert.ok([...HUMAN_DURATIONS, LONG_DURATION].includes(r.seconds), String(r.seconds));

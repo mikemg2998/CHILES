@@ -7,7 +7,7 @@ import { TARGETS } from './data/targets.js';
 import { ACTOR_TOOLS } from './data/actorTools.js';
 import { ACTIONS } from './data/actions.js';
 import { STYLES } from './data/styles.js';
-import { shapeFits } from './grammar.js';
+import { shapeFits, COMBO } from './grammar.js';
 
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 const low = s => s.charAt(0).toLowerCase() + s.slice(1);
@@ -15,7 +15,12 @@ const clean = s => s.replace(/\ba el\b/g, 'al').replace(/\bde el\b/g, 'del').rep
 const pron = n => /^(el|un) /.test(n) ? 'lo' : /^(los|unos) /.test(n) ? 'los' : /^(las|unas) /.test(n) ? 'las' : 'la';
 const STOP = new Set(['de', 'la', 'el', 'los', 'las', 'con', 'en', 'a', 'y', 'e', 'que', 'su', 'sus', 'un', 'una', 'tu', 'tus', 'sin', 'al', 'del', 'por', 'se', 'lo', 'le', 'te', 'muy', 'más', 'o', 'sobre', 'hasta', 'para', 'como', 'si', 'ahí', 'así']);
 
-/* estructuras candidatas para la combinación */
+/* estructuras candidatas para una combinación compilada (cartesiana o blueprint posicional) */
+export function shapesForCombo(c, style, level, guided) {
+  if (c && c.kind === 'POSITIONAL') { if (guided) return []; const b = c.blueprint; return (b.copyVariants || []).map((t, i) => ({ t, w: 1, fixed: !t.includes('{S}'), stylePos: t.includes('{S}') ? 'adv' : 'none', id: `${c.key}#${i}` })).filter(s => !style || s.t.includes('{S}') || style === null); }
+  return shapesFor(c.action, c.tool, c.target, style, level, guided);
+}
+/* estructuras candidatas para la combinación cartesiana */
 export function shapesFor(action, tool, target, style, level, guided) {
   const z = TARGETS[target], t = ACTOR_TOOLS[tool], a = ACTIONS[action];
   // longitud estimada de la frase base: una guía solo cabe en una frase corta
@@ -27,7 +32,8 @@ export function shapesFor(action, tool, target, style, level, guided) {
 export function realize(combo, ctx) {
   const a = ACTIONS[combo.action], z = TARGETS[combo.target], t = ACTOR_TOOLS[combo.tool];
   const rng = ctx.rng, partner = ctx.partner || 'tu pareja', style = combo.style ? STYLES[combo.style] : null, recent = ctx.recentShapes || [];
-  let cands = shapesFor(combo.action, combo.tool, combo.target, combo.style || null, combo.level, combo.pattern === 'GUIDED');
+  const compiled = (combo.key && COMBO[combo.key]) || COMBO[`${combo.action}|${combo.tool}|${combo.target}`];
+  let cands = compiled && compiled.kind === 'POSITIONAL' ? shapesForCombo(compiled, combo.style || null, combo.level, combo.pattern === 'GUIDED') : shapesFor(combo.action, combo.tool, combo.target, combo.style || null, combo.level, combo.pattern === 'GUIDED');
   if (!cands.length) return null;
   const pick = rng.weighted(cands.map(s => ({ item: s, weight: s.w * shapePenalty(s.id, recent) })));
   const cc = { a, z, t, partner, style, rng, guided: combo.pattern === 'GUIDED', level: combo.level };

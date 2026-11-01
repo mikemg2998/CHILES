@@ -2,13 +2,13 @@
    Director de sesión (qué pretende la ronda) → gramática (solo combinaciones aprobadas: acción + herramienta + zona, con
    nivel, estilo y duración derivados) → realizador humano (frase) → filtro de calidad → dados que la representan.
    Los dados representan conceptos; no gobiernan la lógica. */
-import { LEVELS, LEVEL_BY_KEY, ACTIONS, ACTIONS_LIST, TARGETS, ACTOR_TOOLS, STYLES, COMBO, COMBOS, combosForLevel, combinationIntensity, INTENSITY_LABEL, GROUPS, LEGACY_TARGET, levelWeight, migrateLevelId } from './grammar.js';
+import { LEVELS, LEVEL_BY_KEY, ACTIONS, ACTIONS_LIST, TARGETS, ACTOR_TOOLS, STYLES, COMBO, COMBOS, combosForLevel, combinationIntensity, INTENSITY_LABEL, GROUPS, LEGACY_TARGET, levelWeight, migrateLevelId, blueprintAvailable, REPERTOIRE } from './grammar.js';
 import { Rng } from './rng.js';
 import { HistoryManager } from './history.js';
 import { PreferenceManager } from './prefs.js';
 import { SessionState, SessionDirector, AVOIDS, MOODS, ruleBlocksAction, ruleBlocksTarget } from './session.js';
 import { criticalCheck, qualityScore, fallbackFor, THRESHOLD, HUMAN_MIN } from './quality.js';
-import { realize, shapesFor } from './realizer.js';
+import { realize, shapesForCombo } from './realizer.js';
 import { pickDuration, durationOptions, formatDuration } from './duration.js';
 import { LEGACY_ACTION, LEGACY_STYLE } from './data/legacy.js';
 
@@ -70,8 +70,8 @@ export class GameEngine {
     const names = this.prefs.names || ['', ''];
     let performer = names.indexOf(fav.performerName); if (performer < 0) performer = fav.performer ?? this.state.performer;
     this.prefs.partner = 1 - performer;
-    const c = COMBO[`${fav.action}|${fav.tool}|${fav.target}`];
-    if (!c || !this.prefs.targetEnabled(fav.target)) return null;
+    const c = (fav.key && COMBO[fav.key]) || COMBO[`${fav.action}|${fav.tool}|${fav.target}`];
+    if (!c || !this.prefs.targetEnabled(fav.target) || (c.kind === 'POSITIONAL' && !blueprintAvailable(c.blueprint, this.prefs))) return null;
     const level = this.session.level;
     const combo = this.compose(c, { style: fav.style && c.styles.includes(fav.style) ? fav.style : null, guided: fav.pattern === 'GUIDED' && c.guidable, level, band: level, duration: fav.duration || null, keepText: fav.performerName === names[performer] && fav.partnerName === names[1 - performer] ? fav.phrase : null });
     if (!combo) return null;
@@ -170,11 +170,12 @@ export class GameEngine {
         if (keep.action && c.action !== keep.action) continue;
         if (keep.target && c.target !== keep.target) continue;
         if (!prefs.targetEnabled(z) || prefs.actionDisabled(a)) continue;
+        if (c.kind === 'POSITIONAL' && !blueprintAvailable(c.blueprint, prefs)) continue; // los dos cuerpos tienen que cuadrar
         if (rules.some(r => ruleBlocksAction(r, a) || ruleBlocksTarget(r, z))) continue;
         if (avoid && avoid.action === c.action && avoid.target === c.target) continue;
         if (H.cooling('action', c.action, COOL.action) && !keep.action) continue; // la misma acción no vuelve en 3 rondas, ni relajando
         if (relax < 2 && H.cooling('key', c.key, COOL.combo)) continue; // la misma combinación exacta no vuelve en un buen rato
-        if (!relax && H.recentShapes.length && shapesFor(c.action, c.tool, c.target, null, band, false).every(sh => H.recentShapes.includes(sh.id))) continue; // todas sus frases posibles acaban de salir
+        if (!relax && H.recentShapes.length && shapesForCombo(c, null, band, false).every(sh => H.recentShapes.includes(sh.id))) continue; // todas sus frases posibles acaban de salir
         if (H.cooling('target', c.target, relax < 2 ? COOL.target : 3) && !keep.target) continue;
         if (!relax && mods.purpose !== 'DEEPEN' && (H.familyCooling('action', a.semanticFamily, FAM_COOL.action) || H.familyCooling('target', z.family, FAM_COOL.target))) continue;
         if (!relax && mods.purpose !== 'DEEPEN' && H.rounds.slice(0, 2).some(r => r.semanticFamily === `${a.semanticFamily}·${z.family}`)) continue;
@@ -197,7 +198,8 @@ export class GameEngine {
   pickStyle(c, band, target, mods) {
     const H = this.history;
     const L = LEVELS[band];
-    const items = c.styles.map(id => { const st = STYLES[id]; const v = c.intensity + st.intensityMod; if (H.cooling('style', id, COOL.style) || v > L.max || v < L.lo) return null; return { item: id, v, weight: near(v, target, 1.2) * H.novelty('style', id, 8, 1) * mods.style(st) }; }).filter(Boolean);
+    const preferred = (REPERTOIRE[c.target] && REPERTOIRE[c.target].preferredStyles) || []; // estilos que la zona prefiere (repertorio curado)
+    const items = c.styles.map(id => { const st = STYLES[id]; const v = c.intensity + st.intensityMod; if (H.cooling('style', id, COOL.style) || v > L.max || v < L.lo) return null; return { item: id, v, weight: near(v, target, 1.2) * H.novelty('style', id, 8, 1) * mods.style(st) * (preferred.includes(id) ? 2 : 1) }; }).filter(Boolean);
     const onTarget = items.filter(it => Math.abs(it.v - target) <= 1.6); // si hay estilos que mantienen el objetivo, solo esos
     const pool = onTarget.length ? onTarget : items;
     return pool.length ? this.rng.weighted(pool) : null;
@@ -207,7 +209,7 @@ export class GameEngine {
     if (!c) return null;
     const a = ACTIONS[c.action];
     const pattern = guided ? 'GUIDED' : a.pattern;
-    const cand = { key: c.key, action: c.action, tool: c.tool, target: c.target, style, pattern, level, band, tier: c.tier };
+    const cand = { key: c.key, kind: c.kind, blueprintId: c.kind === 'POSITIONAL' ? c.blueprint.id : null, action: c.action, tool: c.tool, target: c.target, style, pattern, level, band, status: c.status, tier: c.status };
     const partner = this.prefs.names[this.prefs.partner] || 'tu pareja';
     const recent = excludeShape ? [excludeShape, excludeShape, ...this.history.recentShapes] : this.history.recentShapes;
     let r = realize(cand, { partner, rng: this.rng, recentShapes: recent });
@@ -215,7 +217,7 @@ export class GameEngine {
     if (!r) return null;
     if (style && !r.styleUsed) cand.style = null; // la frase no lo verbaliza: el dado tampoco lo muestra
     cand.intensity = combinationIntensity(c.action, c.target, c.tool, cand.style);
-    cand.duration = duration || pickDuration(c.action, c.target, cand.style, band, this.rng);
+    cand.duration = duration || pickDuration(c.kind === 'POSITIONAL' ? c.key : c.action, c.target, cand.style, band, this.rng);
     cand.text = keepText || r.text; cand.shapeId = r.shapeId; cand.shape = r.shape; cand.humanLikeness = r.humanLikeness; cand.humanFlags = r.humanFlags; cand.guidedAffects = r.guidedAffects;
     return cand;
   }
@@ -266,7 +268,7 @@ export class GameEngine {
       id: `${Date.now().toString(36)}-${Math.floor(this.rng.next() * 1e6).toString(36)}`,
       n: ++this.state.round, level, band: combo.band || level, levelName: LEVELS[level].name, target_intensity: opts.target ?? combo.target_intensity ?? combo.intensity, intensity: combo.intensity, intensityLabel: INTENSITY_LABEL(combo.intensity),
       purpose: combo.purpose || 'MAINTAIN', pattern: combo.pattern, semanticFamily: `${a.semanticFamily}·${z.family}`,
-      key: combo.key, action: combo.action, tool: combo.tool, target: combo.target, style: combo.style || null, duration: combo.duration, seconds: combo.duration, tier: combo.tier,
+      key: combo.key, kind: combo.kind || 'CARTESIAN', blueprintId: combo.blueprintId || null, action: combo.action, tool: combo.tool, target: combo.target, style: combo.style || null, duration: combo.duration, seconds: combo.duration, status: combo.status || combo.tier, tier: combo.status || combo.tier,
       shapeId: combo.shapeId, shape: combo.shape, humanLikeness: combo.humanLikeness,
       performer, performerName, partnerName: partner, phrase: combo.text, faces: this.faces(combo), dice: this.diceFaces(combo, level),
       families: { action: a.semanticFamily, tool: ACTOR_TOOLS[combo.tool].kind, target: z.family, style: combo.style ? STYLES[combo.style].dim : null },
@@ -293,7 +295,7 @@ export class GameEngine {
     const actNames = pool.map(c => ACTIONS[c.action].name);
     const c = COMBO[combo.key];
     const styleNames = (c && c.styles.length ? c.styles : Object.keys(STYLES)).map(s => STYLES[s].label);
-    const durations = durationOptions(combo.action, combo.target, combo.style, level).map(o => formatDuration(o.seconds));
+    const durations = durationOptions(c && c.kind === 'POSITIONAL' ? c.key : combo.action, combo.target, combo.style, level).map(o => formatDuration(o.seconds));
     return { action: [f.action, ...others(actNames, f.action)], zone: [f.zone, ...others(zoneNames, f.zone)], style: [f.style, ...others(styleNames, f.style)], duration: [f.duration, ...others(durations.length > 1 ? durations : ['00:15', '00:20', '00:30', '00:45', '01:00'], f.duration)] };
   }
 }

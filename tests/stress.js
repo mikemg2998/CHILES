@@ -32,7 +32,7 @@ for (const L of LEVEL_IDS) {
       count(R.actionTarget, `${r.action}→${r.target}`); count(R.toolTarget, `${r.tool}→${r.target}`); count(R.triple, `${r.action}·${r.tool}→${r.target}`); count(R.shape, r.shape); count(R.family, r.semanticFamily);
       count(R.structure, 'A+T+Z' + (r.style ? '+S' : '') + (r.pattern === 'GUIDED' ? '+G' : ''));
       R.quality.push(r.quality); R.human.push(r.humanLikeness); R.phrases.add(r.phrase);
-      const c = COMBO[`${r.action}|${r.tool}|${r.target}`];
+      const c = COMBO[r.key];
       if (r.fallback) R.fallbacks++; if (r.validation !== 'VALID') R.invalid++; if (!r.fallback && r.quality < THRESHOLD) R.lowQuality++; if (r.humanLikeness < HUMAN_MIN) R.lowHuman++;
       if (![...HUMAN_DURATIONS, LONG_DURATION].includes(r.seconds)) R.badDuration++;
       if (!c || !c.levels.includes(r.band || L)) R.unapproved++; // en Intimidad sin anatomía íntima se juega con el repertorio alto de Deseo

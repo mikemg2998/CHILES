@@ -4,7 +4,7 @@ import { realize, humanLikeness, shapesFor } from '../engine/realizer.js';
 import { COMBOS, ACTIONS } from '../engine/grammar.js';
 import { Rng } from '../engine/rng.js';
 
-const rz = (c, o = {}) => realize({ action: c.action, tool: c.tool, target: c.target, style: o.style || null, level: o.level || c.levels[0], pattern: o.guided ? 'GUIDED' : ACTIONS[c.action].pattern }, { partner: 'Ana', rng: new Rng(o.seed || 1), recentShapes: o.recent || [] });
+const rz = (c, o = {}) => realize({ key: c.key, action: c.action, tool: c.tool, target: c.target, style: o.style || null, level: o.level || c.levels[0], pattern: o.guided ? 'GUIDED' : ACTIONS[c.action].pattern }, { partner: 'Ana', rng: new Rng(o.seed || 1), recentShapes: o.recent || [] });
 
 test('toda combinación aprobada se verbaliza, con y sin estilo, y la frase es corta y limpia', () => {
   for (const c of COMBOS) for (const st of [null, ...c.styles]) {

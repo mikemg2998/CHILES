@@ -2,12 +2,14 @@
    rango base (acción) → ajuste de zona → estilo → nivel → valores discretos (15 20 30 45 60 75 90 120; 180 solo donde se permite) con pesos. */
 import { BASE_RANGE, TARGET_DURATION, STYLE_DURATION, LEVEL_DURATION, HUMAN_DURATIONS, LONG_DURATION, ALLOW_180, POSITION_WEIGHT } from './data/durations.js';
 import { TARGETS } from './data/targets.js';
+import { POSITIONAL_BY_ID } from './data/positional.js';
 
 /* rango efectivo [min, max] y sesgo para la combinación */
 export function durationRange(action, target, style, level) {
+  const bp = typeof action === 'string' && action.startsWith('POS:') ? POSITIONAL_BY_ID[action.slice(4)] : null; // blueprint posicional: su propio rango
   const z = TARGETS[target];
-  let [min, max] = TARGET_DURATION.override[`${action}:${target}`] || BASE_RANGE[action] || [15, 30];
-  const sens = TARGET_DURATION.bySensitivity[z ? z.durationSensitivity : 'normal'] || { max: 1 };
+  let [min, max] = bp ? bp.durationRange : (TARGET_DURATION.override[`${action}:${target}`] || BASE_RANGE[action] || [15, 30]);
+  const sens = bp ? { max: 1 } : (TARGET_DURATION.bySensitivity[z ? z.durationSensitivity : 'normal'] || { max: 1 });
   max = max * sens.max;
   let bias = 0;
   if (style && STYLE_DURATION[style]) { const s = STYLE_DURATION[style]; min *= s.min; max *= s.max; bias += s.bias; }

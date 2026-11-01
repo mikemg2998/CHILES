@@ -10,7 +10,7 @@ const F = (t, o = {}) => S(t, { fixed: true, stylePos: 'none', ...o }); // gesto
 export const SHAPES = {
   CARESS: [
     S('Acaricia {S} {T} {TOOL}'), S('Acaricia {S} {T} {TOOL}, de arriba abajo', { tags: ['largo'], w: 0.7 }),
-    S('Pasa {S} la mano por {T}', { tools: ['oneHand'], w: 0.8 }), S('Recorre {S} {T} con la palma abierta', { tools: ['palm'], tags: ['largo'] }),
+    S('Pasa {S} la mano por {T}', { tools: ['oneHand'], notTags: ['intimo'], w: 0.8 }), S('Recorre {S} {T} con la palma abierta', { tools: ['palm'], tags: ['largo'] }),
     S('Acaricia {T} {TOOL}, sin buscar nada más', { stylePos: 'none', levels: [1], w: 0.5 }),
     S('Deja la mano sobre {T} y acarícia{T:pron} {S}', { tools: ['oneHand'], styles: ['SOFT', 'INTERMITTENT', 'SLOW'], w: 0.6 }),
   ],
@@ -59,26 +59,13 @@ export const SHAPES = {
   ],
   BLOW: [ S('Sopla {S} sobre {T}, muy cerca de la piel'), S('Sopla {S} sobre {T}, recorriéndo{T:pron}', { tags: ['largo'], w: 0.6 }) ],
   WHISPER: [ F('Susurra algo a {P} al oído'), F('Acércate al oído de {P} y dile en voz muy baja algo que solo sea para hoy', { w: 0.6 }), F('Susurra a {P} al oído qué es lo que más te gusta de este momento', { w: 0.6 }) ],
-  HUG: [
-    F('Abraza a {P} rodeando {T:bare}', { tools: ['arms'], targets: ['waist', 'shoulders'] }), F('Abraza a {P} por detrás, con tu pecho pegado a su espalda', { tools: ['arms'], targets: ['back'] }),
-    F('Abraza a {P} rodeando {T:bare} y quédate así hasta que respiréis al mismo ritmo', { tools: ['arms'], targets: ['waist', 'back'], w: 0.7 }),
-    F('Abraza a {P} y meceos de lado a lado, de pie', { tools: ['body'] }),
-  ],
+  // HUG y BODY_CONTACT: cuerpo con cuerpo → su copy vive en cada blueprint de positional.js
   HOLD_HANDS: [
     F('Entrelaza tus dedos con los de {P}', { tools: ['fingers'] }), F('Toma las dos manos de {P} entre las tuyas y quédate así un momento', { tools: ['bothHands'], targets: ['hands'] }),
     F('Pon tus palmas contra las de {P} y empujad un poco, notando la fuerza del otro', { tools: ['bothHands'], targets: ['palms'] }),
     F('Besa la palma de la mano de {P} y ciérrale los dedos sobre el beso', { tools: ['lips'] }),
   ],
-  BODY_CONTACT: [
-    F('Pega tu pecho a {T}', { tools: ['chest'], targets: ['back'] }), F('Pega tu pecho al de {P} y quedaos así, sin hablar', { tools: ['chest'], targets: ['chest'] }),
-    F('Ponte detrás de {P} y pega tus caderas a {T:poss}', { tools: ['hips'] }), F('Siéntate sobre los muslos de {P}, de frente', { tools: ['body'], targets: ['outerThighs'] }),
-    F('Apoya todo tu peso sobre {T}, tumbados, y quédate así un momento', { tools: ['body'], targets: ['chest', 'back'] }),
-    F('Rodea la cintura de {P} con tus piernas y acerca su cuerpo al tuyo', { tools: ['legs'] }), F('Apoya tu frente en la de {P} y respirad un momento así', { tools: ['forehead'] }),
-    F('Apoya tu cabeza sobre {T} y quédate ahí un momento', { tools: ['head'] }),
-  ],
-  RUB: [
-    S('Pégate a la espalda de {P} y mueve {S} tus caderas contra {T:poss}', { tools: ['hips'], targets: ['buttocks'] }), S('Tumbados de frente, frota {S} tus caderas contra {T}', { tools: ['hips'], targets: ['groin'] }),
-    S('Desliza {S} tu muslo contra {T}', { tools: ['thigh'] }), S('Tumbados de frente, frota {S} tu pecho contra {T}', { tools: ['chest'], notTargets: ['chest'] }), S('Tumbados de frente, frota {S} tu pecho contra el de {P}', { tools: ['chest'], targets: ['chest'] }),
+  RUB: [ // caderas, muslo y pecho contra el cuerpo: blueprints posicionales; aquí solo la palma
     S('Frota {S} {T} con la palma de la mano, por encima de la ropa', { tools: ['palm'] }), S('Apoya la palma sobre {T}, por encima de la ropa, y frótala {S}', { tools: ['palm'], w: 0.6 }),
   ],
   SQUEEZE: [ S('Aprieta {S} {T} con la mano'), S('Agarra {T} y apriéta{T:pron} {S}, soltando poco a poco', { w: 0.6 }) ],

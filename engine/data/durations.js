@@ -1,3 +1,4 @@
+import { REPERTOIRE } from './repertoire.js';
 /* DURATION ENGINE · datos. La duración se deriva, nunca es un azar continuo:
    rango base de la acción → ajuste de la zona → modificador del estilo → modificador del nivel → valor discreto humano.
    Valores humanos (segundos): 15 20 30 45 60 75 90 120; 180 solo donde se permite expresamente (allow180).
@@ -14,13 +15,8 @@ export const ALLOW_180 = ['MASSAGE', 'HUG', 'HAIR_PLAY'];
 /* ajuste por zona (por sensibilidad de duración): multiplica el máximo del rango; también por zona concreta */
 export const TARGET_DURATION = {
   bySensitivity: { short: { max: 0.6 }, normal: { max: 1 }, long: { max: 1.25 } },
-  override: { // zona → [min, max] concreto para ciertas acciones
-    'MASSAGE:hair': [30, 120], 'MASSAGE:feet': [30, 120], 'MASSAGE:shoulders': [30, 120], 'MASSAGE:back': [30, 120],
-    'KISS:lips': [15, 60], 'KISS:forehead': [15, 20], 'KISS:hands': [15, 20], 'KISS:cheeks': [15, 20],
-    'SUCK:nipples': [15, 45], 'SUCK:clitoris': [20, 75], 'SUCK:glans': [20, 60], 'SUCK:testicles': [15, 30],
-    'STIMULATE:clitoris': [20, 90], 'STIMULATE:glans': [15, 60], 'STIMULATE:nipples': [15, 45],
-    'CARESS:hair': [30, 90], 'CARESS:back': [20, 60], 'RUB:groin': [20, 60], 'LICK:nipples': [15, 30], 'BITE:lips': [15, 15],
-  },
+  // 'ACTION:target' → [min, max]: viven en el repertorio de cada zona (durationOverrides) y se derivan aquí
+  override: Object.fromEntries(Object.entries(REPERTOIRE).flatMap(([tid, r]) => Object.entries(r.durationOverrides || {}).map(([a, range]) => [`${a}:${tid}`, range]))),
 };
 /* el estilo mueve la duración dentro del rango: SLOW hacia medio/largo, FAST hacia corto/medio, INTERMITTENT necesita tiempo */
 export const STYLE_DURATION = {

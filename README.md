@@ -37,13 +37,16 @@ Datos editables, en `engine/data/`:
 - `actions.js` — 24 acciones con metadatos (familia semántica, patrón, herramientas admitidas, estilos, niveles, intensidad, movimiento, presión, reglas biomecánicas). Las diez de base: FROTAR, APRETAR, MASAJEAR, LAMER, CHUPAR, ESTIMULAR, COSQUILLEAR, ROZAR, BESAR, ACARICIAR. Sin acciones casi sinónimas.
 - `styles.js` — estilos LENTO, RÁPIDO, SUAVE, FIRME, A RATOS: cambio de intensidad, dimensión (ritmo / presión) y cómo se dicen (adverbio o coletilla).
 - `durations.js` — rangos base por acción, modificadores por zona, estilo y nivel, duraciones humanas discretas (15, 20, 30, 45, 60, 75, 90, 120; 180 solo donde tiene sentido), sin azar continuo.
-- `compatibility.js` — **la matriz**: entradas `acción · herramienta → zonas` con tier EXCELLENT / GOOD / VALID / INVALID, niveles, estilos y notas. Solo lo que se validó a mano. Lo que no está es UNREVIEWED y nunca sale.
+- `repertoire.js` — **el repertorio por zona**: cada zona lista las relaciones `acción · herramienta` que merecen aparecer en ella (`approvedActions` con status EXCELLENT / GOOD / VALID, niveles y estilos recortados, notas), las rechazadas con motivo (`rejectedActions`: técnicamente posibles, editorialmente pobres), sus estilos preferidos y sus duraciones por acción. La pregunta no es «¿es posible?» sino «¿esta acción merece aparecer aquí?». Lo que no está es UNREVIEWED y nunca sale; nada se promociona por inferencia.
+- `positional.js` — **blueprints posicionales**: interacciones cuerpo con cuerpo (pecho contra espalda, caderas, frente con frente, sentarse sobre los muslos…) cuya calidad depende de una configuración concreta de los dos cuerpos. Cada una está diseñada a mano con status APPROVED / UNREVIEWED / REJECTED, requisitos de quien actúa y de quien recibe (parte y anatomía), orientación, niveles, estilos, rango de duración, copy propio, peso y tier. Nunca se generan por producto cartesiano; un UNREVIEWED no entra hasta que alguien le escribe el copy y lo aprueba.
 - `shapes.js` — estructuras de frase por acción (varias por acción, con huecos para la zona, la herramienta cuando no es obvia y el estilo) y las estructuras del patrón GUIADO.
 - `legacy.js` — mapa de ids antiguos (favoritos guardados) a los nuevos.
 
 Motor:
 
-- `grammar.js` — compila y valida los datos, calcula las combinaciones elegibles (`COMBOS`), la intensidad de cada una, las que se pueden guiar, los niveles (con `levelWeight`, que en Deseo interpola el perfil [bajo, alto] de cada acción y zona), y la lista de combinaciones sin revisar.
+- `grammar.js` — compila y valida los datos, calcula las combinaciones elegibles (`COMBOS`: las cartesianas aprobadas del repertorio más los blueprints posicionales APPROVED, con clave `POS:id`), la intensidad de cada una, las que se pueden guiar, los niveles (con `levelWeight`, que en Deseo interpola el perfil [bajo, alto] de cada acción y zona), el status de cualquier relación (`statusOf`), el universo técnico (`possibleCombinations`), los requisitos corporales de un blueprint (`blueprintAvailable`) y las listas de lo que falta por revisar.
+- `audit.js` — heurísticas de sospecha («técnicamente posible, editorialmente pobre»); solo señalan.
+- `repertoireIO.js` — serializa el repertorio y los blueprints al formato exacto de `engine/data/` (lo usa Content Lab).
 - `duration.js` — motor de duraciones: rango → opciones discretas → elección ponderada.
 - `realizer.js` — convierte la interacción en una frase que suena escrita por una persona: elige estructura evitando las recientes, omite la herramienta obvia, coloca el estilo como adverbio o coletilla (nunca repite el verbo ni cuelga una segunda coletilla), añade la guía de la pareja, y puntúa `humanLikeness` (longitud, comas, palabras repetidas, nombre repetido, complementos encadenados).
 - `quality.js` — comprobaciones críticas con código de rechazo (anatomía, «hoy no», nivel, estilo, guía, duración, frase poco natural…), `qualityScore` (orden: anatomía > seguridad > biomecánica > calidad humana > nivel > sesión > novedad > diversidad), umbral y fallbacks validados a mano.
@@ -62,9 +65,22 @@ el nivel.
 
 ## Revisión de contenido
 
-`content-review/reclasificacion-3-niveles.md` documenta cómo se reclasificó cada combinación al pasar de cuatro niveles a tres. `content-review/unreviewed.md` (generado con `node tools/review-queue.js`) lista las combinaciones que la gramática
-permitiría pero nadie ha aprobado, con la frase que saldría. Para aprobar una, se añade a `compatibility.js` con su tier;
-para rechazarla, se añade con tier INVALID. Nada entra al generador por inferencia.
+Cada relación acción · herramienta · zona tiene exactamente un status: EXCELLENT · GOOD · VALID · REJECTED · UNREVIEWED.
+Solo los tres primeros entran al generador. El principio: **alguien revisó esta relación y existe una razón para que salga.**
+Caso de partida del pase editorial (2026-11-01): «Sopla sobre las clavículas…» era técnicamente posible y editorialmente
+pobre; ahora SOPLAR + CLAVÍCULAS es REJECTED con motivo, igual que otras 18 combinaciones que entraban por regla genérica, y
+hay un test que lo garantiza (`tests/strict.test.js`).
+
+- **Content Lab** (`lab/index.html`, también publicado en `/lab/`): herramienta de curación real. Abre una zona (por ejemplo
+  CLAVÍCULAS) y ve cada acción · herramienta con su status, niveles, motivo y la frase que saldría; cambia la clasificación,
+  los estilos preferidos y las duraciones; edita los blueprints posicionales (copy, status, tier, duración, estilos, peso,
+  requisitos) o crea uno nuevo; mira la auditoría; y exporta `repertoire.js` y `positional.js` listos para `engine/data/`. El
+  borrador vive solo en ese navegador (`localStorage` `pab.lab`); nada entra al motor hasta guardar el fichero y pasar la validación.
+- `node tools/audit-matrix.js` → `content-review/auditoria-matriz.md` (matriz completa zona × acción × herramienta con status y
+  motivo, más las aprobadas que las heurísticas señalan), `revision-valid.md` (todas las VALID) y `revision-unreviewed.md`
+  (todo lo UNREVIEWED y los blueprints pendientes). Solo lee: nunca promociona nada.
+- `node tools/review-queue.js` → `content-review/unreviewed.md`, la cola corta.
+- `content-review/reclasificacion-3-niveles.md` documenta la reclasificación de cuatro niveles a tres.
 
 ## Privacidad
 
@@ -76,10 +92,11 @@ feedback, intensidad) vive en memoria y desaparece al cerrar. No hay telemetría
 
 ```
 node tests/validate.js                 # validación estructural de los datos (falla si hay errores)
-node --test 'tests/*.test.js'          # tests de datos, duraciones, realizador, guiado, motor y migración a tres niveles
+node --test 'tests/*.test.js'          # tests de datos, duraciones, realizador, guiado, motor, tres niveles y compatibilidad estricta
 node tests/simulate.js 1000 --sample   # simulación por nivel y anatomía; debe terminar en «✓ Todo correcto»
 node tests/stress.js 10000 --audit=auditoria.txt --session=sesion.txt   # 10.000 tiradas: frecuencias, rechazos, auditoría de 200 y sesión de 50
 node tools/review-queue.js             # regenera content-review/unreviewed.md
+node tools/audit-matrix.js             # auditoría de la matriz + exportación de VALID y UNREVIEWED (solo lectura)
 ```
 
 Regla de oro: no se arreglan frases, se arregla el sistema que las permitió. Una interacción mala durante una prueba real se convierte en un test sobre la propiedad que falló, nunca en una lista negra.

@@ -1,7 +1,8 @@
 /* HUMAN QUALITY FILTER. Orden de prioridad: ANATOMÍA > SEGURIDAD/COMODIDAD > BIOMECÁNICA > CALIDAD HUMANA > ENCAJE DE
    NIVEL > ENCAJE DE SESIÓN > NOVEDAD > DIVERSIDAD. Primero lo crítico (si falla, el candidato no existe); después una
    puntuación 0–1 para comparar candidatos. La diversidad nunca pasa por encima de la calidad humana. */
-import { ACTIONS, TARGETS, ACTOR_TOOLS, STYLES, LEVELS, COMBO, TIER_WEIGHT, combinationIntensity } from './grammar.js';
+import { ACTIONS, TARGETS, ACTOR_TOOLS, STYLES, LEVELS, COMBO, STATUS_WEIGHT, combinationIntensity, blueprintAvailable } from './grammar.js';
+const comboOf = cand => (cand.key && COMBO[cand.key]) || COMBO[`${cand.action}|${cand.tool}|${cand.target}`];
 import { durationValid } from './duration.js';
 import { AVOIDS, ruleBlocksAction, ruleBlocksTarget, ruleBlocksPattern } from './session.js';
 import { HUMAN_DURATIONS, LONG_DURATION } from './data/durations.js';
@@ -16,16 +17,17 @@ export function criticalCheck(cand, ctx) {
   if (ctx.session && ctx.session.ended) reasons.push('SESSION_ENDED');
   const a = ACTIONS[cand.action], z = TARGETS[cand.target], t = ACTOR_TOOLS[cand.tool];
   if (!a || !z || !t) return { ok: false, reasons: ['UNKNOWN_ELEMENT'] };
-  const c = COMBO[`${cand.action}|${cand.tool}|${cand.target}`];
-  // 1. anatomía
+  const c = comboOf(cand);
+  // 1. anatomía (de quien recibe y, en blueprints posicionales, también de quien actúa)
   if (!ctx.prefs.targetEnabled(z)) reasons.push('ANATOMY_INCOMPATIBLE');
+  if (c && c.kind === 'POSITIONAL' && !blueprintAvailable(c.blueprint, ctx.prefs)) reasons.push('BODY_REQUIREMENTS_UNMET');
   if (z.tags.includes('intimo') && ctx.level < 3) reasons.push('INTIMATE_OUTSIDE_INTIMACY');
   // 2. seguridad / comodidad: «hoy no» de la sesión
   const av = ctx.session ? ctx.session.avoidSet() : new Set();
   for (const k of av) { const r = AVOIDS[k]; if (r && (ruleBlocksAction(r, a) || ruleBlocksTarget(r, z) || ruleBlocksPattern(r, cand.pattern))) reasons.push('AVOID_TODAY'); }
   if (ctx.prefs.actionDisabled(a)) reasons.push('ACTION_DISABLED');
   // 3. compatibilidad explícita (lista blanca) y biomecánica
-  if (!c) reasons.push('TARGET_INCOMPATIBLE');
+  if (!c || c.kind === 'CARTESIAN' && !['EXCELLENT', 'GOOD', 'VALID'].includes(c.status)) reasons.push('TARGET_INCOMPATIBLE'); // REJECTED / UNREVIEWED no existen
   else {
     if (!c.mechanics.ok) reasons.push(c.mechanics.code);
     if (!c.levels.includes(ctx.level)) reasons.push('LEVEL_OUT_OF_BAND');
@@ -35,7 +37,7 @@ export function criticalCheck(cand, ctx) {
   if (!a.allowedActorTools.includes(cand.tool)) reasons.push('ACTION_BODY_PART_INCOMPATIBLE');
   if (cand.style && !STYLES[cand.style]) reasons.push('STYLE_INCOMPATIBLE');
   // 4. duración humana dentro del rango derivado
-  if (cand.duration != null && (![...HUMAN_DURATIONS, LONG_DURATION].includes(cand.duration) || !durationValid(cand.action, cand.target, cand.style || null, ctx.level, cand.duration))) reasons.push('DURATION_OUT_OF_RANGE');
+  if (cand.duration != null && (![...HUMAN_DURATIONS, LONG_DURATION].includes(cand.duration) || !durationValid(c && c.kind === 'POSITIONAL' ? c.key : cand.action, cand.target, cand.style || null, ctx.level, cand.duration))) reasons.push('DURATION_OUT_OF_RANGE');
   // 5. nivel: la intensidad de la combinación cae dentro del nivel
   if (cand.intensity != null) { const L = LEVELS[ctx.level]; if (cand.intensity > L.max + 1e-9 || cand.intensity < L.lo) reasons.push('LEVEL_OUT_OF_BAND'); }
   // 6. calidad humana del texto
@@ -47,11 +49,11 @@ export function criticalCheck(cand, ctx) {
 
 /* Puntuación 0–1. ctx: {history, session, target, purpose, level} */
 export function qualityScore(cand, ctx) {
-  const a = ACTIONS[cand.action], z = TARGETS[cand.target], c = COMBO[`${cand.action}|${cand.tool}|${cand.target}`];
+  const a = ACTIONS[cand.action], z = TARGETS[cand.target], c = comboOf(cand);
   const H = ctx.history, S = ctx.session;
   const parts = {};
   parts.humanQuality = cand.humanLikeness ?? 0.8;
-  parts.compatibilityTier = c ? Math.min(1, TIER_WEIGHT[c.tier] / TIER_WEIGHT.EXCELLENT + 0.25) : 0;
+  parts.compatibilityTier = c ? Math.min(1, STATUS_WEIGHT[c.status] / STATUS_WEIGHT.EXCELLENT + 0.25) : 0;
   parts.bodyNaturalness = c ? c.mechanics.naturalness * (1 - 0.25 * c.mechanics.complexity) : 0;
   parts.levelFit = near(cand.intensity, ctx.target, 0.9);
   // sesión: continuidad según el propósito

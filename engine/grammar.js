@@ -1,11 +1,14 @@
-/* INTERACTION GRAMMAR. Compila los datos editables (targets, actorTools, actions, styles, compatibility) en el espacio de
-   combinaciones elegibles y los valida estructuralmente. Es la ÚNICA puerta por la que una combinación llega al generador:
-   si no hay una relación explícita y aprobada entre ACCIÓN, HERRAMIENTA, ZONA, ESTILO, DURACIÓN y NIVEL, no existe. */
+/* INTERACTION GRAMMAR. Compila los datos editables (targets, actorTools, actions, styles, repertorio por zona, blueprints
+   posicionales) en el espacio de combinaciones elegibles y los valida estructuralmente. Es la ÚNICA puerta por la que una
+   combinación llega al generador: si no hay una relación explícita y aprobada (EXCELLENT / GOOD / VALID) entre ACCIÓN,
+   HERRAMIENTA, ZONA, ESTILO, DURACIÓN y NIVEL, no existe. REJECTED y UNREVIEWED no existen para el generador.
+   Las interacciones cuerpo con cuerpo solo existen como blueprints posicionales APPROVED (nunca por producto cartesiano). */
 import { TARGETS, TARGETS_LIST, LEGACY_TARGET, targetHeight, targetSide, GROUPS } from './data/targets.js';
 import { ACTOR_TOOLS, KIND_CAPABILITIES } from './data/actorTools.js';
 import { ACTIONS, ACTIONS_LIST } from './data/actions.js';
 import { STYLES, STYLE_IDS } from './data/styles.js';
-import { COMPATIBILITY, GUIDABLE_ACTIONS, TIER_WEIGHT } from './data/compatibility.js';
+import { REPERTOIRE, GUIDABLE_ACTIONS, STATUS_WEIGHT, APPROVED_STATUSES, ALL_STATUSES } from './data/repertoire.js';
+import { POSITIONAL, POSITIONAL_BY_ID, BLUEPRINT_STATUSES, ORIENTATIONS } from './data/positional.js';
 import { BASE_RANGE, TARGET_DURATION, HUMAN_DURATIONS } from './data/durations.js';
 import { SHAPES } from './data/shapes.js';
 
@@ -63,21 +66,26 @@ export function guidable(action, tool, target) {
 }
 
 /* ---------- compilación ---------- */
-const tierOf = v => typeof v === 'string' ? v : v.tier;
-export const COMBOS = []; // { key, action, tool, target, tier, weight, levels, styles, guidable, intensity }
+/* herramientas que son «cuerpo»: nunca entran por el repertorio cartesiano, solo por blueprint posicional */
+export const BODY_TOOL_KINDS = ['torso', 'pelvis', 'leg', 'body', 'head', 'arms'];
+export const isBodyTool = tool => { const t = ACTOR_TOOLS[tool]; return !!t && (BODY_TOOL_KINDS.includes(t.kind) || tool === 'forehead'); };
+export const COMBOS = []; // { key, kind, action, tool, target, status, tier, weight, levels, styles, guidable, intensity, mechanics }
 export const COMBO = {};
-const entries = {}; // action|tool|target → merged entry (INVALID gana)
-for (const e of COMPATIBILITY) {
-  if (e.status !== 'APPROVED') continue;
-  for (const [tid, v] of Object.entries(e.targets)) {
-    const k = `${e.action}|${e.tool}|${tid}`;
-    const cur = entries[k];
-    const tier = tierOf(v);
-    if (cur && (cur.tier === 'INVALID' || tier !== 'INVALID')) { if (cur.tier !== 'INVALID' && tier !== 'INVALID') cur.dup = true; continue; }
-    entries[k] = { action: e.action, tool: e.tool, target: tid, tier, levels: typeof v === 'object' && v.levels ? v.levels.slice() : null, styles: typeof v === 'object' && v.styles ? v.styles.slice() : null, notes: typeof v === 'object' ? v.notes : null };
+export const REJECTED_COMBOS = new Set(); // 'ACTION|tool|target' rechazadas con motivo
+export const REJECTED_REASON = {};
+export const UNREVIEWED_EXPLICIT = new Set(); // parqueadas a mano con status UNREVIEWED
+const entries = {}; // action|tool|target → entry
+const asEntry = v => typeof v === 'string' ? { status: v } : v;
+for (const [tid, rep] of Object.entries(REPERTOIRE)) {
+  for (const [at, v] of Object.entries(rep.approvedActions || {})) {
+    const [action, tool] = at.split('|'); const k = `${at}|${tid}`; const e = asEntry(v);
+    if (entries[k]) { entries[k].dup = true; continue; }
+    if (e.status === 'UNREVIEWED') { UNREVIEWED_EXPLICIT.add(k); continue; }
+    if (e.status === 'REJECTED') { REJECTED_COMBOS.add(k); REJECTED_REASON[k] = e.notes || 'rechazada'; continue; }
+    entries[k] = { action, tool, target: tid, status: e.status, levels: e.levels ? e.levels.slice() : null, styles: e.styles ? e.styles.slice() : null, notes: e.notes || null };
   }
+  for (const [at, why] of Object.entries(rep.rejectedActions || {})) { const k = `${at}|${tid}`; REJECTED_COMBOS.add(k); REJECTED_REASON[k] = typeof why === 'string' ? why : (why && why.notes) || 'rechazada'; if (entries[k]) entries[k].conflict = true; }
 }
-export const INVALID_COMBOS = new Set();
 export function pairIntensity(action, target, tool) {
   const a = ACTIONS[action], z = TARGETS[target], t = ACTOR_TOOLS[tool];
   let v = 0.5 * a.intensity + 0.5 * z.sensitivity;
@@ -86,17 +94,50 @@ export function pairIntensity(action, target, tool) {
   return Math.round(Math.max(a.intensityRange[0], Math.min(a.intensityRange[1], Math.max(1, Math.min(10, v)))) * 10) / 10;
 }
 export function combinationIntensity(action, target, tool, style) {
-  let v = pairIntensity(action, target, tool) + (style ? STYLES[style].intensityMod : 0);
+  const c = COMBO[`${action}|${tool}|${target}`];
+  let v = (c && c.kind === 'POSITIONAL' ? c.intensity : pairIntensity(action, target, tool)) + (style ? STYLES[style].intensityMod : 0);
   return Math.round(Math.max(1, Math.min(10, v)) * 10) / 10;
 }
 for (const e of Object.values(entries)) {
   const a = ACTIONS[e.action], z = TARGETS[e.target];
-  if (e.tier === 'INVALID') { INVALID_COMBOS.add(`${e.action}|${e.tool}|${e.target}`); continue; }
-  if (!a || !z) continue;
+  if (!a || !z || !APPROVED_STATUSES.includes(e.status)) continue;
   const levels = (e.levels || a.allowedLevels.filter(L => z.allowedLevels.includes(L))).filter(L => a.allowedLevels.includes(L) && z.allowedLevels.includes(L));
   const styles = (e.styles || a.styles).filter(s => a.styles.includes(s) && z.allowedStyles.includes(s));
-  const c = { key: `${e.action}|${e.tool}|${e.target}`, action: e.action, tool: e.tool, target: e.target, tier: e.tier, weight: TIER_WEIGHT[e.tier], levels, styles, guidable: guidable(e.action, e.tool, e.target), intensity: pairIntensity(e.action, e.target, e.tool), mechanics: mechanics(e.action, e.tool, e.target), notes: e.notes, dup: !!e.dup };
+  const c = { key: `${e.action}|${e.tool}|${e.target}`, kind: 'CARTESIAN', action: e.action, tool: e.tool, target: e.target, status: e.status, tier: e.status, weight: STATUS_WEIGHT[e.status], levels, styles, guidable: guidable(e.action, e.tool, e.target), intensity: pairIntensity(e.action, e.target, e.tool), mechanics: mechanics(e.action, e.tool, e.target), notes: e.notes, dup: !!e.dup, conflict: !!e.conflict };
   COMBOS.push(c); COMBO[c.key] = c;
+}
+/* blueprints posicionales APPROVED → combinaciones de tipo POSITIONAL (clave POS:id; nunca la clave cartesiana) */
+export const BLUEPRINTS = [];
+for (const b of POSITIONAL) {
+  if (b.status !== 'APPROVED') continue;
+  const a = ACTIONS[b.action]; if (!a) continue;
+  const tool = b.actorRequirements[0] && b.actorRequirements[0].part, target = b.receiverRequirements[0] && b.receiverRequirements[0].part;
+  const z = TARGETS[target]; if (!z || !ACTOR_TOOLS[tool]) continue;
+  const styles = (b.allowedStyles || []).filter(s => a.styles.includes(s) && z.allowedStyles.includes(s));
+  const intensity = b.intensity != null ? b.intensity : Math.round(Math.max(a.intensityRange[0], Math.min(a.intensityRange[1], 0.5 * a.intensity + 0.5 * z.sensitivity)) * 10) / 10;
+  const c = { key: `POS:${b.id}`, kind: 'POSITIONAL', blueprint: b, action: b.action, tool, target, status: b.tier, tier: b.tier, weight: STATUS_WEIGHT[b.tier] * (b.weight ?? 1), levels: (b.allowedLevels || []).filter(L => a.allowedLevels.includes(L) && z.allowedLevels.includes(L)), styles, guidable: false, intensity, mechanics: { ok: true, code: null, complexity: 0, naturalness: 0.95, orient: b.requiredOrientation, posture: b.requiredOrientation }, notes: b.notes };
+  COMBOS.push(c); COMBO[c.key] = c; BLUEPRINTS.push(c);
+}
+/* ¿puede jugarse este blueprint con quien actúa y quien recibe ahora? (anatomía de los dos, grupos activos) */
+export function blueprintAvailable(b, prefs) {
+  if (!b || !prefs) return false;
+  const actor = 1 - prefs.partner;
+  for (const r of b.receiverRequirements || []) { if (TARGETS[r.part] && !prefs.targetEnabled(r.part)) return false; if (r.anatomy && !(prefs.bodyParts[prefs.partner] || []).includes(r.anatomy)) return false; }
+  for (const r of b.actorRequirements || []) { const need = r.anatomy || (r.part === 'penis' ? 'pene' : r.part === 'vulva' ? 'vulva' : null); if (need && !(prefs.bodyParts[actor] || []).includes(need)) return false; }
+  return true;
+}
+/* clasificación de una relación acción · herramienta · zona (para Content Lab y auditoría) */
+export function statusOf(action, tool, target) {
+  const k = `${action}|${tool}|${target}`;
+  if (COMBO[k]) return COMBO[k].status;
+  if (REJECTED_COMBOS.has(k)) return 'REJECTED';
+  return 'UNREVIEWED';
+}
+/* universo técnico: toda relación acción · herramienta · zona que el modelo podría producir (acción admite herramienta, biomecánica posible) */
+export function possibleCombinations() {
+  const out = [];
+  for (const a of ACTIONS_LIST) for (const tool of a.allowedActorTools) { if (isBodyTool(tool)) continue; for (const z of TARGETS_LIST) { const m = mechanics(a.id, tool, z.id); if (!m.ok) continue; out.push({ action: a.id, tool, target: z.id, status: statusOf(a.id, tool, z.id), mechanics: m }); } }
+  return out;
 }
 /* allowedTargets / allowedActions / allowedActorTools derivados (una sola fuente de verdad) */
 for (const a of ACTIONS_LIST) { a.allowedTargets = [...new Set(COMBOS.filter(c => c.action === a.id).map(c => c.target))]; }
@@ -113,7 +154,7 @@ export function validateData() {
     if (!BASE_RANGE[a.id]) errors.push(`acción ${a.id}: sin rango base de duración`);
     else if (BASE_RANGE[a.id][0] > BASE_RANGE[a.id][1] || BASE_RANGE[a.id][0] < 15) errors.push(`acción ${a.id}: rango de duración vacío o fuera de rango`);
     for (const t of a.implicitTools) if (!a.allowedActorTools.includes(t)) errors.push(`acción ${a.id}: implicitTool ${t} no está en allowedActorTools`);
-    if (!SHAPES[a.id] || !SHAPES[a.id].length) errors.push(`acción ${a.id}: sin realizador (shapes)`);
+    if (!(SHAPES[a.id] && SHAPES[a.id].length) && !POSITIONAL.some(b => b.action === a.id)) errors.push(`acción ${a.id}: sin realizador (shapes) ni blueprint posicional`);
     if (!a.allowedTargets.length) warn.push(`acción ${a.id}: sin combinaciones aprobadas`);
   }
   for (const z of TARGETS_LIST) {
@@ -123,19 +164,53 @@ export function validateData() {
     if (z.tags.includes('intimo') && z.allowedLevels.some(L => L < 3)) errors.push(`zona ${z.id}: íntima fuera de Intimidad`);
     if (z.anatomy && !z.tags.includes('intimo')) errors.push(`zona ${z.id}: exige anatomía pero no es íntima`);
   }
-  for (const e of COMPATIBILITY) {
-    if (!ACTIONS[e.action]) errors.push(`matriz: acción inexistente ${e.action}`);
-    if (!tools.has(e.tool)) errors.push(`matriz: herramienta inexistente ${e.tool}`);
-    if (ACTIONS[e.action] && !ACTIONS[e.action].allowedActorTools.includes(e.tool)) errors.push(`matriz: ${e.action} no admite la herramienta ${e.tool}`);
-    for (const [tid, v] of Object.entries(e.targets)) {
-      if (!TARGETS[tid]) { errors.push(`matriz: zona inexistente ${tid} en ${e.action}·${e.tool}`); continue; }
-      if (!TIER_WEIGHT.hasOwnProperty(tierOf(v))) errors.push(`matriz: tier desconocido en ${e.action}·${e.tool}·${tid}`);
-      if (typeof v === 'object' && v.levels) for (const L of v.levels) { if (!LEVELS[L]) errors.push(`matriz: nivel ${L} inexistente en ${e.action}·${e.tool}·${tid}`); if (TARGETS[tid].tags.includes('intimo') && L < 4) errors.push(`matriz: ${e.action}·${e.tool}·${tid} íntima en nivel ${L}`); }
-      if (typeof v === 'object' && v.styles) for (const s of v.styles) if (!STYLE_IDS.includes(s)) errors.push(`matriz: estilo inexistente ${s} en ${e.action}·${e.tool}·${tid}`);
+  const toolOk = (a, tool) => ACTIONS[a] && ACTIONS[a].allowedActorTools.includes(tool);
+  for (const [tid, rep] of Object.entries(REPERTOIRE)) {
+    if (!TARGETS[tid]) { errors.push(`repertorio: zona inexistente ${tid}`); continue; }
+    for (const s of rep.preferredStyles || []) if (!STYLE_IDS.includes(s)) errors.push(`repertorio ${tid}: estilo preferido inexistente ${s}`);
+    for (const [a, r] of Object.entries(rep.durationOverrides || {})) { if (!ACTIONS[a]) errors.push(`repertorio ${tid}: duración para acción inexistente ${a}`); if (!Array.isArray(r) || r[0] > r[1] || r[0] < HUMAN_DURATIONS[0]) errors.push(`repertorio ${tid}: rango de duración inválido en ${a}`); }
+    for (const [at, v] of Object.entries(rep.approvedActions || {})) {
+      const [a, tool] = at.split('|'); const e = asEntry(v);
+      if (!ACTIONS[a]) errors.push(`repertorio ${tid}: acción inexistente ${a}`);
+      if (!tools.has(tool)) errors.push(`repertorio ${tid}: herramienta inexistente ${tool}`);
+      if (ACTIONS[a] && tools.has(tool) && !toolOk(a, tool)) errors.push(`repertorio ${tid}: ${a} no admite la herramienta ${tool}`);
+      if (isBodyTool(tool)) errors.push(`repertorio ${tid}: ${at} es cuerpo con cuerpo y tiene que ser un blueprint posicional, no una entrada cartesiana`);
+      if (!ALL_STATUSES.includes(e.status)) errors.push(`repertorio ${tid}: status desconocido en ${at}`);
+      if (e.levels) for (const L of e.levels) { if (!LEVELS[L]) errors.push(`repertorio ${tid}: nivel ${L} inexistente en ${at}`); if (TARGETS[tid].tags.includes('intimo') && L < 3) errors.push(`repertorio ${tid}: ${at} íntima en nivel ${L}`); }
+      if (e.styles) for (const s of e.styles) if (!STYLE_IDS.includes(s)) errors.push(`repertorio ${tid}: estilo inexistente ${s} en ${at}`);
+      if (rep.rejectedActions && rep.rejectedActions[at] && e.status !== 'REJECTED') errors.push(`repertorio ${tid}: ${at} está a la vez en approvedActions y rejectedActions`);
+    }
+    for (const at of Object.keys(rep.rejectedActions || {})) { const [a, tool] = at.split('|'); if (!ACTIONS[a]) errors.push(`repertorio ${tid}: rechazo de acción inexistente ${a}`); if (!tools.has(tool)) errors.push(`repertorio ${tid}: rechazo con herramienta inexistente ${tool}`); }
+  }
+  const ids = new Set();
+  for (const b of POSITIONAL) {
+    const where = `blueprint ${b.id}`;
+    if (ids.has(b.id)) errors.push(`${where}: id repetido`); ids.add(b.id);
+    if (b.type !== 'POSITIONAL') errors.push(`${where}: type debe ser POSITIONAL`);
+    if (!BLUEPRINT_STATUSES.includes(b.status)) errors.push(`${where}: status desconocido ${b.status}`);
+    if (!ACTIONS[b.action]) errors.push(`${where}: acción inexistente ${b.action}`);
+    if (b.semanticFamily !== 'BODY_TO_BODY') errors.push(`${where}: semanticFamily debe ser BODY_TO_BODY`);
+    if (!b.actorRequirements || !b.actorRequirements.length) errors.push(`${where}: sin actorRequirements`);
+    if (!b.receiverRequirements || !b.receiverRequirements.length) errors.push(`${where}: sin receiverRequirements`);
+    for (const r of b.actorRequirements || []) { if (!ACTOR_TOOLS[r.part]) errors.push(`${where}: parte de quien actúa inexistente ${r.part}`); if (r.anatomy && !['pene', 'vulva'].includes(r.anatomy)) errors.push(`${where}: anatomía inexistente`); }
+    for (const r of b.receiverRequirements || []) { if (!TARGETS[r.part]) errors.push(`${where}: zona de quien recibe inexistente ${r.part}`); if (r.anatomy && !['pene', 'vulva'].includes(r.anatomy)) errors.push(`${where}: anatomía inexistente`); }
+    if (b.requiredOrientation && !ORIENTATIONS.includes(b.requiredOrientation)) errors.push(`${where}: orientación desconocida`);
+    if (!Array.isArray(b.allowedLevels) || !b.allowedLevels.length) errors.push(`${where}: sin niveles`); else for (const L of b.allowedLevels) if (!LEVELS[L]) errors.push(`${where}: nivel ${L} inexistente`);
+    const intimateReq = [...(b.actorRequirements || []), ...(b.receiverRequirements || [])].some(r => r.anatomy || (TARGETS[r.part] && TARGETS[r.part].tags.includes('intimo')) || ['penis', 'vulva'].includes(r.part));
+    if (intimateReq && (b.allowedLevels || []).some(L => L < 3)) errors.push(`${where}: exige anatomía íntima y sale fuera de Intimidad`);
+    for (const s of b.allowedStyles || []) if (!STYLE_IDS.includes(s)) errors.push(`${where}: estilo inexistente ${s}`);
+    if (!Array.isArray(b.durationRange) || b.durationRange[0] > b.durationRange[1] || b.durationRange[0] < HUMAN_DURATIONS[0]) errors.push(`${where}: rango de duración inválido`);
+    if (b.weight != null && !(b.weight >= 0 && b.weight <= 3)) errors.push(`${where}: weight fuera de 0–3`);
+    for (const v of b.copyVariants || []) { if (!/\{P\}|\{T(:\w+)?\}/.test(v)) errors.push(`${where}: la frase «${v}» no nombra a la pareja ni la zona`); if (/\{(?!P\}|T\}|T:poss\}|T:bare\}|T:pron\}|S\}|TOOL!?\})/.test(v)) errors.push(`${where}: token desconocido en «${v}»`); }
+    if (b.status === 'APPROVED') {
+      if (!(b.copyVariants || []).length) errors.push(`${where}: APPROVED sin copy`);
+      if (!APPROVED_STATUSES.includes(b.tier)) errors.push(`${where}: APPROVED sin tier EXCELLENT / GOOD / VALID`);
+      for (const r of b.receiverRequirements || []) if (TARGETS[r.part] && TARGETS[r.part].tags.includes('intimo') && !r.anatomy && !TARGETS[r.part].anatomy) errors.push(`${where}: zona íntima sin anatomía declarada`);
     }
   }
   for (const c of COMBOS) {
-    if (c.dup) errors.push(`matriz: ${c.key} declarada dos veces`);
+    if (c.dup) errors.push(`repertorio: ${c.key} declarada dos veces`);
+    if (c.conflict) errors.push(`repertorio: ${c.key} aprobada y rechazada a la vez`);
     if (!c.levels.length) errors.push(`combinación ${c.key} sin nivel`);
     if (!c.mechanics.ok) errors.push(`combinación ${c.key} imposible: ${c.mechanics.code}`);
     const a = ACTIONS[c.action];
@@ -149,6 +224,7 @@ export function validateData() {
 }
 /* ¿hay alguna plantilla que pueda verbalizar esta combinación? */
 export function realizable(c) {
+  if (c.kind === 'POSITIONAL') return (c.blueprint.copyVariants || []).length > 0;
   const list = SHAPES[c.action] || [];
   return list.some(s => shapeFits(s, c.tool, c.target, null, null));
 }
@@ -175,12 +251,17 @@ export function unreviewedCombinations() {
     if (a.semanticFamily === 'intimo' || ['LICK', 'SUCK', 'KISS', 'CARESS', 'BRUSH', 'RUB'].includes(a.id)) for (const z of TARGETS_LIST) if (z.tags.includes('intimo')) candidateTargets.add(z.id);
     for (const tool of a.allowedActorTools) for (const tid of candidateTargets) {
       const k = `${a.id}|${tool}|${tid}`;
-      if (COMBO[k] || INVALID_COMBOS.has(k)) continue;
+      if (isBodyTool(tool)) continue; // cuerpo con cuerpo: solo blueprints (unreviewedBlueprints)
+      if (COMBO[k] || REJECTED_COMBOS.has(k)) continue;
       if (!mechanics(a.id, tool, tid).ok) continue; // lo imposible no se revisa: no es contenido
       const z = TARGETS[tid];
       out.push({ action: a.id, tool, target: tid, levels: a.allowedLevels.filter(L => z.allowedLevels.includes(L)), styles: a.styles.filter(s => z.allowedStyles.includes(s)), duration: BASE_RANGE[a.id], intimate: z.tags.includes('intimo') });
     }
   }
+  for (const k of UNREVIEWED_EXPLICIT) { const [action, tool, tid] = k.split('|'); if (!out.some(u => u.action === action && u.tool === tool && u.target === tid)) { const a = ACTIONS[action], z = TARGETS[tid]; if (a && z) out.push({ action, tool, target: tid, levels: a.allowedLevels.filter(L => z.allowedLevels.includes(L)), styles: a.styles.filter(s => z.allowedStyles.includes(s)), duration: BASE_RANGE[action], intimate: z.tags.includes('intimo'), explicit: true }); } }
   return out;
 }
-export { TARGETS, TARGETS_LIST, LEGACY_TARGET, GROUPS, ACTOR_TOOLS, ACTIONS, ACTIONS_LIST, STYLES, STYLE_IDS, COMPATIBILITY, TIER_WEIGHT, BASE_RANGE, KIND_CAPABILITIES, SHAPES };
+/* blueprints posicionales pendientes de decisión humana (nunca entran solos) */
+export const unreviewedBlueprints = () => POSITIONAL.filter(b => b.status === 'UNREVIEWED');
+export const TIER_WEIGHT = STATUS_WEIGHT; // alias histórico
+export { TARGETS, TARGETS_LIST, LEGACY_TARGET, GROUPS, ACTOR_TOOLS, ACTIONS, ACTIONS_LIST, STYLES, STYLE_IDS, REPERTOIRE, POSITIONAL, POSITIONAL_BY_ID, STATUS_WEIGHT, APPROVED_STATUSES, ALL_STATUSES, BLUEPRINT_STATUSES, ORIENTATIONS, GUIDABLE_ACTIONS, BASE_RANGE, KIND_CAPABILITIES, SHAPES };

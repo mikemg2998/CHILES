@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Content Lab · Pollo a la brasa</title>
+<link rel="icon" href="../icon-192.png">
+<link rel="preconnect" href="https://api.fontshare.com">
+<link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap">
+<link rel="stylesheet" href="lab.css?v=1">
+</head>
+<body>
+<header class="bar">
+  <div class="brand"><span class="dot"></span><strong>Content Lab</strong><span class="sub">Pollo a la brasa · curación de contenido</span></div>
+  <nav class="tabs" role="tablist">
+    <button class="tab on" data-tab="zonas">Zonas</button>
+    <button class="tab" data-tab="posicionales">Posicionales</button>
+    <button class="tab" data-tab="auditoria">Auditoría</button>
+  </nav>
+  <div class="actions">
+    <span id="changes" class="pill">0 cambios</span>
+    <button id="exportRep" class="btn">Exportar repertoire.js</button>
+    <button id="exportPos" class="btn">Exportar positional.js</button>
+    <button id="discard" class="btn ghost">Descartar cambios</button>
+  </div>
+</header>
+<div id="validation" class="validation" hidden></div>
+
+<main>
+  <section id="tab-zonas" class="panel split">
+    <aside class="side">
+      <input id="search" class="search" type="search" placeholder="Buscar zona…" autocomplete="off">
+      <div id="targets" class="list"></div>
+    </aside>
+    <div id="zone" class="zone"><p class="empty">Elige una zona para ver su repertorio: cada acción · herramienta con su clasificación, editable.</p></div>
+  </section>
+
+  <section id="tab-posicionales" class="panel" hidden>
+    <div class="toolbar">
+      <p class="hint">Cuerpo con cuerpo: cada blueprint es una configuración concreta de los dos cuerpos, con su copy. Solo <b>APPROVED</b> con copy y tier entra al generador. Un UNREVIEWED nunca se promociona solo.</p>
+      <button id="newBp" class="btn">Nuevo blueprint</button>
+    </div>
+    <div id="blueprints" class="cards"></div>
+  </section>
+
+  <section id="tab-auditoria" class="panel" hidden>
+    <p class="hint">La auditoría solo señala. Pregunta: <b>¿esta acción merece aparecer aquí?</b> Decide en la zona (clic en la fila) y exporta.</p>
+    <div id="audit"></div>
+  </section>
+</main>
+
+<dialog id="exportDlg">
+  <div class="dlgHead"><strong id="exportTitle">Exportar</strong><div class="row"><button id="copyExport" class="btn">Copiar</button><button id="downloadExport" class="btn">Descargar</button><button id="closeExport" class="btn ghost">Cerrar</button></div></div>
+  <p class="hint" id="exportHint"></p>
+  <textarea id="exportText" readonly spellcheck="false"></textarea>
+</dialog>
+<script type="module" src="lab.js?v=1"></script>
+</body>
+</html>

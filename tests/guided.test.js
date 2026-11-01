@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { GameEngine } from '../engine/engine.js';
 import { COMBOS, COMBO, guidable, TARGETS, ACTOR_TOOLS, GROUPS, ACTIONS, LEVEL_IDS } from '../engine/grammar.js';
-import { GUIDABLE_ACTIONS } from '../engine/data/compatibility.js';
+import { GUIDABLE_ACTIONS } from '../engine/data/repertoire.js';
 import { realize, humanLikeness } from '../engine/realizer.js';
 import { criticalCheck } from '../engine/quality.js';
 import { Rng } from '../engine/rng.js';
