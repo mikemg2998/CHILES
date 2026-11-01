@@ -187,3 +187,53 @@ test('privacidad: el estado de sesión no forma parte de lo que se persiste', ()
   const json = JSON.stringify(p);
   for (const k of ['intents', 'pref', 'liked', 'skipped', 'feedback', 'familyScore', 'mood']) assert.ok(!json.includes(k));
 });
+
+/* ---- regresiones estructurales (no frases prohibidas: propiedades que fallaron) ---- */
+import { mechanicsCheck } from '../engine/body.js';
+import { BLUEPRINT } from '../engine/blueprints.js';
+test('las condiciones SETUP solo aparecen con blueprints que las admiten y nunca dos veces en pocas rondas', () => {
+  for (const L of [2, 3, 4]) for (const seed of [1, 2, 3]) {
+    const e = mk({ level: L, seed: 300 + seed }); const rs = rolls(e, 150);
+    rs.forEach((r, i) => {
+      if (r.condTier !== 'SETUP') return;
+      assert.ok(BLUEPRINT[r.blueprint].conditions.setup.includes(r.cond), `${r.phrase} (${r.blueprint})`);
+      assert.ok(!rs.slice(Math.max(0, i - 4), i).some(p => p.condTier === 'SETUP'), 'dos preparaciones seguidas: ' + r.phrase);
+    });
+  }
+});
+test('ninguna interacción con posición compleja (≥2), naturalidad baja o movimiento imposible llega a la interfaz', () => {
+  for (const L of [1, 2, 3, 4]) {
+    const e = mk({ level: L, seed: 77 + L });
+    for (const r of rolls(e, 300)) {
+      const m = mechanicsCheck(ACTION[r.action], ZONE[r.zone], r.cond ? CONDITION[r.cond] : null);
+      assert.ok(m.ok, `${r.phrase} → ${m.reasons.join(',')}`);
+      assert.ok(r.mechanics.complexity <= 1 && r.mechanics.naturalness >= 0.6, r.phrase);
+      assert.ok(r.blueprint && BLUEPRINT[r.blueprint].actions.includes(r.action), 'ronda sin blueprint: ' + r.phrase);
+    }
+  }
+});
+test('regresión conceptual: «caderas contra glúteos con venda» cae por razones estructurales, no por una lista negra', () => {
+  const e = mk({ level: 3 });
+  const ctx = { prefs: e.prefs, level: 3, session: e.session, avoids: AVOIDS };
+  const bare = e.build(BLUEPRINT.cuerpoMovimiento, ACTION.frotarCaderasDetras, ZONE.gluteos, null, null, 3, 7.5);
+  assert.ok(criticalCheck(bare, ctx).ok, 'con la postura en la frase, el gesto es válido');
+  const withBlindfold = e.build(BLUEPRINT.cuerpoMovimiento, ACTION.frotarCaderasDetras, ZONE.gluteos, null, CONDITION.vendados, 3, 7.5);
+  const chk = criticalCheck(withBlindfold, ctx);
+  assert.ok(!chk.ok && chk.reasons.some(r => r.startsWith('SETUP_CONDITION_UNSUPPORTED')), chk.reasons.join());
+  // y sin la postura en la frase, la pelvis contra los glúteos ni siquiera es una relación aceptable
+  const libre = { ...ACTION.frotarCaderasDetras, id: 'free', frame: '{V} tus caderas contra {ZONE}', mechanics: { movement: 'rub' } };
+  const m = mechanicsCheck(libre, ZONE.gluteos);
+  assert.ok(!m.ok && m.reasons.includes('POSITION_TOO_COMPLEX'));
+});
+test('cada añadido se queda solo si mejora: una forma o condición sin valor no sobrevive y la ausencia es un resultado normal', () => {
+  const e = mk({ level: 2, seed: 5 }); const rs = rolls(e, 200);
+  const bare = rs.filter(r => !r.cond && !r.method).length;
+  assert.ok(bare / rs.length > 0.5, 'la mayoría de las rondas van sin añadidos');
+  assert.ok(e.stats.rejectedReasons.CONDITION_NO_VALUE > 0 && e.stats.rejectedReasons.FORM_NO_VALUE > 0);
+  for (const r of rs) if (r.cond) assert.ok(CE.conditionValue(CONDITION[r.cond], ACTION[r.action], ZONE[r.zone]) >= 0.45, r.phrase);
+});
+test('paso no borra una preferencia: una zona pasada vuelve a salir más adelante', () => {
+  const e = mk({ level: 1, seed: 21 }); const first = e.roll(); e.pass();
+  const later = rolls(e, 60).filter(r => r.families.zone === first.families.zone);
+  assert.ok(later.length > 0, 'la familia de zona ' + first.families.zone + ' no volvió');
+});

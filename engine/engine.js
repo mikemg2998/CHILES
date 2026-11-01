@@ -1,7 +1,7 @@
 /* GameEngine v3: el Session Director decide qué pretende la ronda; el motor de generación propone candidatos
    compatibles; el filtro de calidad puntúa y descarta; el compositor escribe la frase; los dados solo la representan.
    Orden de prioridad: compatibilidad > calidad > progresión > variedad. */
-import { ACTIONS, ACTION, ZONES, ZONE, METHODS, METHOD, CONDITIONS, CONDITION, LEVELS, LEVEL_BY_KEY, INTENSITY_LABEL } from './catalog.js';
+import { ACTIONS, ACTION, ZONES, ZONE, METHODS, METHOD, CONDITIONS, CONDITION, LEVELS, LEVEL_BY_KEY, INTENSITY_LABEL, GROUPS } from './catalog.js';
 import { Rng } from './rng.js';
 import { CompatibilityEngine as CE, CombinationValidator } from './compat.js';
 import { combinationIntensity, pairIntensity } from './intensity.js';
@@ -11,6 +11,8 @@ import { NaturalLanguageGenerator as NLG } from './nlg.js';
 import { interactionMeta } from './meta.js';
 import { SessionState, SessionDirector, AVOIDS, MOODS } from './session.js';
 import { criticalCheck, qualityScore, fallbackFor, THRESHOLD } from './quality.js';
+import { mechanicsCheck } from './body.js';
+import { BLUEPRINTS, BLUEPRINT, BLUEPRINTS_OF_ACTION, blueprintZones, blueprintAllowsCondition, blueprintFor } from './blueprints.js';
 
 const near = (v, t, k = 1) => Math.exp(-k * Math.abs(v - t));
 const COOL = { action: 3, zone: 4, method: 2, cond: 5 };
@@ -18,6 +20,8 @@ const FAM_COOL = { action: 1, zone: 2, cond: 2 };
 /* probabilidad de que la ronda intente llevar forma y de que pruebe una condición; la condición solo se queda si la frase mejora */
 const DENSITY = { 1: { method: .6, cond: .35 }, 2: { method: .65, cond: .6 }, 3: { method: .6, cond: .7 }, 4: { method: .6, cond: .7 } };
 const MAX_ATTEMPTS = 34, MAX_CANDIDATES = 6;
+/* un añadido (forma, condición) solo se queda si mejora la frase al menos esto respecto a la misma frase sin él */
+const MARGIN = { form: 0.015, cond: 0.01 };
 
 export class GameEngine {
   constructor({ prefs, seed, level, debug = false } = {}) {
@@ -74,9 +78,9 @@ export class GameEngine {
     const names = this.prefs.names || ['', ''];
     let performer = names.indexOf(fav.performerName); if (performer < 0) performer = fav.performer ?? this.state.performer;
     this.prefs.partner = 1 - performer;
-    if (!this.prefs.zoneEnabled(ZONE[fav.zone])) return null;
+    if (!this.prefs.zoneEnabled(ZONE[fav.zone]) || !mechanicsCheck(ACTION[fav.action], ZONE[fav.zone]).ok) return null;
     const advance = performer !== this.state.performer;
-    return this.round({ action: fav.action, zone: fav.zone, method: fav.method, cond: fav.cond, alt: fav.alt }, { advanceTurn: advance, fromFavorite: true });
+    return this.round({ blueprint: fav.blueprint || (blueprintFor(fav.action, fav.zone) || {}).id || null, action: fav.action, zone: fav.zone, method: fav.method, cond: fav.cond, alt: fav.alt }, { advanceTurn: advance, fromFavorite: true });
   }
   inspireFavorite(fav) {
     if (this.session.ended) return null;
@@ -89,59 +93,73 @@ export class GameEngine {
   removeFavorite(id) { this.state.favorites = this.state.favorites.filter(f => f.id !== id); }
   resetGame() { this.newSession(this.session.level); }
 
-  /* ---------- generación: director → candidatos → filtro de calidad ---------- */
+  /* ---------- generación: director → blueprint → acción · zona (biomecánica) → forma/condición solo si aportan → filtro ---------- */
   generate({ target = null, keep = {}, avoid = null, purpose = null }) {
     const prefs = this.prefs, H = this.history, S = this.session, level = S.level;
     const P = purpose ? { purpose, reason: 'pedido por la interfaz' } : this.director.purpose(S, H);
     purpose = P.purpose === 'END' ? 'MAINTAIN' : P.purpose;
     if (target == null) target = this.director.target(purpose, S, H);
+    // Intimidad sin anatomía íntima disponible para quien recibe: se juega con la banda y el repertorio de Exploración
+    const intimateOk = prefs.enabledGroups.some(g => GROUPS[g].intimate) && (prefs.bodyParts[prefs.partner] || []).length > 0;
+    const band = level === 4 && !intimateOk ? 3 : level;
+    if (band !== level) target = Math.min(target, 8);
     const mods = this.director.modifiers(purpose, S, H);
-    const dbg = { selectedPurpose: purpose, purposeReason: P.reason, selectedPattern: null, target, level, intraLevelIntensity: S.intraLevelIntensity, calm: S.calm(), selectedFamily: null, candidateWeights: {}, recencyPenalty: {}, diversityBoost: {}, feedbackModifier: {}, intensityModifier: {}, anatomyModifier: {}, rejectedCandidates: [], rejectionReasons: {}, candidates: [], finalQualityScore: null, fallback: false };
+    const dbg = { selectedPurpose: purpose, purposeReason: P.reason, selectedPattern: null, selectedBlueprint: null, target, level, intraLevelIntensity: S.intraLevelIntensity, calm: S.calm(), selectedFamily: null, blueprintWeights: {}, candidateWeights: {}, recencyPenalty: {}, diversityBoost: {}, feedbackModifier: {}, intensityModifier: {}, anatomyModifier: {}, rejectedCandidates: [], rejectionReasons: {}, candidates: [], finalQualityScore: null, positionComplexity: null, fallback: false };
     const candidates = [];
-    const ctxBase = { prefs, level, session: S, avoids: AVOIDS, history: H, target, purpose };
+    const ctxBase = { prefs, level: band, session: S, avoids: AVOIDS, history: H, target, purpose };
+    const D = DENSITY[band];
     for (let attempt = 0; attempt < MAX_ATTEMPTS && candidates.length < MAX_CANDIDATES; attempt++) {
       const relax = candidates.length ? 0 : attempt > 27 ? 2 : attempt > 16 ? 1 : 0; // sin candidatos: primero cae el enfriamiento por familia, después el de elemento
-      const action = keep.action ? ACTION[keep.action] : this.pickAction(level, target, avoid, relax, mods, dbg);
+      const bp = this.pickBlueprint(band, target, keep, avoid, relax, mods, dbg);
+      if (!bp) continue;
+      const action = keep.action ? ACTION[keep.action] : this.pickAction(bp, band, target, avoid, relax, mods, dbg);
       if (!action) continue;
-      const zone = keep.zone ? ZONE[keep.zone] : this.pickZone(action, level, target, avoid, relax, mods, dbg);
+      const zone = keep.zone ? ZONE[keep.zone] : this.pickZone(bp, action, band, target, avoid, relax, mods, dbg);
       if (!zone) continue;
-      const D = DENSITY[level];
-      const wantMethod = keep.method !== undefined ? !!keep.method : this.rng.chance(action.manner === 'baja' ? D.method * .4 : D.method);
-      const method = wantMethod ? this.pickMethod(action, zone, level, target, avoid, relax, mods) : null;
-      const cond = this.rng.chance(D.cond) ? this.pickCondition(action, zone, method, level, target, avoid, relax, mods) : null;
-      // se construye con y sin condición (y a veces sin forma); cada añadido solo se queda si la frase mejora de verdad
-      const versions = [this.build(action, zone, method, null, level, target)];
-      if (cond) versions.push(this.build(action, zone, method, cond, level, target));
-      if (method && this.rng.chance(0.35)) versions.push(this.build(action, zone, null, null, level, target));
-      let best = null;
-      for (const v of versions) {
+      const req = bp.requires ? CONDITION[bp.requires] : null;
+      const mech = mechanicsCheck(action, zone, req);
+      if (!mech.ok) { this.reject(`${mech.reasons[0]}: ${action.actor} → ${zone.id}`, dbg, { phrase: `${action.id} · ${zone.id}` }); continue; }
+      // forma: solo con una razón (la acción no lleva su manera implícita y hay algo que ajustar o el nivel lo pide)
+      const wantMethod = bp.forms !== false && (keep.method !== undefined ? !!keep.method : action.manner !== 'baja' && (Math.abs(S.pressure) > 0.2 || Math.abs(S.pace) > 0.2 || this.rng.chance(D.method)));
+      const method = wantMethod ? this.pickMethod(action, zone, band, target, avoid, relax, mods) : null;
+      // condición: primero una razón de contexto, después una compatible dentro del blueprint; la ausencia es un buen resultado
+      const want = req ? { tiers: ['SETUP'], only: req.id } : this.conditionReason(bp, purpose, S, H, band);
+      const cond = want ? this.pickCondition(bp, want, action, zone, method, band, target, avoid, relax, mods) : null;
+      if (req && (!cond || cond.id !== req.id)) { this.reject(`SETUP_CONDITION_UNSUPPORTED: ${bp.id} sin ${req.id}`, dbg, { phrase: `${action.id} · ${zone.id}` }); continue; }
+      // REMOVE-EACH-COMPONENT: cada añadido solo se queda si la frase mejora de verdad respecto a la misma frase sin él
+      const score = v => {
         const chk = criticalCheck(v, ctxBase);
-        if (!chk.ok) { this.reject(chk.reasons[0], dbg, v); continue; }
-        if (Math.abs(v.intensity - target) > (relax ? 2.2 : 1.4)) { this.reject('intensidad fuera de objetivo', dbg, v); continue; }
-        const q = qualityScore(v, { ...ctxBase, phrase: v.phrase, dims: v.meta.dims, semanticFamily: v.meta.semanticFamily });
-        v.quality = q.score; v.qualityParts = q.parts;
-        if (q.score < THRESHOLD) { this.reject('calidad insuficiente', dbg, v); continue; }
-        if (!best || q.score > best.quality + (v.cond && !best.cond ? 0.03 : 0)) best = v;
-      }
-      if (best) candidates.push(best);
+        if (!chk.ok) { this.reject(chk.reasons[0], dbg, v); return null; }
+        if (Math.abs(v.intensity - target) > (relax ? 2.2 : 1.4)) { this.reject(`INTENSITY_OFF_TARGET: ${v.intensity} vs ${target}`, dbg, v); return null; }
+        const q = qualityScore(v, { ...ctxBase, phrase: v.phrase, dims: v.meta.dims, semanticFamily: v.meta.semanticFamily, mechanics: chk.mechanics });
+        v.quality = q.score; v.qualityParts = q.parts; v.mechanics = chk.mechanics;
+        return v;
+      };
+      let best = score(this.build(bp, action, zone, null, req ? cond : null, band, target));
+      if (!best) continue;
+      if (method) { const v = score(this.build(bp, action, zone, method, req ? cond : null, band, target)); if (v && v.quality >= best.quality + MARGIN.form) best = v; else if (v) this.reject('FORM_NO_VALUE', dbg, v); }
+      if (cond && !req) { const v = score(this.build(bp, action, zone, best.method ? method : null, cond, band, target)); if (v && v.quality >= best.quality + MARGIN.cond) best = v; else if (v) this.reject('CONDITION_NO_VALUE', dbg, v); }
+      if (best.quality < THRESHOLD) { this.reject(`LOW_QUALITY: ${best.quality}`, dbg, best); continue; }
+      candidates.push(best);
     }
     let combo;
     if (candidates.length) {
       combo = this.rng.weighted(candidates.map(c => ({ item: c, weight: Math.exp(8 * c.quality) * (purpose === 'DEEPEN' ? c.qualityParts.continuity ** 2 : 1) * mods.maybe(ACTION[c.action], ZONE[c.zone], c.cond ? CONDITION[c.cond] : null) }))); // calidad manda, con un poco de azar
     } else {
-      const f = fallbackFor(level, prefs, H.last() ? H.last().action + ':' + H.last().zone : null, c => criticalCheck({ ...c, phrase: '' }, ctxBase).ok);
-      combo = this.build(ACTION[f.action], ZONE[f.zone], f.method ? METHOD[f.method] : null, null, level, target);
+      const f = fallbackFor(band, prefs, H.last() ? H.last().action + ':' + H.last().zone : null, c => criticalCheck({ ...c, phrase: '' }, ctxBase).ok);
+      combo = this.build(BLUEPRINT[f.blueprint] || null, ACTION[f.action], ZONE[f.zone], f.method ? METHOD[f.method] : null, null, band, target);
       combo.fallback = true; combo.quality = 0; this.stats.fallbacks++; dbg.fallback = true;
     }
-    combo.purpose = purpose;
-    dbg.candidates = candidates.map(c => ({ phrase: c.phrase, quality: c.quality }));
-    dbg.selectedFamily = combo.meta.semanticFamily; dbg.selectedPattern = combo.meta.pattern; dbg.finalQualityScore = combo.quality;
+    combo.purpose = purpose; combo.band = band; combo.level = level;
+    dbg.candidates = candidates.map(c => ({ phrase: c.phrase, quality: c.quality, blueprint: c.blueprint }));
+    dbg.selectedFamily = combo.meta.semanticFamily; dbg.selectedPattern = combo.meta.pattern; dbg.selectedBlueprint = combo.blueprint; dbg.finalQualityScore = combo.quality;
+    dbg.positionComplexity = combo.mechanics ? combo.mechanics.complexity : null;
     this.lastDebug = dbg;
     return combo;
   }
-  build(action, zone, method, cond, level, target) {
+  build(bp, action, zone, method, cond, level, target) {
     const intensity = combinationIntensity(action, zone, method, cond);
-    const combo = { action: action.id, zone: zone.id, method: method ? method.id : null, cond: cond ? cond.id : null, alt: null, intensity, level, target };
+    const combo = { blueprint: bp ? bp.id : null, action: action.id, zone: zone.id, method: method ? method.id : null, cond: cond ? cond.id : null, alt: null, intensity, level, target };
     combo.phrase = this.previewPhrase(combo);
     combo.meta = interactionMeta(combo);
     return combo;
@@ -152,6 +170,22 @@ export class GameEngine {
   }
   previewPhrase(combo) { return NLG.phrase(combo, { partner: this.prefs.names[1] || 'tu pareja', performer: this.prefs.names[0] || 'tú' }); }
 
+  /* ¿Hay una razón para que esta ronda lleve condición? Nunca por probabilidad fija sin contexto. */
+  conditionReason(bp, purpose, S, H, level) {
+    const recent = H.rounds.slice(0, 3).filter(r => r.cond).length;
+    const setupRecent = H.rounds.slice(0, 6).some(r => r.condTier === 'SETUP');
+    let p = 0, tiers = [];
+    if (level >= 2 && ['EXPLORE', 'VARIATION', 'BUILD', 'DEEPEN'].includes(purpose)) { p = 0.5; tiers = ['INTERACTION', 'LIGHT']; } // la dinámica entre los dos es lo que varía
+    else if (purpose === 'CONNECT' || purpose === 'COOLDOWN') { p = level === 1 ? 0.25 : 0.35; tiers = ['LIGHT']; } // solo un matiz
+    else { p = 0.3; tiers = ['LIGHT', 'INTERACTION']; }
+    if (!recent && H.rounds.length >= 3) p += 0.2; // llevamos varias rondas sin ninguna: una cambia el aire
+    if (recent >= 2) p -= 0.25; // no encadenar condiciones
+    if (S.intentSet().has('tranquilo')) p -= 0.1;
+    if (level >= 2 && bp.conditions.setup.length && !setupRecent && this.rng.chance(0.3)) tiers.push('SETUP'); // preparación: pocas veces y solo donde está diseñada
+    if (!this.rng.chance(Math.max(0, p))) return null;
+    return { tiers, reason: purpose };
+  }
+
   /* finalWeight = base × nivel × anatomía × propósito × recencia × recenciaSemántica × diversidad × progresión × feedback */
   /* "hoy no": lo que cualquiera de los dos ha apartado no entra ni en la selección */
   avoidRules() { const S = this.session; return [...S.avoidSet()].map(k => AVOIDS[k]).filter(Boolean); }
@@ -160,17 +194,44 @@ export class GameEngine {
   condAllowed(c, rules) { return !rules.some(r => r.condFamilies && r.condFamilies.includes(c.family)); }
   /* el par acción·zona tiene que poder caer dentro del nivel (forma y condición mueven como mucho ±0.9) */
   inBand(a, z, level) { const v = pairIntensity(a, z), L = LEVELS[level]; return v >= L.lo - 0.9 && v <= L.max + 0.5; }
-  pickAction(level, target, avoid, relax, mods, dbg) {
-    const H = this.history, prefs = this.prefs, items = [], rules = this.avoidRules();
-    for (const a of ACTIONS) {
-      if (!a.levels[level] || prefs.actionDisabled(a) || !this.actionAllowed(a, rules)) continue;
+  /* acciones del blueprint con alguna zona disponible ahora mismo (anatomía, nivel, enfriamiento, «hoy no», objetivo) */
+  usableActions(bp, level, target, avoid, relax, mods) {
+    const H = this.history, prefs = this.prefs, rules = this.avoidRules(), out = [];
+    for (const id of bp.actions) {
+      const a = ACTION[id];
+      if (!a || !a.levels[level] || prefs.actionDisabled(a) || !this.actionAllowed(a, rules)) continue;
       if (avoid && avoid.action === a.id) continue;
       if (relax < 2 && H.cooling('action', a.id, COOL.action)) continue;
       if (!relax && mods.purpose !== 'DEEPEN' && H.familyCooling('action', a.family, FAM_COOL.action)) continue;
-      const zs = CE.zonesFor(a, level, prefs).filter(z => this.zoneAllowed(z, rules) && this.inBand(a, z, level) && !(avoid && avoid.zone === z.id) && !H.cooling('zone', z.id, relax < 2 ? COOL.zone : 3)); // solo acciones con alguna zona disponible ahora
+      const zs = blueprintZones(bp, a, level, prefs).filter(z => this.zoneAllowed(z, rules) && this.inBand(a, z, level) && !(avoid && avoid.zone === z.id) && !H.cooling('zone', z.id, relax < 2 ? COOL.zone : 3) && mechanicsCheck(a, z, bp.requires ? CONDITION[bp.requires] : null).ok);
       if (!zs.length) continue;
       const d = Math.min(...zs.map(z => Math.abs(pairIntensity(a, z) - target)));
       if (d > (relax ? 2.4 : 1.6)) continue;
+      out.push({ a, zs, d });
+    }
+    return out;
+  }
+  pickBlueprint(level, target, keep, avoid, relax, mods, dbg) {
+    const H = this.history, items = [];
+    for (const bp of BLUEPRINTS) {
+      if (!bp.levels[level]) continue;
+      if (keep.action && !bp.actions.includes(keep.action)) continue;
+      if (keep.zone && !bp.actions.some(id => ACTION[id].zones.includes(keep.zone))) continue;
+      if (bp.requires && !keep.action && H.rounds.slice(0, 10).some(r => r.condTier === 'SETUP')) continue; // una preparación cada bastante tiempo
+      const usable = this.usableActions(bp, level, target, avoid, relax, mods);
+      if (!usable.length) continue;
+      const d = Math.min(...usable.map(u => u.d));
+      const recency = H.familyWeight('blueprint', bp.id, { strength: mods.purpose === 'DEEPEN' ? 0.2 : 1, soft: mods.purpose === 'DEEPEN' });
+      const maybe = Math.max(...usable.map(u => mods.maybeAction(u.a))); // «quizá»: si todo el blueprint está en duda, apenas sale
+      const w = bp.baseWeight * bp.levels[level] * near(d, 0, 1) * recency * mods.blueprint(bp) * maybe * Math.min(1, usable.length / 3 + 0.4);
+      if (this.debug) dbg.blueprintWeights[bp.id] = Math.round(w * 1000) / 1000;
+      items.push({ item: bp, weight: w });
+    }
+    return items.length ? this.rng.weighted(items) : null;
+  }
+  pickAction(bp, level, target, avoid, relax, mods, dbg) {
+    const H = this.history, items = [];
+    for (const { a, zs, d } of this.usableActions(bp, level, target, avoid, relax, mods)) {
       const recency = H.novelty('action', a.id, 10, 1.2) * H.familyWeight('action', a.family, { strength: mods.purpose === 'DEEPEN' ? 0.2 : 1, soft: mods.purpose === 'DEEPEN' }) * H.familyWeight('actor', a.actor, { strength: 0.6, hunger: 99 });
       const prog = near(d, 0, 1.2), pm = mods.action(a);
       const w = a.levels[level] * prog * recency * pm;
@@ -179,19 +240,21 @@ export class GameEngine {
     }
     return items.length ? this.rng.weighted(items) : null;
   }
-  pickZone(action, level, target, avoid, relax, mods, dbg) {
-    const H = this.history, rules = this.avoidRules();
-    const items = CE.zonesFor(action, level, this.prefs).map(z => {
+  pickZone(bp, action, level, target, avoid, relax, mods, dbg) {
+    const H = this.history, rules = this.avoidRules(), req = bp.requires ? CONDITION[bp.requires] : null;
+    const items = blueprintZones(bp, action, level, this.prefs).map(z => {
       if (avoid && avoid.zone === z.id) return null;
       if (!this.zoneAllowed(z, rules)) return null;
       if (H.cooling('zone', z.id, relax < 2 ? COOL.zone : 3)) return null; // ni relajando vuelve la zona de las 3 últimas rondas
       if (!relax && mods.purpose !== 'DEEPEN' && H.familyCooling('zone', z.family, FAM_COOL.zone)) return null;
       const d = Math.abs(pairIntensity(action, z) - target);
       if (d > (relax ? 2.4 : 1.6)) return null;
+      if (!relax && mods.purpose !== 'DEEPEN' && H.rounds.slice(0, 2).some(r => r.semanticFamily === `${action.family}·${z.family}`)) return null; // la misma idea seguida solo al profundizar
+      const m = mechanicsCheck(action, z, req); if (!m.ok) return null;
       const seen = H.rounds.filter(r => r.families && r.families.zone === z.family).length;
       const diversity = H.rounds.length >= 6 && !seen ? 1.5 : 1; // cobertura corporal: lo que aún no ha salido empuja
       if (this.debug) dbg.diversityBoost[z.id] = diversity;
-      return { item: z, weight: z.levels[level] * near(d, 0, 1.5) * H.novelty('zone', z.id, 10, 2) * H.familyWeight('zone', z.family, { strength: mods.purpose === 'DEEPEN' ? 0.3 : 1.5, soft: mods.purpose === 'DEEPEN' }) * diversity * mods.zone(z, action) };
+      return { item: z, weight: z.levels[level] * near(d, 0, 1.5) * H.novelty('zone', z.id, 10, 2) * H.familyWeight('zone', z.family, { strength: mods.purpose === 'DEEPEN' ? 0.3 : 1.5, soft: mods.purpose === 'DEEPEN' }) * diversity * mods.zone(z, action) * (0.6 + 0.4 * m.rel.naturalness) };
     }).filter(Boolean);
     return items.length ? this.rng.weighted(items) : null;
   }
@@ -204,15 +267,17 @@ export class GameEngine {
     }).filter(Boolean);
     return items.length ? this.rng.weighted(items) : null;
   }
-  pickCondition(action, zone, method, level, target, avoid, relax, mods) {
+  pickCondition(bp, want, action, zone, method, level, target, avoid, relax, mods) {
     const H = this.history, base = pairIntensity(action, zone) + (method ? method.mod : 0);
     const rules = this.avoidRules();
     const items = CE.conditionsFor(action, zone, method, level).map(c => {
+      if (want.only && c.id !== want.only) return null;
+      if (!want.tiers.includes(c.tier) || !blueprintAllowsCondition(bp, c)) return null;
       if (c.needsAlt || !this.condAllowed(c, rules)) return null;
       if (avoid && avoid.cond === c.id) return null;
       if (relax < 2 && H.cooling('cond', c.id, COOL.cond)) return null;
       if (!relax && H.familyCooling('cond', c.family, FAM_COOL.cond)) return null;
-      return { item: c, weight: c.levels[level] * CE.conditionValue(c, action, zone) * near(base + c.mod, target, 1.2) * H.novelty('cond', c.id, 12, 2) * H.familyWeight('cond', c.family, { strength: 2 }) * mods.cond(c) };
+      return { item: c, weight: c.levels[level] * CE.conditionValue(c, action, zone) * near(base + c.mod, target, 1.2) * H.novelty('cond', c.id, 12, 2) * H.familyWeight('cond', c.family, { strength: 2 }) * mods.cond(c) * (c.tier === 'SETUP' ? 0.6 : 1) };
     }).filter(Boolean);
     return items.length ? this.rng.weighted(items) : null;
   }
@@ -229,11 +294,13 @@ export class GameEngine {
       for (const a of actions) {
         const ms = METHODS.filter(m => CE.methodFits(m, a, zone) && (m.levels[level] || Object.keys(m.levels).some(l => l < level)));
         for (const m of [null, ...ms]) {
-          const cs = CONDITIONS.filter(c => CE.conditionFits(c, a, zone, m) && !c.needsAlt && c.slot !== 'swap' && (c.levels[level] || Object.keys(c.levels).some(l => l < level)));
+          const bps = (BLUEPRINTS_OF_ACTION[a.id] || []).map(id => BLUEPRINT[id]);
+          if (!bps.length || !mechanicsCheck(a, zone).ok) continue;
+          const cs = CONDITIONS.filter(c => c.tier !== 'SETUP' && bps.some(b => blueprintAllowsCondition(b, c)) && CE.conditionFits(c, a, zone, m) && !c.needsAlt && (c.levels[level] || Object.keys(c.levels).some(l => l < level)));
           for (const c of [null, ...cs]) {
             const v = combinationIntensity(a, zone, m, c);
             if (!inRange(v)) continue;
-            const combo = { action: a.id, zone: zone.id, method: m ? m.id : null, cond: c ? c.id : null, alt: null, intensity: v, level, target: v };
+            const combo = { blueprint: (blueprintFor(a.id, zone.id) || bps[0]).id, action: a.id, zone: zone.id, method: m ? m.id : null, cond: c ? c.id : null, alt: null, intensity: v, level, target: v };
             if (combo.action === last.action && combo.method === last.method && combo.cond === last.cond) continue;
             combo.phrase = this.previewPhrase(combo);
             if (CombinationValidator.validate({ ...combo, level: null, names: prefs.names }, prefs).status !== 'VALID') continue; // bajar puede salir del nivel por abajo
@@ -271,14 +338,15 @@ export class GameEngine {
     const round = {
       id: `${Date.now().toString(36)}-${Math.floor(this.rng.next() * 1e6).toString(36)}`,
       n: ++this.state.round, level, levelName: LEVELS[level].name, target: opts.target ?? combo.target ?? intensity, intensity, intensityLabel: INTENSITY_LABEL(intensity),
-      purpose: combo.purpose || 'MAINTAIN', pattern: meta.pattern, semanticFamily: meta.semanticFamily, dims: meta.dims,
+      purpose: combo.purpose || 'MAINTAIN', pattern: meta.pattern, semanticFamily: meta.semanticFamily, dims: meta.dims, blueprint: combo.blueprint || null,
+      condTier: c ? c.tier : null, mechanics: combo.mechanics || mechanicsCheck(a, z, c).rel,
       action: combo.action, zone: combo.zone, method: combo.method, cond: combo.cond, alt: combo.alt || null,
       seconds: m && m.seconds ? m.seconds : (c && c.id === 'esperar' ? 5 : null),
       performer, performerName, partnerName: partner, phrase, faces: NLG.faces(combo), dice: this.diceFaces(combo, level),
-      families: { action: a.family, actor: a.actor || null, zone: z.family, cond: c ? c.family : null, method: m ? m.dim : null },
+      families: { action: a.family, actor: a.actor || null, zone: z.family, cond: c ? c.family : null, method: m ? m.dim : null, blueprint: combo.blueprint || null },
       variant: opts.variant || null, kept: combo.kept || null, fallback: !!combo.fallback, quality: combo.quality ?? null,
       canMore: !!(m && ['presion', 'ritmo', 'dinamica'].includes(m.dim)) || a.tags.includes('presion'),
-      validation: CombinationValidator.validate({ ...combo, intensity, level: opts.fromFavorite ? null : level, phrase, names }, this.prefs).status,
+      validation: CombinationValidator.validate({ ...combo, intensity, level: opts.fromFavorite ? null : (combo.band || level), phrase, names }, this.prefs).status,
     };
     this.history.push(round);
     this.director.afterRound(this.session, round);

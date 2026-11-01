@@ -11,7 +11,7 @@ function fill(t, ctx) {
 }
 /* "{ZONE}" = "el cuello de Ana" o "su cuello" si la pareja ya se nombró; "{ZONE:bare}" = "el cuello" */
 function zoneText(frame, ctx, poss) {
-  return frame.replace(/\{ZONE:bare\}/g, ctx.zoneBare).replace(/\{ZONE\}/g, poss ? ctx.zonePoss : `${ctx.zoneBare} de ${ctx.partner}`);
+  return frame.replace(/\{ZONE:poss\}/g, ctx.zonePoss).replace(/\{ZONE:bare\}/g, ctx.zoneBare).replace(/\{ZONE\}/g, poss ? ctx.zonePoss : `${ctx.zoneBare} de ${ctx.partner}`);
 }
 /* núcleo: verbo + forma + zona */
 function core(a, m, ctx, poss) {

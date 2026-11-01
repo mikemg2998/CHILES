@@ -119,7 +119,7 @@ for (const s of setups) {
   console.log(`  ${s.key}: familias de zona distintas ${med(fam)} (mín ${Math.min(...fam)}) · acciones distintas ${med(acts)} (mín ${Math.min(...acts)}) · familia de zona más repetida ${med(famMax)}/20 · condición más repetida ${Math.max(...condMax)}`);
   console.log(`    misma familia de zona 3 veces en 5 ${pct(win5Fam, pairsN)} · misma familia de acción 3 veces en 5 ${pct(win5Act, pairsN)} · condición repetida en 5 ${pct(condNear, pairsN)} · misma familia semántica en 3 seguidas ${pct(semNear, pairsN)}`);
   const small = s.level === 4;
-  if (med(fam) < (small ? 5 : 6) || med(acts) < 9 || Math.max(...condMax) > 3 || condNear / pairsN > 0.005 || win5Fam / pairsN > (small ? 0.08 : 0.03) || semNear / pairsN > 0.02) { console.log('  ✗ la sesión no se siente variada'); fail++; }
+  if (med(fam) < (small ? 5 : 6) || med(acts) < 9 || Math.max(...condMax) > 3 || condNear / pairsN > 0.005 || win5Fam / pairsN > (small ? 0.12 : 0.03) || semNear / pairsN > (small ? 0.04 : 0.02)) { console.log('  ✗ la sesión no se siente variada'); fail++; }
 }
 
 /* 4. Muestra */

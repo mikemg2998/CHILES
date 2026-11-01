@@ -43,7 +43,7 @@ export class SessionState {
     this.intensityHistory = []; this.purposes = [];
     this.feedback = []; // {round, kind, more}
     this.liked = []; this.changed = []; this.skipped = [];
-    this.familyScore = {}; this.zoneScore = {}; this.semanticScore = {}; this.actorScore = {};
+    this.familyScore = {}; this.zoneScore = {}; this.semanticScore = {}; this.actorScore = {}; this.blueprintScore = {};
     this.pressure = 0; this.pace = 0; // -1 … 1 preferencias aprendidas (MÁS / MENOS)
     this.lastFeedback = null; this.deepenStreak = 0;
     this.ended = null; this.lastMessage = null;
@@ -128,8 +128,22 @@ export class SessionDirector {
     const F = S.familyScore, Zs = S.zoneScore, Sem = S.semanticScore, maybe = S.maybeSet();
     const MAYBE = 0.15; // «quizá»: puede salir, pero no se asume
     const maybeAction = a => [...maybe].some(k => { const r = AVOIDS[k]; return (r.contact && r.contact.includes(a.contactType)) || (r.actionTags && r.actionTags.some(t => a.tags.includes(t))) || (r.families && r.families.includes(a.family)); }) ? MAYBE : 1;
+    const bpCount = {}; for (const r of history.rounds) bump(bpCount, r.blueprint, 1);
     return {
-      purpose,
+      purpose, maybeAction,
+      /* blueprint: familia y patrón según el propósito, continuidad o variación respecto al último, humor de hoy y feedback */
+      blueprint: b => {
+        let w = (P.fam[b.family] || 1) * (P.pattern[b.pattern] || 1);
+        if (purpose === 'DEEPEN' && last) w *= b.id === last.blueprint ? 4 : 0.5;
+        if ((purpose === 'MAINTAIN' || purpose === 'VARIATION') && last && b.id === last.blueprint) w *= 0.3;
+        if (purpose === 'EXPLORE') w *= 1 / (1 + 0.5 * (bpCount[b.id] || 0));
+        if (intents.has('cuidar') && ['masaje', 'abrazo', 'cabello'].includes(b.family)) w *= 1.6;
+        if (intents.has('cerca') && b.pattern === 'MUTUAL') w *= 1.4;
+        if (intents.has('curiosidad') && b.pattern === 'DISCOVER') w *= 1.4;
+        if (intents.has('jugar') && ['caricia', 'aCiegas', 'mordisco'].includes(b.family)) w *= 1.3;
+        if (intents.has('tranquilo') && ['cuerpo', 'presion', 'mordisco'].includes(b.family)) w *= 0.5;
+        return w * scoreMul(S.blueprintScore, b.id);
+      },
       /* factor «quizá» de una combinación completa (acción, zona, condición): también pesa al elegir entre candidatos */
       maybe: (a, z, c) => maybeAction(a) * (maybe.has('intimo') && z.tags.includes('intimo') ? MAYBE : 1) * (c && [...maybe].some(k => AVOIDS[k].condFamilies && AVOIDS[k].condFamilies.includes(c.family)) ? MAYBE : 1),
       action: a => {
@@ -187,16 +201,16 @@ export class SessionDirector {
     S.feedback.push({ round: round.n, kind, more: extra.more ?? null });
     S.lastFeedback = { round: round.n, kind };
     if (kind === 'like') {
-      S.liked.push(round.id); bump(S.familyScore, a.family, 1); bump(S.zoneScore, z.family, 0.8); bump(S.semanticScore, sem, 0.5); bump(S.actorScore, a.actor, 0.5);
+      S.liked.push(round.id); bump(S.familyScore, a.family, 1); bump(S.zoneScore, z.family, 0.8); bump(S.semanticScore, sem, 0.5); bump(S.actorScore, a.actor, 0.5); bump(S.blueprintScore, round.blueprint, 1);
       if (round.cond) bump(S.familyScore, 'cond:' + round.families.cond, 0.6);
       if (extra.more === true) { if (a.tags.includes('presion') || (round.families.method === 'presion')) S.pressure = Math.min(1, S.pressure + 0.35); else S.pace = Math.min(1, S.pace + 0.35); S.intraLevelIntensity = Math.min(1, S.intraLevelIntensity + 0.3); }
       if (extra.more === false) { if (a.tags.includes('presion') || (round.families.method === 'presion')) S.pressure = Math.max(-1, S.pressure - 0.35); else S.pace = Math.max(-1, S.pace - 0.35); S.intraLevelIntensity = Math.max(-1, S.intraLevelIntensity - 0.3); }
     } else if (kind === 'cambia') {
-      S.changed.push(round.id); bump(S.semanticScore, sem, -1.2); bump(S.familyScore, a.family, -0.3);
+      S.changed.push(round.id); bump(S.semanticScore, sem, -1.2); bump(S.familyScore, a.family, -0.3); bump(S.blueprintScore, round.blueprint, -1);
       if (round.cond) bump(S.familyScore, 'cond:' + round.families.cond, -0.5);
-    } else if (kind === 'paso') {
-      S.skipped.push(round.id); bump(S.familyScore, a.family, -1.5); bump(S.semanticScore, sem, -2.5); bump(S.zoneScore, z.family, -0.5);
-      if (round.cond) bump(S.familyScore, 'cond:' + round.families.cond, -1);
+    } else if (kind === 'paso') { // «esta no, ahora»: no se infiere una preferencia íntima de un solo evento
+      S.skipped.push(round.id); bump(S.familyScore, a.family, -0.5); bump(S.semanticScore, sem, -1.5); bump(S.blueprintScore, round.blueprint, -0.6);
+      if (round.cond) bump(S.familyScore, 'cond:' + round.families.cond, -0.6);
     }
   }
 

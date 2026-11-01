@@ -2,6 +2,7 @@
    CombinationValidator: última barrera. Detecta redundancia, contradicción, duración absurda,
    condición irrelevante, fuera de nivel y frase robótica. */
 import { ZONE, ACTION, METHOD, CONDITION, METHODS, CONDITIONS, CONFLICTS, LEVELS } from './catalog.js';
+import { mechanicsCheck } from './body.js';
 
 const has = (arr, t) => arr.includes(t);
 
@@ -49,12 +50,7 @@ export const CompatibilityEngine = {
     if (c.needsZoneEnd && !/\{ZONE\}$/.test(action.frame)) return false;
     if (c.slot === 'prep' && / y /.test(action.frame)) return false; // «Sentaos frente a frente y apoya la mano y súbela»: dos «y» seguidas // la elección de zona solo lee bien si la zona cierra la frase
     if (method && c.denyDims.includes(method.dim)) return false;
-    if (c.id === 'detras' && ['abrazar', 'entrelazar', 'pegarCuerpo', 'frotar'].includes(action.id)) return false;
-    if (c.id === 'frenteAFrente' && ['abrazar', 'pegarCuerpo', 'frotar', 'acercarse', 'respirarCerca'].includes(action.id)) return false;
-    if (c.id === 'tumbados' && ['abrazar', 'entrelazar', 'pegarCuerpo', 'frotar', 'jugarCabello', 'mecer', 'sentarseEncima', 'pesoEncima', 'palmasContraPalmas'].includes(action.id)) return false;
-    if (c.id === 'detras' && ['mecer', 'sentarseEncima', 'pesoEncima', 'palmasContraPalmas', 'rodearConPiernas', 'besoProfundo', 'atraparLabio'].includes(action.id)) return false;
-    if (c.id === 'frenteAFrente' && ['mecer', 'pesoEncima', 'rodearConPiernas', 'sentarseEncima'].includes(action.id)) return false;
-    if ((c.id === 'empezandoPor' || c.id === 'repetirEn' || c.id === 'oLoQuePrefiera') && !/\{ZONE/.test(action.frame)) return false; // frases sin zona libre no admiten otra zona
+    if (c.orient && !mechanicsCheck(action, zone, c).ok) return false; // la postura que pide la condición tiene que cuadrar con la que el gesto ya implica
     if (c.id === 'mirandose') { // contacto visual: solo si la postura lo permite de verdad
       if (action.contactType === 'ninguno' && zone.id !== 'labios' && zone.id !== 'rostro') return false;
       if (action.contactType === 'boca' && (zone.id === 'labios' || ['muslosInt', 'muslos', 'piernas', 'pies', 'pantorrillas', 'entrepierna', 'gluteos'].includes(zone.id) || zone.tags.includes('intimo'))) return false;

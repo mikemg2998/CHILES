@@ -230,8 +230,8 @@ function renderDebug() {
   const d = engine.lastDebug; if (!d) return; el.hidden = false;
   const S = engine.session;
   const topW = Object.entries(d.candidateWeights || {}).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k, v]) => `${k} ${v}`).join(', ');
-  el.textContent = `purpose ${d.selectedPurpose} (${d.purposeReason}) · pattern ${d.selectedPattern} · target ${d.target} · family ${d.selectedFamily} · quality ${d.finalQualityScore}${d.fallback ? ' · FALLBACK' : ''}\n` +
-    `weights: ${topW}\nrejected: ${JSON.stringify(d.rejectionReasons)}\ncandidates: ${(d.candidates || []).map(c => `${c.quality} ${c.phrase}`).join(' | ')}\n` +
+  el.textContent = `purpose ${d.selectedPurpose} (${d.purposeReason}) · blueprint ${d.selectedBlueprint} · pattern ${d.selectedPattern} · target ${d.target} · family ${d.selectedFamily} · complexity ${d.positionComplexity} · quality ${d.finalQualityScore}${d.fallback ? ' · FALLBACK' : ''}\n` +
+    `blueprints: ${Object.entries(d.blueprintWeights || {}).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k, v]) => `${k} ${v}`).join(', ')}\nweights: ${topW}\nrejected: ${JSON.stringify(d.rejectionReasons)}\ncandidates: ${(d.candidates || []).map(c => `${c.quality} ${c.phrase}`).join(' | ')}\n` +
     `session: level ${S.level} · rounds ${S.rounds} · intraLevel ${S.intraLevelIntensity.toFixed(2)} · calm ${S.calm()} · pressure ${S.pressure.toFixed(2)} · pace ${S.pace.toFixed(2)} · familyScore ${JSON.stringify(S.familyScore)}`;
 }
 function renderFavBtn() { $('#btnFav').classList.toggle('on', !!current && engine.state.favorites.some(f => f.id === current.id)); }
