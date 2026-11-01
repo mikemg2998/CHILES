@@ -1,13 +1,29 @@
-/* Catálogo v2. Intensidad interna 1–10. Niveles: RELAJADO 1–3.5 · SENSUAL 3.5–6.5 · ATREVIDO 6.5–10.
-   Cada elemento dice en qué niveles entra (levels: {1:peso,2:peso,3:peso}) y con qué es compatible.
+/* Catálogo v3. Intensidad interna 1–10. Cuatro niveles:
+   1 CONEXIÓN 1–3.5 · 2 DESEO 3.5–6.5 · 3 EXPLORACIÓN 5.5–8.5 (claramente sexual, sin anatomía íntima)
+   4 INTIMIDAD 7–10 (anatomía íntima; el juego sabe cuándo dejar de dirigir).
+   El contenido se escribe en tres bandas (levels: {1,2,3}) y se expande a cuatro niveles al cargar:
+   la banda 3 alimenta Exploración e Intimidad; las zonas íntimas solo existen en Intimidad.
    Regla de oro: antes de añadir algo, preguntarse con qué combina bien. */
 
 export const LEVELS = {
-  1: { id: 1, key: 'relajado', name: 'Relajado', min: 1, max: 3.5 },
-  2: { id: 2, key: 'sensual', name: 'Sensual', min: 3.5, max: 6.5 },
-  3: { id: 3, key: 'atrevido', name: 'Atrevido', min: 6.5, max: 10 },
+  1: { id: 1, key: 'conexion', name: 'Conexión', min: 1, lo: 1, max: 3.5, tagline: 'No tenemos que llegar a ningún sitio.' },
+  2: { id: 2, key: 'deseo', name: 'Deseo', min: 3.5, lo: 3, max: 6.5, tagline: 'Descubrir qué nos enciende.' },
+  3: { id: 3, key: 'exploracion', name: 'Exploración', min: 6, lo: 6, max: 8.5, tagline: 'Sin prisa, con las manos y la boca.' },
+  4: { id: 4, key: 'intimidad', name: 'Intimidad', min: 7, lo: 6.5, max: 10, tagline: 'Elegimos juntos hasta dónde queremos llegar.' },
 };
-export const LEVEL_BY_KEY = { relajado: 1, sensual: 2, atrevido: 3, progresivo: 1 };
+/* claves antiguas (partidas guardadas) → nivel */
+export const LEVEL_BY_KEY = { conexion: 1, deseo: 2, exploracion: 3, intimidad: 4, relajado: 1, sensual: 2, atrevido: 3, progresivo: 1 };
+export const LEVEL_KEYS = ['conexion', 'deseo', 'exploracion', 'intimidad'];
+/* banda 3 → niveles 3 y 4. intimate: la zona solo existe en Intimidad. hot: en Intimidad pesa igual que en Exploración; si no, la mitad */
+const expand = (levels, { intimate = false, hot = true } = {}) => {
+  const out = {};
+  if (intimate) { if (levels[3]) out[4] = levels[3]; return out; }
+  if (levels[1]) out[1] = levels[1];
+  if (levels[2]) out[2] = levels[2];
+  if (levels[3]) { out[3] = levels[3]; out[4] = hot ? levels[3] * 0.7 : levels[3] * 0.35; }
+  if (levels[4]) out[4] = levels[4];
+  return out;
+};
 
 export const GROUPS = {
   cabeza: { name: 'Cabeza, rostro y cuello', default: true },
@@ -16,8 +32,8 @@ export const GROUPS = {
   brazos: { name: 'Brazos y manos', default: true },
   piernas: { name: 'Piernas y pies', default: true },
   gluteos: { name: 'Glúteos y entrepierna', default: true },
-  intimaF: { name: 'Anatomía íntima femenina', default: false, intimate: true, sex: 'F' },
-  intimaM: { name: 'Anatomía íntima masculina', default: false, intimate: true, sex: 'M' },
+  intimaF: { name: 'Anatomía íntima femenina', default: true, intimate: true, sex: 'F' },
+  intimaM: { name: 'Anatomía íntima masculina', default: true, intimate: true, sex: 'M' },
 };
 
 /* ZONAS. n: nombre con artículo · np: forma con posesivo (su/sus) · intensity 1–10
@@ -25,7 +41,7 @@ export const GROUPS = {
          tumbado (mejor tumbados) · sensible · intimo */
 /* family: familia anatómica para el balanceo (no repetir la misma idea en tiradas cercanas) */
 const ZONE_FAMILY = {"cabello": "rostro", "frente": "rostro", "mejillas": "rostro", "rostro": "rostro", "orejas": "cuello", "labios": "boca", "cuello": "cuello", "nuca": "cuello", "hombros": "espalda", "espalda": "espalda", "lumbar": "espalda", "pecho": "torso", "abdomen": "torso", "abdomenBajo": "vientre", "cintura": "torso", "caderas": "vientre", "senos": "senos", "pezones": "senos", "brazos": "brazos", "manos": "brazos", "dedos": "brazos", "muslos": "muslos", "muslosInt": "muslos", "piernas": "piernas", "pantorrillas": "piernas", "pies": "piernas", "gluteos": "gluteos", "entrepierna": "entrepierna", "vulva": "intimaF", "labiosMayores": "intimaF", "labiosMenores": "intimaF", "clitoris": "intimaF", "vagina": "intimaF", "pene": "intimaM", "glande": "intimaM", "testiculos": "intimaM", "clavicula": "cuello", "sienes": "rostro", "munecas": "brazos", "palmas": "brazos", "costados": "torso", "rodillas": "piernas", "tobillos": "piernas", "ingles": "entrepierna"};
-const Z = (id, n, group, intensity, tags, levels, np) => ({ id, n, np: np || n.replace(/^(el|la) /, 'su ').replace(/^(los|las) /, 'sus '), group, family: ZONE_FAMILY[id], intensity, tags, levels });
+const Z = (id, n, group, intensity, tags, levels, np) => ({ id, n, np: np || n.replace(/^(el|la) /, 'su ').replace(/^(los|las) /, 'sus '), group, family: ZONE_FAMILY[id], intensity, tags, levels: expand(levels, { intimate: tags.includes('intimo'), hot: intensity >= 6.5 }) });
 export const ZONES = [
   Z('cabello', 'el cabello', 'cabeza', 1.5, ['detras'], { 1: 3 }),
   Z('frente', 'la frente', 'cabeza', 1, ['frontal'], { 1: 1.2 }),
@@ -92,7 +108,7 @@ const INTIMA = [...INTIMA_F, ...INTIMA_M];
    tags: movimiento · quieto · circular · ligero · presion · repetido · anticipacion · voz · ropa
    concepts: ideas semánticas para detectar redundancias (ligero, quieto, cerca, aliento, voz, anticipacion)
    manner: 'baja' si la acción ya lleva su manera implícita y una forma añadida suele sobrar */
-const A = (o) => Object.assign({ tags: [], concepts: [], denyConditions: [], denyMethods: [] }, o);
+const A = (o) => { const a = Object.assign({ tags: [], concepts: [], denyConditions: [], denyMethods: [], pattern: 'GIVE' }, o); a.levels = expand(a.levels); if (a.tags.includes('anticipacion') && a.pattern === 'GIVE') a.pattern = 'DISCOVER'; return a; };
 export const ACTIONS = [
   // --- base (nivel 1, también en 2 y 3 con sus zonas) ---
   A({ id: 'acariciar', actor: 'mano', family: 'caricia', name: 'Acariciar', verb: 'Acaricia', frame: '{V} {M} {ZONE}', intensity: 2.5, contactType: 'mano', durationType: 'sostenible',
@@ -101,7 +117,7 @@ export const ACTIONS = [
   A({ id: 'masajear', actor: 'manos', family: 'masaje', name: 'Masajear', verb: 'Masajea', frame: '{V} {M} {ZONE}', intensity: 2.5, contactType: 'mano', durationType: 'sostenible',
     levels: { 1: 3, 2: 1.2, 3: 0.4 }, tags: ['movimiento', 'circular', 'presion'],
     zones: ['hombros', 'nuca', 'cuello', 'espalda', 'lumbar', 'brazos', 'manos', 'dedos', 'muslos', 'piernas', 'pantorrillas', 'pies', 'caderas', 'gluteos', 'pecho'] }),
-  A({ id: 'abrazar', actor: 'brazos', family: 'abrazo', manner: 'baja', name: 'Abrazar', verb: 'Abraza', frame: '{V} {M} a {P} rodeando {ZONE:bare}', frameP: 'Abrázale {M} rodeando {ZONE:bare}', intensity: 1.5, contactType: 'cuerpo', durationType: 'sostenible',
+  A({ id: 'abrazar', pattern: 'MUTUAL', actor: 'brazos', family: 'abrazo', manner: 'baja', name: 'Abrazar', verb: 'Abraza', frame: '{V} {M} a {P} rodeando {ZONE:bare}', frameP: 'Abrázale {M} rodeando {ZONE:bare}', intensity: 1.5, contactType: 'cuerpo', durationType: 'sostenible',
     levels: { 1: 2.5, 2: 0.8 }, tags: ['quieto'], concepts: ['contacto'],
     zones: ['cintura', 'hombros', 'espalda'] }),
   A({ id: 'apoyarMano', actor: 'mano', family: 'masaje', manner: 'baja', name: 'Apoyar la mano', verb: 'Apoya', frame: '{V} {M} la mano sobre {ZONE}, sin moverla', intensity: 1.5, contactType: 'mano', durationType: 'sostenible',
@@ -121,7 +137,7 @@ export const ACTIONS = [
   A({ id: 'respirarCerca', actor: 'aliento', manner: 'baja', family: 'anticipacion', name: 'Respirar cerca', verb: 'Respira', frame: '{V} {M} muy cerca de {ZONE}, sin tocar', intensity: 3.5, contactType: 'ninguno', durationType: 'breve',
     levels: { 2: 1.8, 3: 1 }, tags: ['anticipacion'], concepts: ['anticipacion', 'cerca', 'aliento'],
     zones: ['cuello', 'nuca', 'orejas', 'senos', 'muslosInt', 'labios', 'abdomenBajo', 'vulva', 'pene', 'entrepierna', 'pezones'] }),
-  A({ id: 'entrelazar', actor: 'dedos', family: 'abrazo', manner: 'baja', name: 'Entrelazar los dedos', verb: 'Entrelaza', frame: '{V} {M} tus dedos con los de {P}', frameP: '{V} {M} tus dedos con los suyos', intensity: 1, contactType: 'mano', durationType: 'sostenible',
+  A({ id: 'entrelazar', pattern: 'MUTUAL', actor: 'dedos', family: 'abrazo', manner: 'baja', name: 'Entrelazar los dedos', verb: 'Entrelaza', frame: '{V} {M} tus dedos con los de {P}', frameP: '{V} {M} tus dedos con los suyos', intensity: 1, contactType: 'mano', durationType: 'sostenible',
     levels: { 1: 2 }, tags: ['quieto'], concepts: ['contacto'], zones: ['manos'], denyMethods: ['muySuave', 'suave', 'moderada'] }),
   A({ id: 'besar', actor: 'labios', family: 'beso', name: 'Besar', verb: 'Besa', frame: '{V} {M} {ZONE}', intensity: 4.5, contactType: 'boca', durationType: 'normal',
     levels: { 1: 1, 2: 3, 3: 0.35 }, tags: ['movimiento', 'repetido'],
@@ -133,7 +149,7 @@ export const ACTIONS = [
   A({ id: 'recorrerLabios', actor: 'labios', family: 'beso', name: 'Recorrer con los labios', verb: 'Recorre', frame: '{V} {M} {ZONE} con los labios', intensity: 5.5, contactType: 'boca', durationType: 'normal',
     levels: { 2: 2.5, 3: 0.6 }, tags: ['movimiento', 'ligero'],
     zones: ['cuello', 'hombros', 'espalda', 'lumbar', 'abdomen', 'pecho', 'cintura', 'caderas', 'muslos', 'muslosInt', 'senos', 'abdomenBajo', 'entrepierna', 'gluteos'] }),
-  A({ id: 'mordisquear', actor: 'dientes', family: 'mordisco', name: 'Mordisquear', verb: 'Mordisquea', frame: '{V} {M} {ZONE}', intensity: 5.5, contactType: 'boca', durationType: 'breve', denyMethods: ['lento', 'muyLento', 'recorrido', 'constante'],
+  A({ id: 'mordisquear', actor: 'dientes', family: 'mordisco', name: 'Mordisquear', verb: 'Mordisquea', frame: '{V} {M} {ZONE}', intensity: 5.5, contactType: 'boca', durationType: 'breve', denyMethods: ['lento', 'muyLento', 'recorrido', 'constante', 'variable', 'impredecible', 'pausaContacto', 'acelerando', 'gradual', 'alCompas'],
     levels: { 2: 1.5, 3: 0.8 }, tags: ['movimiento', 'repetido'],
     zones: ['labios', 'cuello', 'orejas', 'hombros', 'nuca', 'cintura', 'caderas', 'muslosInt', 'senos', 'pezones', 'gluteos'] }),
   A({ id: 'apartarRopa', actor: 'manos', family: 'ropa', manner: 'baja', name: 'Apartar la ropa', verb: 'Aparta', frame: '{V} {M} la ropa de {ZONE} y descubre la piel', intensity: 5, contactType: 'mano', durationType: 'breve',
@@ -141,9 +157,9 @@ export const ACTIONS = [
     zones: ['hombros', 'espalda', 'abdomen', 'cintura', 'caderas', 'pecho', 'senos', 'muslos', 'lumbar', 'gluteos', 'abdomenBajo'] }),
   A({ id: 'susurrar', actor: 'voz', family: 'voz', manner: 'baja', name: 'Susurrar', verb: 'Susurra', frame: '{V} {M} algo a {P} al oído', frameP: 'Susúrrale {M} algo al oído', intensity: 4, contactType: 'ninguno', durationType: 'breve',
     levels: { 2: 1.5, 3: 0.5 }, tags: ['voz'], concepts: ['voz', 'cerca'], zones: ['orejas'] }),
-  A({ id: 'pegarPecho', actor: 'pecho', manner: 'baja', family: 'cuerpo', name: 'Pegar el pecho', verb: 'Pega', frame: '{V} {M} tu pecho a {ZONE}', intensity: 5, contactType: 'cuerpo', durationType: 'sostenible',
+  A({ id: 'pegarPecho', pattern: 'MUTUAL', actor: 'pecho', manner: 'baja', family: 'cuerpo', name: 'Pegar el pecho', verb: 'Pega', frame: '{V} {M} tu pecho a {ZONE}', intensity: 5, contactType: 'cuerpo', durationType: 'sostenible',
     levels: { 2: 1.4, 3: 0.5 }, tags: ['quieto'], concepts: ['contacto', 'cerca'], zones: ['espalda', 'pecho'] }),
-  A({ id: 'pegarCaderas', actor: 'caderas', manner: 'baja', family: 'cuerpo', name: 'Pegar las caderas', verb: 'Pega', frame: '{V} {M} tus caderas a {ZONE}', intensity: 6, contactType: 'cuerpo', durationType: 'sostenible',
+  A({ id: 'pegarCaderas', pattern: 'MUTUAL', actor: 'caderas', manner: 'baja', family: 'cuerpo', name: 'Pegar las caderas', verb: 'Pega', frame: '{V} {M} tus caderas a {ZONE}', intensity: 6, contactType: 'cuerpo', durationType: 'sostenible',
     levels: { 2: 0.8, 3: 1 }, tags: ['quieto'], concepts: ['contacto', 'cerca'], zones: ['gluteos'] }),
   A({ id: 'unas', actor: 'uñas', family: 'caricia', name: 'Pasar las uñas', verb: 'Pasa', frame: '{V} {M} las uñas por {ZONE}', intensity: 4.5, contactType: 'mano', durationType: 'normal',
     levels: { 2: 2, 3: 0.5 }, tags: ['movimiento', 'ligero'],
@@ -170,11 +186,11 @@ export const ACTIONS = [
   A({ id: 'introducirDedo', actor: 'dedo', family: 'manoIntima', name: 'Introducir un dedo', verb: 'Introduce', frame: '{V} {M} un dedo en {ZONE}', intensity: 9.5, contactType: 'mano', durationType: 'normal',
     levels: { 3: 1.5 }, tags: ['movimiento'], zones: ['vagina'],
     denyMethods: ['firme', 'moderada', 'impredecible', 'circulos', 'recorrido', 'pequenos'] }),
-  A({ id: 'frotarCaderas', actor: 'caderas', family: 'cuerpo', name: 'Frotar las caderas', verb: 'Frota', frame: '{V} {M} tus caderas contra {ZONE}', intensity: 7.5, contactType: 'cuerpo', durationType: 'normal',
+  A({ id: 'frotarCaderas', pattern: 'MUTUAL', actor: 'caderas', family: 'cuerpo', name: 'Frotar las caderas', verb: 'Frota', frame: '{V} {M} tus caderas contra {ZONE}', intensity: 7.5, contactType: 'cuerpo', durationType: 'normal',
     levels: { 3: 1 }, tags: ['movimiento'], concepts: ['contacto'], zones: ['gluteos', 'entrepierna'] }),
-  A({ id: 'deslizarMuslo', actor: 'muslo', family: 'cuerpo', name: 'Deslizar el muslo', verb: 'Desliza', frame: '{V} {M} tu muslo contra {ZONE}', intensity: 7, contactType: 'cuerpo', durationType: 'normal',
+  A({ id: 'deslizarMuslo', pattern: 'MUTUAL', actor: 'muslo', family: 'cuerpo', name: 'Deslizar el muslo', verb: 'Desliza', frame: '{V} {M} tu muslo contra {ZONE}', intensity: 7, contactType: 'cuerpo', durationType: 'normal',
     levels: { 3: 0.9 }, tags: ['movimiento'], concepts: ['contacto'], zones: ['entrepierna', 'muslosInt'] }),
-  A({ id: 'frotarPecho', actor: 'pecho', family: 'cuerpo', name: 'Frotar el pecho', verb: 'Frota', frame: '{V} {M} tu pecho contra {ZONE}', intensity: 6.5, contactType: 'cuerpo', durationType: 'normal',
+  A({ id: 'frotarPecho', pattern: 'MUTUAL', actor: 'pecho', family: 'cuerpo', name: 'Frotar el pecho', verb: 'Frota', frame: '{V} {M} tu pecho contra {ZONE}', intensity: 6.5, contactType: 'cuerpo', durationType: 'normal',
     levels: { 3: 0.7 }, tags: ['movimiento'], concepts: ['contacto'], zones: ['espalda', 'pecho', 'senos'] }),
   A({ id: 'apretar', actor: 'mano', family: 'presion', name: 'Apretar', verb: 'Aprieta', frame: '{V} {M} {ZONE} con la mano', intensity: 6, contactType: 'mano', durationType: 'breve',
     levels: { 2: 0.6, 3: 1.5 }, tags: ['presion', 'repetido'],
@@ -190,20 +206,20 @@ export const ACTIONS = [
     levels: { 1: 2.5 }, tags: ['movimiento', 'ligero'], zones: ['cabello'] }),
   A({ id: 'masajeCabeza', actor: 'yemas', family: 'masaje', name: 'Masajear la cabeza', verb: 'Masajea', frame: '{V} {M} el cuero cabelludo de {P} con las yemas', frameP: 'Masajéale {M} el cuero cabelludo con las yemas', intensity: 2, contactType: 'mano', durationType: 'sostenible',
     levels: { 1: 2 }, tags: ['movimiento', 'circular', 'presion'], zones: ['cabello'] }),
-  A({ id: 'frenteConFrente', actor: 'frente', manner: 'baja', family: 'abrazo', name: 'Frente con frente', verb: 'Apoya', frame: '{V} {M} tu frente en la de {P} y respirad un momento así', frameP: '{V} {M} tu frente en la suya y respirad un momento así', intensity: 1.5, contactType: 'cuerpo', durationType: 'sostenible',
+  A({ id: 'frenteConFrente', pattern: 'MUTUAL', actor: 'frente', manner: 'baja', family: 'abrazo', name: 'Frente con frente', verb: 'Apoya', frame: '{V} {M} tu frente en la de {P} y respirad un momento así', frameP: '{V} {M} tu frente en la suya y respirad un momento así', intensity: 1.5, contactType: 'cuerpo', durationType: 'sostenible',
     levels: { 1: 2.5, 2: 0.8 }, tags: ['quieto'], concepts: ['contacto', 'cerca', 'aliento', 'quieto'], zones: ['frente'], denyMethods: ['muySuave', 'suave', 'moderada', 'quieto', 'unosSegundos', 's20', 's30'] }),
   A({ id: 'besarPalma', actor: 'labios', manner: 'baja', family: 'beso', name: 'Besar la palma', verb: 'Besa', frame: '{V} {M} la palma de la mano de {P} y ciérrale los dedos sobre el beso', frameP: 'Bésale {M} la palma de la mano y ciérrale los dedos sobre el beso', intensity: 2, contactType: 'boca', durationType: 'breve',
     levels: { 1: 2 }, tags: ['quieto'], concepts: ['contacto'], zones: ['manos'] }),
-  A({ id: 'rozarNariz', actor: 'nariz', manner: 'baja', family: 'caricia', name: 'Rozar la nariz', verb: 'Roza', frame: '{V} {M} la nariz de {P} con la tuya', frameP: 'Rózale {M} la nariz con la tuya', intensity: 2, contactType: 'cuerpo', durationType: 'breve',
+  A({ id: 'rozarNariz', pattern: 'MUTUAL', actor: 'nariz', manner: 'baja', family: 'caricia', name: 'Rozar la nariz', verb: 'Roza', frame: '{V} {M} la nariz de {P} con la tuya', frameP: 'Rózale {M} la nariz con la tuya', intensity: 2, contactType: 'cuerpo', durationType: 'breve',
     levels: { 1: 2 }, tags: ['movimiento', 'ligero'], concepts: ['ligero', 'cerca'], zones: ['rostro'] }),
-  A({ id: 'abrazarDetras', actor: 'pecho', manner: 'baja', family: 'abrazo', name: 'Abrazar por detrás', verb: 'Abraza', frame: '{V} {M} a {P} por detrás, con tu pecho pegado a su espalda', frameP: 'Abrázale {M} por detrás, con tu pecho pegado a su espalda', intensity: 2.5, contactType: 'cuerpo', durationType: 'sostenible',
+  A({ id: 'abrazarDetras', pattern: 'MUTUAL', actor: 'pecho', manner: 'baja', family: 'abrazo', name: 'Abrazar por detrás', verb: 'Abraza', frame: '{V} {M} a {P} por detrás, con tu pecho pegado a su espalda', frameP: 'Abrázale {M} por detrás, con tu pecho pegado a su espalda', intensity: 2.5, contactType: 'cuerpo', durationType: 'sostenible',
     levels: { 1: 2, 2: 1.2 }, tags: ['quieto'], concepts: ['contacto', 'postura', 'cerca'], zones: ['espalda'] }),
   A({ id: 'manosCalientes', actor: 'manos', manner: 'baja', family: 'masaje', name: 'Manos calientes', verb: 'Frota', frame: '{V} tus manos hasta calentarlas y apóyalas {M} sobre {ZONE}', intensity: 2, contactType: 'mano', durationType: 'sostenible',
     levels: { 1: 2.5, 2: 0.6 }, tags: ['quieto'], concepts: ['contacto', 'quieto'], zones: ['espalda', 'abdomen', 'lumbar', 'cuello', 'muslos', 'pecho'] }),
   A({ id: 'pulgares', actor: 'pulgares', family: 'masaje', name: 'Presionar con los pulgares', verb: 'Presiona', frame: '{V} {M} {ZONE} con los pulgares', intensity: 2.5, contactType: 'mano', durationType: 'sostenible',
     levels: { 1: 2.5, 2: 0.8 }, tags: ['movimiento', 'presion', 'circular'], zones: ['hombros', 'nuca', 'lumbar', 'pies', 'manos', 'muslos'] }),
   A({ id: 'soplar', actor: 'aliento', manner: 'baja', family: 'anticipacion', name: 'Soplar', verb: 'Sopla', frame: '{V} {M} sobre {ZONE}, muy cerca de la piel', intensity: 3.5, contactType: 'ninguno', durationType: 'breve',
-    levels: { 1: 0.8, 2: 2, 3: 0.6 }, tags: ['anticipacion'], concepts: ['anticipacion', 'aliento'], zones: ['cuello', 'nuca', 'orejas', 'espalda', 'abdomen', 'abdomenBajo', 'senos', 'muslosInt'] }),
+    levels: { 2: 2, 3: 0.6 }, tags: ['anticipacion'], concepts: ['anticipacion', 'aliento'], zones: ['cuello', 'nuca', 'orejas', 'espalda', 'abdomen', 'abdomenBajo', 'senos', 'muslosInt'] }),
   A({ id: 'recorrerLengua', actor: 'lengua', family: 'lengua', name: 'Recorrer con la lengua', verb: 'Recorre', frame: '{V} {M} {ZONE} con la punta de la lengua', intensity: 6, contactType: 'boca', durationType: 'normal',
     levels: { 2: 1.2, 3: 1.5 }, tags: ['movimiento', 'ligero'], zones: ['cuello', 'orejas', 'abdomen', 'abdomenBajo', 'pecho', 'lumbar', 'senos', 'muslosInt', 'pezones'] }),
   A({ id: 'sujetarCaderas', actor: 'manos', manner: 'baja', family: 'presion', name: 'Sujetar las caderas', verb: 'Sujeta', frame: '{V} {M} las caderas de {P} con las dos manos y acércalas a ti', frameP: 'Sujétale {M} las caderas con las dos manos y acércalas a ti', intensity: 5.5, contactType: 'mano', durationType: 'breve',
@@ -214,22 +230,22 @@ export const ACTIONS = [
     levels: { 2: 1.5 }, tags: ['movimiento', 'ropa'], concepts: ['anticipacion'], denyMethods: ['unosSegundos', 's20', 's30', 'hastaCambiar', 'buenRato', 'circulos', 'recorrido', 'pequenos'],
     zones: ['abdomen', 'lumbar', 'espalda', 'cintura', 'caderas', 'pecho', 'muslos'] }),
   // --- ampliación: gestos cotidianos de cercanía (Relajado) ---
-  A({ id: 'sujetarManos', actor: 'manos', manner: 'baja', family: 'abrazo', name: 'Sujetar las manos', verb: 'Toma', frame: '{V} {M} las dos manos de {P} entre las tuyas y quédate así un momento', frameP: 'Tómale {M} las dos manos entre las tuyas y quédate así un momento', intensity: 1, contactType: 'mano', durationType: 'sostenible',
+  A({ id: 'sujetarManos', pattern: 'MUTUAL', actor: 'manos', manner: 'baja', family: 'abrazo', name: 'Sujetar las manos', verb: 'Toma', frame: '{V} {M} las dos manos de {P} entre las tuyas y quédate así un momento', frameP: 'Tómale {M} las dos manos entre las tuyas y quédate así un momento', intensity: 1, contactType: 'mano', durationType: 'sostenible',
     levels: { 1: 2.5 }, tags: ['quieto'], concepts: ['contacto', 'quieto'], zones: ['manos'], denyMethods: ['muySuave', 'suave', 'moderada', 'quieto', 'unosSegundos', 's10', 's20', 's30'] }),
-  A({ id: 'apoyarCabeza', actor: 'cabeza', manner: 'baja', family: 'abrazo', name: 'Apoyar la cabeza', verb: 'Apoya', frame: '{V} {M} tu cabeza sobre {ZONE} y quédate ahí un momento', intensity: 1.5, contactType: 'cuerpo', durationType: 'sostenible',
+  A({ id: 'apoyarCabeza', pattern: 'MUTUAL', actor: 'cabeza', manner: 'baja', family: 'abrazo', name: 'Apoyar la cabeza', verb: 'Apoya', frame: '{V} {M} tu cabeza sobre {ZONE} y quédate ahí un momento', intensity: 1.5, contactType: 'cuerpo', durationType: 'sostenible',
     levels: { 1: 2.5, 2: 0.5 }, tags: ['quieto'], concepts: ['contacto', 'quieto'], zones: ['hombros', 'pecho', 'muslos'], denyMethods: ['muySuave', 'suave', 'moderada', 'quieto', 'unosSegundos'] }),
-  A({ id: 'palmasContraPalmas', actor: 'manos', manner: 'baja', family: 'abrazo', name: 'Palma contra palma', verb: 'Pon', frame: '{V} {M} tus palmas contra las de {P} y empujad un poco, notando la fuerza del otro', frameP: '{V} {M} tus palmas contra las suyas y empujad un poco, notando la fuerza del otro', intensity: 1.5, contactType: 'cuerpo', durationType: 'sostenible',
+  A({ id: 'palmasContraPalmas', pattern: 'MUTUAL', actor: 'manos', manner: 'baja', family: 'abrazo', name: 'Palma contra palma', verb: 'Pon', frame: '{V} {M} tus palmas contra las de {P} y empujad un poco, notando la fuerza del otro', frameP: '{V} {M} tus palmas contra las suyas y empujad un poco, notando la fuerza del otro', intensity: 1.5, contactType: 'cuerpo', durationType: 'sostenible',
     levels: { 1: 2 }, tags: ['quieto', 'presion'], concepts: ['contacto'], zones: ['palmas'], denyMethods: ['muySuave', 'suave', 'moderada', 'firme', 'quieto', 'unosSegundos', 's10'] }),
-  A({ id: 'mecer', actor: 'cuerpo', manner: 'baja', family: 'abrazo', name: 'Mecerse', verb: 'Abraza', frame: '{V} {M} a {P} y meceos de lado a lado, de pie', frameP: 'Abrázale {M} y meceos de lado a lado, de pie', intensity: 1.5, contactType: 'cuerpo', durationType: 'sostenible',
+  A({ id: 'mecer', pattern: 'MUTUAL', actor: 'cuerpo', manner: 'baja', family: 'abrazo', name: 'Mecerse', verb: 'Abraza', frame: '{V} {M} a {P} y meceos de lado a lado, de pie', frameP: 'Abrázale {M} y meceos de lado a lado, de pie', intensity: 1.5, contactType: 'cuerpo', durationType: 'sostenible',
     levels: { 1: 2 }, tags: ['movimiento'], concepts: ['contacto', 'postura'], zones: ['cintura', 'espalda'], denyMethods: ['circulos', 'recorrido', 'pequenos', 'firme', 'moderada', 'muySuave', 'suave', 'constante', 'variable', 'impredecible', 'gradual', 'empezarSuave', 'pausaContacto', 'acelerando', 'unSoloDedo', 'conLaPalma', 'dorsoMano', 'apenasRozando', 'alternandoLados'] }),
   A({ id: 'tamborilear', actor: 'dedos', family: 'caricia', name: 'Tamborilear', verb: 'Tamborilea', frame: '{V} {M} con los dedos sobre {ZONE}, como si tocaras el piano', intensity: 2.5, contactType: 'mano', durationType: 'normal',
     levels: { 1: 2, 2: 0.6 }, tags: ['movimiento', 'ligero', 'repetido', 'dedos'], denyMethods: ['recorrido', 'circulos', 'quieto'],
     zones: ['espalda', 'brazos', 'muslos', 'abdomen', 'pecho', 'hombros', 'manos', 'lumbar'] }),
   A({ id: 'trazarNombre', actor: 'dedo', family: 'caricia', name: 'Escribir con el dedo', verb: 'Escribe', frame: '{V} {M} tu nombre con un dedo sobre {ZONE} y que {P} lo adivine', frameP: '{V} {M} tu nombre con un dedo sobre {ZONE} y que lo adivine', intensity: 2.5, contactType: 'mano', durationType: 'normal',
-    levels: { 1: 2.5, 2: 1 }, tags: ['movimiento', 'ligero', 'dedos'], concepts: ['ligero', 'juego'], denyMethods: ['circulos', 'pequenos', 'recorrido', 'quieto', 'constante', 'variable'],
+    levels: { 1: 2.5, 2: 1 }, tags: ['movimiento', 'ligero', 'dedos'], concepts: ['ligero', 'juego'], denyMethods: ['circulos', 'pequenos', 'recorrido', 'quieto', 'constante', 'variable', 's10', 's20', 's30', 'buenRato', 'unosSegundos', 'hastaCambiar', 'contandoDiez', 'tresVeces', 'alCompas', 'pausado', 'acelerando', 'gradual', 'impredecible', 'pausaContacto'],
     zones: ['espalda', 'brazos', 'muslos', 'abdomen', 'palmas', 'pecho', 'lumbar'] }),
   A({ id: 'recorrerContorno', actor: 'dedo', family: 'caricia', name: 'Recorrer el contorno', verb: 'Recorre', frame: '{V} {M} el contorno de {ZONE} con un solo dedo', intensity: 3, contactType: 'mano', durationType: 'normal',
-    levels: { 1: 1.5, 2: 2, 3: 0.5 }, tags: ['movimiento', 'ligero', 'dedos'], concepts: ['ligero'], denyMethods: ['circulos', 'pequenos', 'recorrido'],
+    levels: { 1: 1.5, 2: 2, 3: 0.5 }, tags: ['movimiento', 'ligero', 'dedos'], concepts: ['ligero'], denyMethods: ['circulos', 'pequenos', 'recorrido', 'constante', 'variable', 'impredecible', 'acelerando'],
     zones: ['rostro', 'labios', 'orejas', 'manos', 'hombros', 'cintura', 'caderas', 'senos', 'muslos', 'clavicula', 'munecas'] }),
   A({ id: 'besarDetrasOreja', actor: 'labios', manner: 'baja', family: 'beso', name: 'Besar detrás de la oreja', verb: 'Besa', frame: '{V} {M} a {P} justo detrás de la oreja', frameP: 'Bésale {M} justo detrás de la oreja', intensity: 4, contactType: 'boca', durationType: 'breve',
     levels: { 1: 0.6, 2: 2, 3: 0.4 }, tags: ['repetido'], zones: ['orejas'], denyMethods: ['lento', 'muyLento', 'recorrido', 'constante', 'circulos', 'pequenos', 'buenRato', 's20', 's30', 'hastaCambiar'] }),
@@ -252,7 +268,7 @@ export const ACTIONS = [
   A({ id: 'desabrochar', actor: 'manos', manner: 'baja', family: 'ropa', name: 'Desabrochar', verb: 'Desabrocha', frame: '{V} {M} un botón o baja un poco la ropa de {ZONE}, sin llegar a quitarla', intensity: 5.5, contactType: 'mano', durationType: 'breve',
     levels: { 2: 1.2, 3: 0.5 }, tags: ['anticipacion', 'ropa'], concepts: ['anticipacion'], denyMethods: ['unosSegundos', 's10', 's20', 's30', 'hastaCambiar', 'buenRato', 'circulos', 'recorrido', 'pequenos', 'gradual', 'acelerando', 'alternandoLados', 'conLaPalma', 'dorsoMano', 'unSoloDedo'],
     zones: ['pecho', 'senos', 'abdomen', 'caderas', 'cintura', 'muslos'] }),
-  A({ id: 'sentarseEncima', actor: 'cuerpo', manner: 'baja', family: 'cuerpo', name: 'Sentarse encima', verb: 'Siéntate', frame: '{V} {M} sobre {ZONE}, de frente', intensity: 6, contactType: 'cuerpo', durationType: 'sostenible',
+  A({ id: 'sentarseEncima', pattern: 'MUTUAL', actor: 'cuerpo', manner: 'baja', family: 'cuerpo', name: 'Sentarse encima', verb: 'Siéntate', frame: '{V} {M} sobre {ZONE}, de frente', intensity: 6, contactType: 'cuerpo', durationType: 'sostenible',
     levels: { 2: 1, 3: 1 }, tags: ['quieto'], concepts: ['contacto', 'postura'], zones: ['muslos'], denyMethods: ['muySuave', 'suave', 'moderada', 'firme', 'quieto', 'unosSegundos', 's10'] }),
   // --- ampliación: Atrevido ---
   A({ id: 'sujetarMunecas', actor: 'mano', manner: 'baja', family: 'presion', name: 'Sujetar las muñecas', verb: 'Sujeta', frame: '{V} {M} las muñecas de {P} con una mano y mantenlas quietas un momento', frameP: 'Sujétale {M} las muñecas con una mano y mantenlas quietas un momento', intensity: 6.5, contactType: 'mano', durationType: 'breve',
@@ -262,9 +278,9 @@ export const ACTIONS = [
     denyMethods: ['quieto', 'unosSegundos', 's10', 's20', 's30', 'hastaCambiar', 'buenRato', 'circulos', 'recorrido', 'pequenos', 'constante', 'variable', 'gradual', 'acelerando', 'pausaContacto', 'impredecible', 'empezarSuave', 'alternandoLados', 'conLaPalma', 'dorsoMano', 'unSoloDedo', 'apenasRozando', 'cadaVezMasCerca'] }),
   A({ id: 'frotarEntrepierna', actor: 'palma', family: 'manoIntima', name: 'Frotar con la palma', verb: 'Frota', frame: '{V} {M} {ZONE} con la palma de la mano, por encima de la ropa', intensity: 7, contactType: 'mano', durationType: 'normal',
     levels: { 2: 0.3, 3: 1.5 }, tags: ['movimiento', 'presion', 'ropa'], zones: ['entrepierna'], denyMethods: ['unSoloDedo', 'conLaPalma', 'dorsoMano', 'apenasRozando', 'pequenos', 'alternandoLados'] }),
-  A({ id: 'rodearConPiernas', actor: 'piernas', manner: 'baja', family: 'cuerpo', name: 'Rodear con las piernas', verb: 'Rodea', frame: '{V} {M} la cintura de {P} con tus piernas y acércale a ti', frameP: 'Rodéale {M} la cintura con tus piernas y acércale a ti', intensity: 6.5, contactType: 'cuerpo', durationType: 'sostenible',
+  A({ id: 'rodearConPiernas', pattern: 'MUTUAL', actor: 'piernas', manner: 'baja', family: 'cuerpo', name: 'Rodear con las piernas', verb: 'Rodea', frame: '{V} {M} la cintura de {P} con tus piernas y acércale a ti', frameP: 'Rodéale {M} la cintura con tus piernas y acércale a ti', intensity: 6.5, contactType: 'cuerpo', durationType: 'sostenible',
     levels: { 2: 0.5, 3: 1.2 }, tags: ['quieto'], concepts: ['contacto', 'postura'], zones: ['cintura'], denyMethods: ['muySuave', 'suave', 'moderada', 'firme', 'quieto', 'unosSegundos', 's10'] }),
-  A({ id: 'pesoEncima', actor: 'cuerpo', manner: 'baja', family: 'cuerpo', name: 'Apoyar el peso', verb: 'Apoya', frame: '{V} {M} todo tu peso sobre {ZONE}, tumbados, y quédate así un momento', intensity: 6, contactType: 'cuerpo', durationType: 'sostenible',
+  A({ id: 'pesoEncima', pattern: 'MUTUAL', actor: 'cuerpo', manner: 'baja', family: 'cuerpo', name: 'Apoyar el peso', verb: 'Apoya', frame: '{V} {M} todo tu peso sobre {ZONE}, tumbados, y quédate así un momento', intensity: 6, contactType: 'cuerpo', durationType: 'sostenible',
     levels: { 2: 0.8, 3: 1.2 }, tags: ['quieto'], concepts: ['contacto', 'postura', 'quieto'], zones: ['pecho', 'espalda'], denyMethods: ['muySuave', 'suave', 'moderada', 'firme', 'quieto', 'unosSegundos', 's10'] }),
 ];
 export const ACTION = Object.fromEntries(ACTIONS.map(a => [a.id, a]));
@@ -295,19 +311,21 @@ for (const [id, zs] of Object.entries(EXTRA_ZONES)) ACTION[id].zones.push(...zs)
 /* acciones cuya frase ya nombra los dedos: no admiten formas que digan con qué parte de la mano */
 ['rozar', 'recorrerDedos', 'dibujar', 'unas', 'pulgares', 'estimularDedos', 'introducirDedo', 'peinar', 'masajeCabeza', 'jugarCabello', 'masturbar'].forEach(id => ACTION[id].tags.push('dedos'));
 /* «apenas rozando la piel» no cabe en gestos de boca intensa, de presión ni en el cabello */
-['chupar', 'estimularBoca', 'estimularDedos', 'masturbar', 'introducirDedo', 'frotarCaderas', 'frotarPecho', 'deslizarMuslo', 'jugarCabello', 'peinar', 'masajeCabeza', 'masajear', 'pulgares', 'apretar', 'lamer'].forEach(id => ACTION[id].denyMethods.push('apenasRozando'));
+['chupar', 'estimularBoca', 'estimularDedos', 'masturbar', 'introducirDedo', 'frotarCaderas', 'frotarPecho', 'deslizarMuslo', 'jugarCabello', 'peinar', 'masajeCabeza', 'masajear', 'pulgares', 'apretar', 'lamer', 'mordisquear', 'besarSuccion', 'nalgada', 'atraparLabio', 'besoProfundo', 'sujetarCaderas', 'sujetarNuca', 'sujetarMunecas'].forEach(id => ACTION[id].denyMethods.push('apenasRozando'));
+/* «solo durante unos segundos» no cabe en estimulación íntima: corta lo que debería continuar */
+['chupar', 'estimularBoca', 'estimularDedos', 'masturbar', 'introducirDedo', 'lamer'].forEach(id => ACTION[id].denyMethods.push('unosSegundos', 's10'));
 
 /* FORMAS (el tercer dado). Internamente cinco dimensiones; el dado elige UNA forma apropiada para la acción.
    pos: adv (junto al verbo) · phrase (después de la zona) · end (al final de la frase)
    needs / deny: tags de la acción · zoneNeeds: tags de la zona · concepts: para redundancias */
-const M = (o) => Object.assign({ needs: [], deny: [], zoneNeeds: [], concepts: [], denyContact: [] }, o);
+const M = (o) => { const m = Object.assign({ needs: [], deny: [], zoneNeeds: [], concepts: [], denyContact: [] }, o); m.levels = expand(m.levels); return m; };
 export const METHODS = [
   // ritmo
   M({ id: 'lento', dim: 'ritmo', text: 'lentamente', pos: 'adv', mod: 0.3, levels: { 1: 3, 2: 3, 3: 2 }, needs: ['movimiento'], concepts: ['lento'] }),
   M({ id: 'muyLento', dim: 'ritmo', text: 'muy lentamente', pos: 'adv', mod: 0.5, levels: { 2: 2, 3: 2 }, needs: ['movimiento'], concepts: ['lento'] }),
-  M({ id: 'pausado', dim: 'ritmo', text: 'con pequeñas pausas', pos: 'phrase', mod: 0.3, levels: { 1: 2, 2: 2, 3: 1 }, needs: ['movimiento'], concepts: ['pausa'] }),
-  M({ id: 'constante', dim: 'ritmo', text: 'a un ritmo constante', pos: 'phrase', mod: 0, levels: { 1: 1, 2: 2, 3: 2 }, needs: ['movimiento'], deny: ['repetido', 'anticipacion'] }),
-  M({ id: 'variable', dim: 'ritmo', text: 'variando el ritmo', pos: 'phrase', mod: 0.6, levels: { 2: 1.5, 3: 2.5 }, needs: ['movimiento'], deny: ['anticipacion'], concepts: ['variable'] }),
+  M({ id: 'pausado', dim: 'ritmo', text: 'con pequeñas pausas', pos: 'phrase', mod: 0.3, levels: { 1: 2, 2: 2, 3: 1 }, needs: ['movimiento'], deny: ['ropa'], concepts: ['pausa'] }),
+  M({ id: 'constante', dim: 'ritmo', text: 'a un ritmo constante', pos: 'phrase', mod: 0, levels: { 1: 1, 2: 2, 3: 2 }, needs: ['movimiento'], deny: ['repetido', 'anticipacion', 'ropa'] }),
+  M({ id: 'variable', dim: 'ritmo', text: 'variando el ritmo', pos: 'phrase', mod: 0.6, levels: { 2: 1.5, 3: 2.5 }, needs: ['movimiento'], deny: ['anticipacion', 'ropa'], concepts: ['variable'] }),
   // presión
   M({ id: 'muySuave', dim: 'presion', text: 'muy suavemente', pos: 'adv', mod: -0.5, levels: { 1: 3, 2: 2, 3: 1 }, denyContact: ['ninguno'], deny: ['anticipacion'], concepts: ['ligero'] }),
   M({ id: 'suave', dim: 'presion', text: 'suavemente', pos: 'adv', mod: -0.3, levels: { 1: 3, 2: 2, 3: 1.2 }, denyContact: ['ninguno'], deny: ['anticipacion'], concepts: ['ligero'] }),
@@ -351,7 +369,7 @@ export const METHOD = Object.fromEntries(METHODS.map(m => [m.id, m]));
    role: interaccion (cambia la dinámica entre los dos) · escena (postura o preparación) · conexion · atmosfera (decorativa)
    aporta: cuánto aporta la condición a ESTA acción/zona. base × multiplicadores por tag de acción, tag de zona, tipo de contacto
    y duración (zoneElse se aplica si ningún tag de zona coincide). Por debajo de 0.45 la condición no entra: sería relleno. */
-const C = (o) => Object.assign({ needsZoneTags: [], denyZoneTags: [], denyActionTags: [], needsActionTags: [], denyContact: [], denyDims: [], concepts: [], mod: 0 }, o);
+const C = (o) => { const c = Object.assign({ needsZoneTags: [], denyZoneTags: [], denyActionTags: [], needsActionTags: [], denyContact: [], denyDims: [], concepts: [], mod: 0 }, o); c.levels = expand(c.levels); if (!c.pattern) c.pattern = c.family === 'control' ? 'CHOOSE' : c.role === 'interaccion' ? 'GUIDE' : null; return c; };
 export const CONDITIONS = [
   C({ id: 'mirandose', family: 'vista', role: 'conexion', aporta: { base: .9, contact: { mano: .6, boca: .9 }, action: { quieto: 1.3, movimiento: .7, ligero: .8, repetido: .6 }, zone: { sensible: 1 } }, short: 'Mirándoos', slot: 'tail', text: 'mirándoos a los ojos', textBoca: 'sin dejar de mirarle a los ojos', intro: 'Mirándoos a los ojos,', mod: 0.4, levels: { 1: 2.5, 2: 2, 3: 1.8 }, needsZoneTags: ['frontal'], denyZoneTags: ['detras'], concepts: ['mirada'] }),
   C({ id: 'ojosCerrados', family: 'vista', role: 'atmosfera', aporta: { base: .65, action: { ligero: 1.2, anticipacion: 1.2, movimiento: .8, quieto: .4, presion: .5 }, zone: { sensible: 1.2 }, zoneElse: .5, contact: { cuerpo: .4 } }, short: 'Ojos cerrados', slot: 'tail', text: 'mientras {P} mantiene los ojos cerrados', intro: 'Con los ojos cerrados de {P},', mod: 0.3, levels: { 1: 1, 2: 1.2, 3: 0.8 }, concepts: ['ojos'] }),
@@ -361,23 +379,20 @@ export const CONDITIONS = [
   C({ id: 'tumbados', family: 'postura', role: 'escena', aporta: { base: .8, duration: { breve: .5 }, contact: { ninguno: .7 } }, short: 'Tumbados', slot: 'prep', text: 'Pide a {P} que se tumbe y', mod: 0.1, levels: { 1: 1.5, 2: 2, 3: 2 }, needsZoneTags: ['tumbado'], concepts: ['postura'] }),
   C({ id: 'frenteAFrente', family: 'postura', role: 'escena', aporta: { base: .7, action: { quieto: 1.3, movimiento: .8 }, contact: { boca: .6 } }, short: 'Frente a frente', slot: 'prep', text: 'Sentaos frente a frente y', mod: 0, levels: { 1: 2, 2: 1.5 }, needsZoneTags: ['frontal'], denyZoneTags: ['intimo'], concepts: ['postura'] }),
   C({ id: 'parejaCambia', family: 'control', role: 'interaccion', aporta: { base: .8, duration: { breve: 0, sostenible: 1.1 }, action: { repetido: .7 } }, short: 'Pareja decide', slot: 'end', text: 'hasta que {P} decida que cambies', mod: 0.4, levels: { 2: 2, 3: 2 }, denyDims: ['duracion'], denyContact: ['ninguno'], concepts: ['control', 'duracion'] }),
-  C({ id: 'parejaQuieta', family: 'quietud', role: 'interaccion', aporta: { base: .8, zone: { sensible: 1.2, intimo: 1.2 }, zoneElse: .3, action: { ligero: 1.2, anticipacion: 1.1, presion: .3 }, contact: { boca: 1.1, mano: .7 } }, short: 'Pareja quieta', slot: 'tail', text: 'sin que {P} se mueva', mod: 0.3, levels: { 2: 1, 3: 2 }, denyActionTags: ['quieto'], concepts: ['quietoP'] }),
+  C({ id: 'parejaQuieta', family: 'quietud', role: 'interaccion', aporta: { base: .8, zone: { sensible: 1.2, intimo: 1.2 }, zoneElse: .3, action: { ligero: 1.2, anticipacion: 1.1, presion: .3 }, contact: { boca: 1.1, mano: .7 } }, short: 'Pareja quieta', slot: 'tail', text: 'sin que {P} se mueva', intro: 'Sin que {P} se mueva,', mod: 0.3, levels: { 2: 1, 3: 2 }, denyActionTags: ['quieto'], concepts: ['quietoP'] }),
   C({ id: 'vendados', family: 'vista', role: 'interaccion', aporta: { base: .9, action: { ligero: 1.1, anticipacion: 1.1, quieto: .4 }, zone: { sensible: 1.1 }, zoneElse: .7 }, short: 'Ojos vendados', slot: 'tail', text: 'mientras {P} tiene los ojos vendados', intro: 'Con los ojos vendados de {P},', mod: 0.5, levels: { 3: 2 }, concepts: ['ojos'] }),
-  C({ id: 'manosQuietas', family: 'quietud', role: 'interaccion', aporta: { base: .8, zone: { sensible: 1.1, intimo: 1.2 }, zoneElse: .3, contact: { boca: 1.1, mano: .5, ninguno: .5 }, action: { quieto: .3, presion: .3 } }, short: 'Manos quietas', slot: 'tail', text: 'mientras {P} mantiene las manos quietas', mod: 0.3, levels: { 2: 1, 3: 2 }, concepts: ['quietoP'] }),
-  C({ id: 'parejaRitmo', family: 'control', role: 'interaccion', aporta: { base: .85, duration: { breve: 0 }, action: { presion: .7 } }, short: 'Pareja marca ritmo', slot: 'tail', text: 'dejando que {P} marque el ritmo', mod: 0.4, levels: { 2: 1, 3: 2 }, denyDims: ['ritmo', 'dinamica', 'duracion'], denyActionTags: ['quieto', 'anticipacion', 'repetido'], concepts: ['control'] }),
+  C({ id: 'manosQuietas', family: 'quietud', role: 'interaccion', aporta: { base: .8, zone: { sensible: 1.1, intimo: 1.2 }, zoneElse: .3, contact: { boca: 1.1, mano: .5, ninguno: .5 }, action: { quieto: .3, presion: .3 } }, short: 'Manos quietas', slot: 'tail', text: 'mientras {P} mantiene las manos quietas', intro: 'Con las manos de {P} quietas,', mod: 0.3, levels: { 2: 1, 3: 2 }, concepts: ['quietoP'] }),
+  C({ id: 'parejaRitmo', family: 'control', role: 'interaccion', aporta: { base: .85, duration: { breve: 0 }, action: { presion: .7 } }, short: 'Pareja marca ritmo', slot: 'tail', text: 'dejando que {P} marque el ritmo', intro: 'Dejando que {P} marque el ritmo,', mod: 0.4, levels: { 2: 1, 3: 2 }, denyDims: ['ritmo', 'dinamica', 'duracion'], denyActionTags: ['quieto', 'anticipacion', 'repetido'], concepts: ['control'] }),
   C({ id: 'hastaPidaMas', family: 'control', role: 'interaccion', aporta: { base: .9, duration: { breve: 0 } }, short: 'Hasta pedir más', slot: 'end', text: 'hasta que {P} pida más', mod: 0.9, levels: { 3: 2.5 }, denyDims: ['duracion'], denyContact: ['ninguno'], denyActionTags: ['repetido'], concepts: ['control', 'duracion'] }),
-  C({ id: 'enVozAlta', family: 'voz', role: 'interaccion', aporta: { base: .9, zone: { sensible: 1.2 }, zoneElse: .6, action: { quieto: .5 } }, short: 'Decir lo que siente', slot: 'tail', text: 'mientras {P} dice en voz alta lo que siente', mod: 0.6, levels: { 3: 2 }, denyActionTags: ['voz'], concepts: ['voz'] }),
+  C({ id: 'enVozAlta', family: 'voz', role: 'interaccion', aporta: { base: .9, zone: { sensible: 1.2 }, zoneElse: .6, action: { quieto: .5 } }, short: 'Decir lo que siente', slot: 'tail', text: 'mientras {P} dice en voz alta lo que siente', intro: 'Mientras {P} dice en voz alta lo que siente,', mod: 0.6, levels: { 3: 2 }, denyActionTags: ['voz'], concepts: ['voz'] }),
   C({ id: 'esperar', family: 'pausa', role: 'escena', aporta: { base: .8, contact: { ninguno: 1.1, mano: .8, boca: .9 }, action: { ropa: .7 } }, short: 'Espera 5 s', slot: 'after', text: 'Quédate así cinco segundos antes de continuar.', mod: 0.4, levels: { 2: 1.5, 3: 1.5 }, needsActionTags: ['anticipacion'], denyDims: ['duracion'], concepts: ['espera', 'duracion'] }),
-  // --- ampliación: ambiente, juego, recorrido y elección ---
+  // --- ampliación: ambiente, juego y voz. (Las condiciones que añadían una segunda zona se retiraron: la condición modifica la acción, no abre otra.) ---
   C({ id: 'musica', family: 'ambiente', role: 'atmosfera', aporta: { base: .55, duration: { sostenible: 1.3, breve: .5 }, contact: { ninguno: .6 } }, short: 'Con música', slot: 'intro', text: 'Con una canción que elija {P} de fondo,', mod: 0.1, levels: { 1: 1.2, 2: 1.2, 3: 0.6 }, concepts: ['musica'] }),
   C({ id: 'luzApagada', family: 'vista', role: 'atmosfera', aporta: { base: .6, action: { ligero: 1.2, anticipacion: 1.2, quieto: .6, presion: .7 }, zone: { sensible: 1.2 }, zoneElse: .7 }, short: 'A oscuras', slot: 'intro', text: 'Con la luz apagada,', mod: 0.3, levels: { 1: 0.8, 2: 1.5, 3: 1.2 }, concepts: ['ojos'] }),
   C({ id: 'adivinarDonde', family: 'juego', role: 'interaccion', aporta: { base: .75, zone: { largo: 1.3 }, zoneElse: .6, action: { quieto: .4, movimiento: 1.1, anticipacion: .5 } }, short: 'Adivinar dónde', slot: 'after', text: 'Con los ojos cerrados, {P} tiene que decir en qué punto exacto has empezado.', mod: 0.3, levels: { 1: 1.5, 2: 1.5, 3: 0.8 }, denyContact: ['ninguno'], denyActionTags: ['voz', 'ropa', 'anticipacion', 'quieto'], concepts: ['ojos', 'juego'] }),
   C({ id: 'contarTres', family: 'pausa', role: 'escena', aporta: { base: .7, duration: { breve: 1.2, sostenible: .6 } }, short: 'Cuenta hasta tres', slot: 'prep', text: 'Cuenta hasta tres en voz alta y', mod: 0.2, levels: { 2: 1.5, 3: 1.2 }, needsActionTags: ['anticipacion', 'presion'], denyActionTags: ['voz'], concepts: ['espera', 'voz'] }),
-  C({ id: 'parejaGuia', family: 'control', role: 'interaccion', aporta: { base: .85, action: { presion: .6, repetido: .6 } }, short: 'Pareja guía', slot: 'tail', text: 'dejando que la mano de {P} guíe la tuya', mod: 0.3, levels: { 1: 1, 2: 2, 3: 1.2 }, needsContact: ['mano'], denyActionTags: ['quieto', 'anticipacion', 'ropa'], concepts: ['control'] }),
+  C({ id: 'parejaGuia', family: 'control', role: 'interaccion', aporta: { base: .85, action: { presion: .6, repetido: .6 } }, short: 'Pareja guía', slot: 'tail', text: 'dejando que la mano de {P} guíe la tuya', intro: 'Dejando que la mano de {P} guíe la tuya,', mod: 0.3, levels: { 1: 1, 2: 2, 3: 1.2 }, needsContact: ['mano'], denyActionTags: ['quieto', 'anticipacion', 'ropa'], concepts: ['control'] }),
   C({ id: 'sinManos', family: 'quietud', role: 'interaccion', aporta: { base: .8, action: { quieto: .5 } }, short: 'Sin usar las manos', slot: 'tail', text: 'sin usar las manos', mod: 0.3, levels: { 2: 1.5, 3: 1.5 }, needsContact: ['boca', 'cuerpo'], concepts: ['manos'] }),
-  C({ id: 'empezandoPor', family: 'recorrido', role: 'escena', aporta: { base: .85, duration: { breve: .3 } }, short: 'Empezar por otra zona', slot: 'path', text: 'Empezando por {ALT},', mod: 0.3, levels: { 1: 1.5, 2: 2, 3: 1.5 }, needsAlt: true, needsActionTags: ['movimiento'], denyActionTags: ['repetido', 'anticipacion', 'ropa', 'quieto'], denyContact: ['ninguno'], concepts: ['recorrido'] }),
-  C({ id: 'repetirEn', family: 'recorrido', role: 'escena', aporta: { base: .8, duration: { sostenible: .9 } }, short: 'Repetir en otra zona', slot: 'after', text: 'Después, repite lo mismo en {ALT}.', mod: 0.3, levels: { 1: 1.5, 2: 2, 3: 1.5 }, needsAlt: true, denyActionTags: ['ropa', 'voz'], concepts: ['repetir'] }),
-  C({ id: 'oLoQuePrefiera', family: 'control', role: 'interaccion', aporta: { base: .7, duration: { breve: .7 } }, short: 'Pareja elige la zona', slot: 'choice', text: 'o {ALT}, lo que {P} prefiera', mod: 0, levels: { 1: 1.5, 2: 1.2 }, needsAlt: true, needsZoneEnd: true, denyActionTags: ['quieto', 'anticipacion', 'ropa'], concepts: ['control', 'eleccion'] }),
   C({ id: 'describir', family: 'voz', role: 'interaccion', aporta: { base: .85, action: { quieto: 1.1 }, duration: { breve: .5 } }, short: 'Decir lo que viene', slot: 'tail', text: 'mientras le describes en voz baja lo que vas a hacer después', mod: 0.5, levels: { 2: 1.2, 3: 1.8 }, denyActionTags: ['voz'], denyContact: ['boca'], concepts: ['voz'] }),
   C({ id: 'parejaCuenta', family: 'voz', role: 'interaccion', aporta: { base: .7, duration: { breve: .4 } }, short: 'Pareja cuenta', slot: 'tail', text: 'mientras {P} cuenta en voz alta hasta veinte', mod: 0.1, levels: { 1: 1.5, 2: 1 }, denyDims: ['duracion'], denyActionTags: ['voz'], concepts: ['duracion', 'voz'] }),
   C({ id: 'cambioTurno', family: 'turno', role: 'interaccion', aporta: { base: .45 }, denyZoneTags: ['intimo'], short: 'Cambio de turno', slot: 'swap', text: 'Cambio de turno: esta ronda la hace {PF}.', mod: 0, levels: { 2: 0.5, 3: 0.5 }, concepts: ['turno'] }),
@@ -392,4 +407,5 @@ export const CONFLICTS = [
 ];
 
 export const CATEGORIES = { relax: 'Relax', conexion: 'Conexión', carino: 'Cariño', anticipacion: 'Anticipación', sensualidad: 'Sensualidad', provocacion: 'Provocación', intensidad: 'Intensidad' };
+export const PATTERNS = { GIVE: 'Dar', RECEIVE: 'Recibir', MUTUAL: 'A la vez', CHOOSE: 'Elige quien recibe', GUIDE: 'Guiar', DISCOVER: 'Descubrir', CONTINUE: 'Continuar' };
 export const INTENSITY_LABEL = v => v < 2.5 ? 'Relajante' : v < 3.5 ? 'Cariñoso' : v < 5 ? 'Cercano' : v < 6.5 ? 'Sensual' : v < 8 ? 'Provocador' : 'Muy intenso';

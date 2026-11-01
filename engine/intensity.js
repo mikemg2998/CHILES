@@ -13,7 +13,8 @@ export const pairIntensity = (a, z) => combinationIntensity(a, z, null, null);
 export const TARGET_BUCKETS = {
   1: [[1, 3, 0.8], [3, 3.5, 0.2]],
   2: [[3.5, 4.5, 0.2], [4.5, 5.5, 0.6], [5.5, 6.5, 0.2]],
-  3: [[5.5, 6.5, 0.15], [6.5, 7.5, 0.3], [7.5, 10, 0.55]],
+  3: [[6, 6.8, 0.25], [6.8, 7.4, 0.45], [7.4, 8, 0.3]],
+  4: [[6.5, 8, 0.25], [8, 9, 0.4], [9, 10, 0.35]],
 };
 
 export class IntensityDirector {
@@ -34,6 +35,6 @@ export class IntensityDirector {
     const b = this.rng.weighted(buckets.map(x => ({ item: x, weight: x.w })));
     return Math.round((b.lo + this.rng.next() * (b.hi - b.lo)) * 10) / 10;
   }
-  static levelOf(intensity) { return intensity <= 3.5 ? 1 : intensity <= 6.5 ? 2 : 3; }
+  static levelOf(intensity) { return intensity <= 3.5 ? 1 : intensity <= 6.5 ? 2 : intensity <= 8.5 ? 3 : 4; }
 }
 export { LEVELS };

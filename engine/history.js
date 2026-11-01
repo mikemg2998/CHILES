@@ -13,12 +13,12 @@ export class HistoryManager {
   }
   /* Random curado por familias: la última familia pesa casi nada, la penalización se recupera poco a poco
      y una familia que lleva muchas rondas sin salir recibe un empujón moderado. */
-  familyWeight(key, family, { n = 12, strength = 1.5, hunger = 8 } = {}) {
+  familyWeight(key, family, { n = 12, strength = 1.5, hunger = 8, soft = false } = {}) {
     if (!family) return 1;
     let s = 0, lastSeen = -1;
     this.rounds.slice(0, n).forEach((r, i) => { if (r.families && r.families[key] === family) { s += ((n - i) / n) ** 2; if (lastSeen < 0) lastSeen = i; } });
     let w = 1 / (1 + 3 * strength * s);
-    if (lastSeen === 0) w *= 0.15; else if (lastSeen === 1) w *= 0.45;
+    if (!soft) { if (lastSeen === 0) w *= 0.15; else if (lastSeen === 1) w *= 0.45; } // soft: profundizar en la misma familia está permitido
     if (lastSeen < 0 && this.rounds.length >= hunger) w *= 1.6;
     return w;
   }

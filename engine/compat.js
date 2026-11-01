@@ -110,7 +110,7 @@ export const CombinationValidator = {
     // nivel
     if (combo.level && combo.intensity != null) {
       const L = LEVELS[combo.level];
-      const lo = combo.level === 3 ? 5.5 : combo.level === 2 ? 3.0 : L.min; // margen de transición por abajo
+      const lo = L.lo; // margen de transición por abajo
       if (combo.intensity > L.max + 1e-9 || combo.intensity < lo) reasons.push(`intensidad ${combo.intensity} fuera del nivel ${L.name}`);
     }
     if (reasons.length) return { status: 'INVALID', reasons };

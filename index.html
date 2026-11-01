@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="app/styles.css?v=5">
+<link rel="stylesheet" href="app/styles.css?v=6">
 </head>
 <body class="idle">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -36,7 +36,7 @@
   </header>
 
   <nav class="levels" id="levels" role="tablist"></nav>
-  <div class="path" id="path" hidden><span data-b="1">Relax</span><i></i><span data-b="2">Sensual</span><i></i><span data-b="3">Atrevido</span></div>
+  <p class="tagline" id="tagline"></p>
 
   <div class="turn" id="turn"><b id="turnA"></b><i>→</i><b id="turnB"></b></div>
 
@@ -49,28 +49,60 @@
 
   <section class="result">
     <div class="welcome" id="welcome">
-      <p class="meta">Cuatro dados</p>
-      <p class="phrase">Cuatro dados, una sola instrucción escrita para los dos. Los dados que no hacen falta se quedan en blanco.</p>
+      <p class="meta">Una sesión</p>
+      <p class="phrase">Cuatro dados y una sola instrucción escrita para los dos. La sesión está completa en cualquier nivel: subir es algo que decidís juntos, en privado.</p>
     </div>
     <div class="round" id="roundBox" hidden>
       <div class="meta"><span id="metaText"></span><button class="fav" id="btnFav" aria-label="Guardar en favoritas"><svg><use href="#i-mark"/></svg></button></div>
       <p class="phrase" id="phrase"></p>
       <p class="note" id="note" hidden></p>
+      <div class="feedback" id="feedback">
+        <button class="chip" id="fbLike">Me gusta</button>
+        <button class="chip" id="fbMore" hidden>Más</button>
+        <button class="chip" id="fbLess" hidden>Menos</button>
+      </div>
     </div>
+    <div class="ending" id="ending" hidden>
+      <p class="meta">Sesión</p>
+      <p class="phrase" id="endingText"></p>
+    </div>
+    <pre class="debug" id="debug" hidden></pre>
   </section>
 
   <div class="actions">
     <button class="btn primary" id="btnRoll">Lanzar los dados</button>
+    <button class="btn primary" id="btnNew" hidden>Nueva sesión</button>
     <div class="row" id="secondary">
       <button class="btn" id="btnPass">Pasar</button>
       <button class="btn" id="btnReroll">Otra</button>
-      <button class="btn" id="btnSofter">Bajar</button>
+      <button class="btn" id="btnSofter">Suave</button>
       <button class="btn" id="btnHarder">Subir</button>
     </div>
   </div>
 </div>
 
 <div class="backdrop" id="backdrop" hidden></div>
+
+<section class="sheet" id="sheetStart" aria-hidden="true">
+  <div class="sheet-head"><h2>Esta noche quiero…</h2><button class="ib" data-close aria-label="Cerrar"><svg><use href="#i-x"/></svg></button></div>
+  <p class="hint">Cada uno elige lo que le apetezca. La sesión usa lo que tenéis en común. Nada de esto se guarda.</p>
+  <div class="two" id="intents"></div>
+  <details class="quiet"><summary>Hoy no…</summary><p class="hint">Si uno de los dos aparta algo, queda fuera para toda la sesión. Nadie pregunta por qué.</p><div class="two" id="avoids"></div></details>
+  <button class="btn primary" id="btnStart">Empezar</button>
+</section>
+
+<section class="sheet gate" id="sheetGate" aria-hidden="true">
+  <div class="sheet-head"><h2 id="gateTitle">Un momento para los dos</h2></div>
+  <div id="gateStep">
+    <p class="gate-who" id="gateWho"></p>
+    <p class="hint">Elige en privado. Solo se verá la decisión conjunta, nunca quién eligió qué.</p>
+    <div class="gate-opts" id="gateOpts"></div>
+  </div>
+  <div id="gateResult" hidden>
+    <p class="gate-msg" id="gateMsg"></p>
+    <button class="btn primary" id="btnGateGo">Seguir</button>
+  </div>
+</section>
 
 <section class="sheet" id="sheetFavs" aria-hidden="true">
   <div class="sheet-head"><h2>Favoritas</h2><button class="ib" data-close aria-label="Cerrar"><svg><use href="#i-x"/></svg></button></div>
@@ -88,7 +120,7 @@
   <p class="lab">Zonas del cuerpo</p>
   <div class="list" id="groups"></div>
   <p class="lab">Anatomía íntima</p>
-  <p class="hint">Solo entra en juego en Atrevido y al final de Progresivo, según la anatomía de quien recibe.</p>
+  <p class="hint">Solo entra en juego en Intimidad, según la anatomía de quien recibe. Todo se guarda únicamente en este teléfono.</p>
   <div class="list" id="groupsIntimate"></div>
   <p class="lab">Dispositivo</p>
   <div class="list"><label class="sw"><span>Vibración al lanzar</span><input type="checkbox" id="swVibe"><i></i></label></div>
@@ -99,6 +131,6 @@
 </section>
 
 <div class="toast" id="toast" role="status"></div>
-<script type="module" src="app/app.js?v=5"></script>
+<script type="module" src="app/app.js?v=6"></script>
 </body>
 </html>

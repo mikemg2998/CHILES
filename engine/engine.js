@@ -1,184 +1,251 @@
-/* GameEngine v2: un director invisible elige una experiencia coherente; los dados solo la revelan. */
+/* GameEngine v3: el Session Director decide qué pretende la ronda; el motor de generación propone candidatos
+   compatibles; el filtro de calidad puntúa y descarta; el compositor escribe la frase; los dados solo la representan.
+   Orden de prioridad: compatibilidad > calidad > progresión > variedad. */
 import { ACTIONS, ACTION, ZONES, ZONE, METHODS, METHOD, CONDITIONS, CONDITION, LEVELS, LEVEL_BY_KEY, INTENSITY_LABEL } from './catalog.js';
 import { Rng } from './rng.js';
 import { CompatibilityEngine as CE, CombinationValidator } from './compat.js';
-import { combinationIntensity, pairIntensity, IntensityDirector } from './intensity.js';
+import { combinationIntensity, pairIntensity } from './intensity.js';
 import { HistoryManager } from './history.js';
 import { PreferenceManager } from './prefs.js';
 import { NaturalLanguageGenerator as NLG } from './nlg.js';
+import { interactionMeta } from './meta.js';
+import { SessionState, SessionDirector, AVOIDS, INTENTS } from './session.js';
+import { criticalCheck, qualityScore, fallbackFor, THRESHOLD } from './quality.js';
 
 const near = (v, t, k = 1) => Math.exp(-k * Math.abs(v - t));
 const COOL = { action: 3, zone: 4, method: 2, cond: 5 };
-const FAM_COOL = { action: 1, zone: 2, cond: 2 }; // la misma familia no vuelve en las rondas siguientes
-/* Densidad por nivel: probabilidad de que la ronda intente usar forma y condición.
-   Los dados son la mecánica; la frase manda. Relajado va limpio; Atrevido admite más condiciones porque forman parte del picante. */
-const DENSITY = { 1: { method: .6, cond: .15, both: .3 }, 2: { method: .65, cond: .35, both: .5 }, 3: { method: .6, cond: .5, both: .6 } };
+const FAM_COOL = { action: 1, zone: 2, cond: 2 };
+/* probabilidad de que la ronda intente llevar forma y de que pruebe una condición; la condición solo se queda si la frase mejora */
+const DENSITY = { 1: { method: .6, cond: .35 }, 2: { method: .65, cond: .6 }, 3: { method: .6, cond: .7 }, 4: { method: .6, cond: .7 } };
+const MAX_ATTEMPTS = 34, MAX_CANDIDATES = 6;
 
 export class GameEngine {
-  constructor({ prefs, seed } = {}) {
+  constructor({ prefs, seed, level, debug = false } = {}) {
     this.rng = new Rng(seed);
     this.prefs = prefs instanceof PreferenceManager ? prefs : new PreferenceManager(prefs);
     this.history = new HistoryManager();
-    this.director = new IntensityDirector(this.rng);
-    this.state = { round: 0, performer: 0, favorites: [], progressive: { band: 1, calm: 0 } };
-    this.stats = { rejected: 0, rejectedReasons: {} };
+    this.director = new SessionDirector(this.rng);
+    this.session = new SessionState(level || LEVEL_BY_KEY[this.prefs.mode] || 1);
+    this.state = { round: 0, performer: 0, favorites: [] };
+    this.stats = { rejected: 0, rejectedReasons: {}, fallbacks: 0 };
+    this.debug = debug; this.lastDebug = null;
   }
 
-  /* nivel efectivo: el elegido, o la banda actual en modo progresivo */
-  level() {
-    if (this.prefs.mode === 'progresivo') return this.state.progressive.band;
-    return LEVEL_BY_KEY[this.prefs.mode] || 1;
+  /* ---------- sesión ---------- */
+  level() { return this.session.level; }
+  levelInfo() { return LEVELS[this.session.level]; }
+  /* nivel de arranque: antes de la primera ronda vale cualquiera; después solo se baja. Subir es cosa de la puerta. */
+  setLevel(level) {
+    level = Math.max(1, Math.min(4, Number(level) || 1));
+    if (this.state.round === 0 || level <= this.session.level) { this.session.level = level; this.session.roundsInLevel = 0; this.session.stayHere = false; return true; }
+    return false;
   }
-  categoryOf(a, z, c, intensity) {
-    if (intensity >= 8) return 'intensidad';
-    if (a.tags.includes('anticipacion') || (c && c.concepts.includes('anticipacion'))) return 'anticipacion';
-    if (intensity >= 6.5) return 'provocacion';
-    if (intensity >= 4.5) return 'sensualidad';
-    if (a.tags.includes('quieto') || (c && ['mirandose', 'respirarJuntos'].includes(c.id))) return 'conexion';
-    if (a.id === 'masajear' || a.id === 'apoyarMano') return 'relax';
-    return intensity >= 3 ? 'sensualidad' : 'carino';
-  }
+  setIntents(player, list) { this.session.intents[player] = [...new Set(list.filter(k => INTENTS[k]))]; }
+  setAvoid(player, list) { this.session.avoid[player] = [...new Set(list.filter(k => AVOIDS[k]))]; }
+  newSession(level) { this.history.reset(); this.state.round = 0; this.state.performer = 0; this.session = new SessionState(level || this.session.level); this.stats = { rejected: 0, rejectedReasons: {}, fallbacks: 0 }; }
+  ended() { return this.session.ended; }
+  feedback(kind, extra) { this.director.feedback(this.session, this.history.last(), kind, extra); }
+  gateDue() { return this.director.gateDue(this.session); }
+  canOpenGate() { return this.director.canOpenGate(this.session); }
+  openGate() { return this.director.openGate(this.session); }
+  vote(player, choice) { return this.director.vote(this.session, player, choice); }
+  lowerLevel() { return this.director.lower(this.session); }
+  endSession(how) { return this.director.end(this.session, how); }
 
-  /* ---------- API ---------- */
-  /* quién recibe en la próxima ronda: decide qué anatomía íntima entra en juego */
+  /* ---------- API de rondas ---------- */
   aim(advance) { const next = advance && this.state.round > 0 ? 1 - this.state.performer : this.state.performer; this.prefs.partner = 1 - next; }
-  roll() { this.aim(true); return this.round(this.generate({ level: this.level() }), { advanceTurn: true }); }
-  pass() { this.state.progressive.calm = 0; const last = this.history.last(); if (last) last.passed = true; return this.roll(); }
+  roll() { if (this.session.ended) return null; this.aim(true); return this.round(this.generate({}), { advanceTurn: true }); }
+  /* PASAR: se descarta sin castigo visible y se sigue con otra cosa */
+  pass() { const last = this.history.last(); if (last && !last.passed) { last.passed = true; this.feedback('paso'); } return this.roll(); }
+  /* OTRA: misma persona, otra propuesta; cuenta como "cambia" */
   reroll() {
+    if (this.session.ended) return null;
     this.aim(false);
     const last = this.history.last();
-    const combo = this.generate({ level: this.level(), target: last ? last.target : null, avoid: last });
+    if (last) this.feedback('cambia');
+    const combo = this.generate({ purpose: 'EXPLORE', target: last ? last.target : null, avoid: last });
     return this.round(combo, { advanceTurn: false, target: last ? last.target : null });
   }
-  softer() { return this.variant(-1); }
-  harder() { return this.variant(+1); }
-  variant(dir) {
-    const last = this.history.last(); if (!last) return this.roll();
+  /* SUAVE: la misma idea, más suave, sin cambiar de persona */
+  softer() {
+    const last = this.history.last(); if (!last || this.session.ended) return null;
     this.aim(false);
-    if (dir < 0) this.state.progressive.calm = 0;
-    const combo = this.getVariant(last, dir);
+    const combo = this.getVariant(last);
     if (!combo) return null;
-    return this.round(combo, { advanceTurn: false, target: combo.intensity, variant: dir < 0 ? 'softer' : 'harder' });
+    return this.round(combo, { advanceTurn: false, target: combo.intensity, variant: 'softer' });
   }
-  repeatFavorite(fav) { this.aim(true); return this.round({ action: fav.action, zone: fav.zone, method: fav.method, cond: fav.cond, alt: fav.alt }, { advanceTurn: true, fromFavorite: true }); }
+  /* repetir una favorita conserva quién la hacía a quién: la anatomía de quien recibe tiene que seguir cuadrando */
+  repeatFavorite(fav) {
+    if (this.session.ended) return null;
+    const names = this.prefs.names || ['', ''];
+    let performer = names.indexOf(fav.performerName); if (performer < 0) performer = fav.performer ?? this.state.performer;
+    this.prefs.partner = 1 - performer;
+    if (!this.prefs.zoneEnabled(ZONE[fav.zone])) return null;
+    const advance = performer !== this.state.performer;
+    return this.round({ action: fav.action, zone: fav.zone, method: fav.method, cond: fav.cond, alt: fav.alt }, { advanceTurn: advance, fromFavorite: true });
+  }
   inspireFavorite(fav) {
+    if (this.session.ended) return null;
     this.aim(true);
     const keep = this.rng.chance(0.5) ? { action: fav.action } : { zone: fav.zone };
-    const combo = this.generate({ level: this.level(), target: fav.intensity, keep, avoid: fav });
+    const combo = this.generate({ target: fav.intensity, keep, avoid: fav, purpose: 'DEEPEN' });
     return this.round(combo, { advanceTurn: true, inspired: true });
   }
   addFavorite(r) { if (!this.state.favorites.some(f => f.id === r.id)) this.state.favorites.push(r); }
   removeFavorite(id) { this.state.favorites = this.state.favorites.filter(f => f.id !== id); }
-  resetGame() { this.history.reset(); this.state.round = 0; this.state.progressive = { band: 1, calm: 0 }; }
+  resetGame() { this.newSession(this.session.level); }
 
-  /* ---------- generación por restricciones ---------- */
-  generate({ level, target = null, keep = {}, avoid = null }) {
-    const prefs = this.prefs, H = this.history;
-    const L = LEVELS[level];
-    if (target == null) target = this.director.nextTarget(level, H);
-    const lo = level === 3 ? 5.5 : level === 2 ? 3.0 : L.min, hi = L.max;
-    let best = null;
-    for (let attempt = 0; attempt < 40; attempt++) {
-      const relax = attempt > 20; // si no encuentra nada, relaja los enfriamientos
-      const action = keep.action ? ACTION[keep.action] : this.pickAction(level, target, avoid, relax);
+  /* ---------- generación: director → candidatos → filtro de calidad ---------- */
+  generate({ target = null, keep = {}, avoid = null, purpose = null }) {
+    const prefs = this.prefs, H = this.history, S = this.session, level = S.level;
+    const P = purpose ? { purpose, reason: 'pedido por la interfaz' } : this.director.purpose(S, H);
+    purpose = P.purpose === 'END' ? 'MAINTAIN' : P.purpose;
+    if (target == null) target = this.director.target(purpose, S, H);
+    const mods = this.director.modifiers(purpose, S, H);
+    const dbg = { selectedPurpose: purpose, purposeReason: P.reason, target, level, selectedFamily: null, weights: {}, recencyPenalty: {}, diversityBoost: {}, feedbackModifier: {}, progressionModifier: {}, rejectedCandidates: [], rejectionReasons: {}, candidates: [], finalQualityScore: null, fallback: false };
+    const candidates = [];
+    const ctxBase = { prefs, level, session: S, avoids: AVOIDS, history: H, target, purpose };
+    for (let attempt = 0; attempt < MAX_ATTEMPTS && candidates.length < MAX_CANDIDATES; attempt++) {
+      const relax = candidates.length ? 0 : attempt > 27 ? 2 : attempt > 16 ? 1 : 0; // sin candidatos: primero cae el enfriamiento por familia, después el de elemento
+      const action = keep.action ? ACTION[keep.action] : this.pickAction(level, target, avoid, relax, mods, dbg);
       if (!action) continue;
-      const zone = keep.zone ? ZONE[keep.zone] : this.pickZone(action, level, target, avoid, relax);
+      const zone = keep.zone ? ZONE[keep.zone] : this.pickZone(action, level, target, avoid, relax, mods, dbg);
       if (!zone) continue;
-      // estructura de la ronda: qué dados entran. Nunca por obligación.
       const D = DENSITY[level];
-      let wantMethod = this.rng.chance(action.manner === 'baja' ? D.method * .45 : D.method);
-      let wantCond = this.rng.chance(D.cond);
-      if (wantMethod && wantCond && !this.rng.chance(D.both)) { if (this.rng.chance(.5)) wantMethod = false; else wantCond = false; }
-      if (keep.method !== undefined) wantMethod = !!keep.method;
-      const method = wantMethod ? this.pickMethod(action, zone, level, target, avoid, relax) : null;
-      let cond = wantCond ? this.pickCondition(action, zone, method, level, target, avoid, relax) : null;
-      let alt = null;
-      if (cond && cond.needsAlt) { const alts = CE.altZones(cond, action, zone, level, prefs); if (!alts.length) cond = null; else alt = this.rng.pick(alts).id; }
-      const intensity = combinationIntensity(action, zone, method, cond);
-      const combo = { action: action.id, zone: zone.id, method: method ? method.id : null, cond: cond ? cond.id : null, alt, intensity, level, target };
-      if (intensity < lo || intensity > hi || Math.abs(intensity - target) > 1.3) { this.reject('intensidad fuera de objetivo'); continue; }
-      const v = CombinationValidator.validate({ ...combo, phrase: this.previewPhrase(combo), names: prefs.names }, prefs);
-      if (v.status !== 'VALID') { this.reject(v.reasons[0]); continue; }
-      return combo;
+      const wantMethod = keep.method !== undefined ? !!keep.method : this.rng.chance(action.manner === 'baja' ? D.method * .4 : D.method);
+      const method = wantMethod ? this.pickMethod(action, zone, level, target, avoid, relax, mods) : null;
+      const cond = this.rng.chance(D.cond) ? this.pickCondition(action, zone, method, level, target, avoid, relax, mods) : null;
+      // se construye con y sin condición (y a veces sin forma); cada añadido solo se queda si la frase mejora de verdad
+      const versions = [this.build(action, zone, method, null, level, target)];
+      if (cond) versions.push(this.build(action, zone, method, cond, level, target));
+      if (method && this.rng.chance(0.35)) versions.push(this.build(action, zone, null, null, level, target));
+      let best = null;
+      for (const v of versions) {
+        const chk = criticalCheck(v, ctxBase);
+        if (!chk.ok) { this.reject(chk.reasons[0], dbg, v); continue; }
+        if (Math.abs(v.intensity - target) > (relax ? 2.2 : 1.4)) { this.reject('intensidad fuera de objetivo', dbg, v); continue; }
+        const q = qualityScore(v, { ...ctxBase, phrase: v.phrase, dims: v.meta.dims, semanticFamily: v.meta.semanticFamily });
+        v.quality = q.score; v.qualityParts = q.parts;
+        if (q.score < THRESHOLD) { this.reject('calidad insuficiente', dbg, v); continue; }
+        if (!best || q.score > best.quality + (v.cond && !best.cond ? 0.03 : 0)) best = v;
+      }
+      if (best) candidates.push(best);
     }
-    // red de seguridad: lo más tranquilo del nivel
-    const fallback = this.fallback(level);
-    return fallback;
+    let combo;
+    if (candidates.length) {
+      combo = this.rng.weighted(candidates.map(c => ({ item: c, weight: Math.exp(8 * c.quality) * (purpose === 'DEEPEN' ? c.qualityParts.continuity ** 2 : 1) }))); // calidad manda, con un poco de azar
+    } else {
+      const f = fallbackFor(level, prefs, H.last() ? H.last().action + ':' + H.last().zone : null, c => criticalCheck({ ...c, phrase: '' }, ctxBase).ok);
+      combo = this.build(ACTION[f.action], ZONE[f.zone], f.method ? METHOD[f.method] : null, null, level, target);
+      combo.fallback = true; combo.quality = 0; this.stats.fallbacks++; dbg.fallback = true;
+    }
+    combo.purpose = purpose;
+    dbg.candidates = candidates.map(c => ({ phrase: c.phrase, quality: c.quality }));
+    dbg.selectedFamily = combo.meta.semanticFamily; dbg.finalQualityScore = combo.quality;
+    this.lastDebug = dbg;
+    return combo;
   }
-  reject(reason) { this.stats.rejected++; const k = String(reason).split(':')[0]; this.stats.rejectedReasons[k] = (this.stats.rejectedReasons[k] || 0) + 1; }
+  build(action, zone, method, cond, level, target) {
+    const intensity = combinationIntensity(action, zone, method, cond);
+    const combo = { action: action.id, zone: zone.id, method: method ? method.id : null, cond: cond ? cond.id : null, alt: null, intensity, level, target };
+    combo.phrase = this.previewPhrase(combo);
+    combo.meta = interactionMeta(combo);
+    return combo;
+  }
+  reject(reason, dbg, v) {
+    this.stats.rejected++; const k = String(reason).split(':')[0]; this.stats.rejectedReasons[k] = (this.stats.rejectedReasons[k] || 0) + 1;
+    if (dbg) { dbg.rejectionReasons[k] = (dbg.rejectionReasons[k] || 0) + 1; if (this.debug && v) dbg.rejectedCandidates.push({ phrase: v.phrase, reason }); }
+  }
   previewPhrase(combo) { return NLG.phrase(combo, { partner: this.prefs.names[1] || 'tu pareja', performer: this.prefs.names[0] || 'tú' }); }
-  pickAction(level, target, avoid, relax) {
-    const H = this.history, prefs = this.prefs;
-    const items = [];
+
+  /* finalWeight = base × nivel × anatomía × propósito × recencia × recenciaSemántica × diversidad × progresión × feedback */
+  /* "hoy no": lo que cualquiera de los dos ha apartado no entra ni en la selección */
+  avoidRules() { const S = this.session; return [...S.avoidSet()].map(k => AVOIDS[k]).filter(Boolean); }
+  actionAllowed(a, rules) { return !rules.some(r => (r.contact && r.contact.includes(a.contactType)) || (r.actionTags && r.actionTags.some(t => a.tags.includes(t))) || (r.families && r.families.includes(a.family))); }
+  zoneAllowed(z, rules) { return !rules.some(r => r.groups && r.groups.includes(z.group)); }
+  condAllowed(c, rules) { return !rules.some(r => r.condFamilies && r.condFamilies.includes(c.family)); }
+  /* el par acción·zona tiene que poder caer dentro del nivel (forma y condición mueven como mucho ±0.9) */
+  inBand(a, z, level) { const v = pairIntensity(a, z), L = LEVELS[level]; return v >= L.lo - 0.9 && v <= L.max + 0.5; }
+  pickAction(level, target, avoid, relax, mods, dbg) {
+    const H = this.history, prefs = this.prefs, items = [], rules = this.avoidRules();
     for (const a of ACTIONS) {
-      if (!a.levels[level] || prefs.actionDisabled(a)) continue;
+      if (!a.levels[level] || prefs.actionDisabled(a) || !this.actionAllowed(a, rules)) continue;
       if (avoid && avoid.action === a.id) continue;
-      if (!relax && (H.cooling('action', a.id, COOL.action) || H.familyCooling('action', a.family, FAM_COOL.action))) continue;
-      const zs = CE.zonesFor(a, level, prefs);
+      if (relax < 2 && H.cooling('action', a.id, COOL.action)) continue;
+      if (!relax && mods.purpose !== 'DEEPEN' && H.familyCooling('action', a.family, FAM_COOL.action)) continue;
+      const zs = CE.zonesFor(a, level, prefs).filter(z => this.zoneAllowed(z, rules) && this.inBand(a, z, level) && !(avoid && avoid.zone === z.id) && !H.cooling('zone', z.id, relax < 2 ? COOL.zone : 3)); // solo acciones con alguna zona disponible ahora
       if (!zs.length) continue;
       const d = Math.min(...zs.map(z => Math.abs(pairIntensity(a, z) - target)));
-      if (d > 1.6) continue;
-      items.push({ item: a, weight: a.levels[level] * near(d, 0, 1.2) * H.novelty('action', a.id, 10, 1.2) * H.familyWeight('action', a.family, { strength: 1 }) * H.familyWeight('actor', a.actor, { strength: 0.6, hunger: 99 }) });
+      if (d > (relax ? 2.4 : 1.6)) continue;
+      const recency = H.novelty('action', a.id, 10, 1.2) * H.familyWeight('action', a.family, { strength: mods.purpose === 'DEEPEN' ? 0.2 : 1, soft: mods.purpose === 'DEEPEN' }) * H.familyWeight('actor', a.actor, { strength: 0.6, hunger: 99 });
+      const prog = near(d, 0, 1.2), pm = mods.action(a);
+      const w = a.levels[level] * prog * recency * pm;
+      if (this.debug) { dbg.weights[a.id] = Math.round(w * 1000) / 1000; dbg.recencyPenalty[a.id] = Math.round(recency * 100) / 100; dbg.progressionModifier[a.id] = Math.round(prog * 100) / 100; dbg.feedbackModifier[a.id] = Math.round(pm * 100) / 100; }
+      items.push({ item: a, weight: w });
     }
     return items.length ? this.rng.weighted(items) : null;
   }
-  pickZone(action, level, target, avoid, relax) {
-    const H = this.history;
+  pickZone(action, level, target, avoid, relax, mods, dbg) {
+    const H = this.history, rules = this.avoidRules();
     const items = CE.zonesFor(action, level, this.prefs).map(z => {
       if (avoid && avoid.zone === z.id) return null;
-      if (!relax && (H.cooling('zone', z.id, COOL.zone) || H.familyCooling('zone', z.family, FAM_COOL.zone))) return null;
+      if (!this.zoneAllowed(z, rules)) return null;
+      if (H.cooling('zone', z.id, relax < 2 ? COOL.zone : 3)) return null; // ni relajando vuelve la zona de las 3 últimas rondas
+      if (!relax && mods.purpose !== 'DEEPEN' && H.familyCooling('zone', z.family, FAM_COOL.zone)) return null;
       const d = Math.abs(pairIntensity(action, z) - target);
-      if (d > 1.6) return null;
-      return { item: z, weight: z.levels[level] * near(d, 0, 1.5) * H.novelty('zone', z.id, 10, 2) * H.familyWeight('zone', z.family, { strength: 1.5 }) };
+      if (d > (relax ? 2.4 : 1.6)) return null;
+      const seen = H.rounds.filter(r => r.families && r.families.zone === z.family).length;
+      const diversity = H.rounds.length >= 6 && !seen ? 1.5 : 1; // cobertura corporal: lo que aún no ha salido empuja
+      if (this.debug) dbg.diversityBoost[z.id] = diversity;
+      return { item: z, weight: z.levels[level] * near(d, 0, 1.5) * H.novelty('zone', z.id, 10, 2) * H.familyWeight('zone', z.family, { strength: mods.purpose === 'DEEPEN' ? 0.3 : 1.5, soft: mods.purpose === 'DEEPEN' }) * diversity * mods.zone(z, action) };
     }).filter(Boolean);
     return items.length ? this.rng.weighted(items) : null;
   }
-  pickMethod(action, zone, level, target, avoid, relax) {
+  pickMethod(action, zone, level, target, avoid, relax, mods) {
     const H = this.history, base = pairIntensity(action, zone);
     const items = CE.methodsFor(action, zone, level).map(m => {
       if (avoid && avoid.method === m.id) return null;
-      if (!relax && H.cooling('method', m.id, COOL.method)) return null;
-      return { item: m, weight: m.levels[level] * near(base + m.mod, target, 1.2) * H.novelty('method', m.id, 10, 1) };
+      if (relax < 2 && H.cooling('method', m.id, COOL.method)) return null;
+      return { item: m, weight: m.levels[level] * near(base + m.mod, target, 1.2) * H.novelty('method', m.id, 10, 1) * mods.method(m) };
     }).filter(Boolean);
     return items.length ? this.rng.weighted(items) : null;
   }
-  pickCondition(action, zone, method, level, target, avoid, relax) {
+  pickCondition(action, zone, method, level, target, avoid, relax, mods) {
     const H = this.history, base = pairIntensity(action, zone) + (method ? method.mod : 0);
+    const rules = this.avoidRules();
     const items = CE.conditionsFor(action, zone, method, level).map(c => {
+      if (c.needsAlt || !this.condAllowed(c, rules)) return null;
       if (avoid && avoid.cond === c.id) return null;
-      if (!relax && (H.cooling('cond', c.id, COOL.cond) || H.familyCooling('cond', c.family, FAM_COOL.cond))) return null;
-      return { item: c, weight: c.levels[level] * CE.conditionValue(c, action, zone) * near(base + c.mod, target, 1.2) * H.novelty('cond', c.id, 12, 2) * H.familyWeight('cond', c.family, { strength: 2 }) };
+      if (relax < 2 && H.cooling('cond', c.id, COOL.cond)) return null;
+      if (!relax && H.familyCooling('cond', c.family, FAM_COOL.cond)) return null;
+      return { item: c, weight: c.levels[level] * CE.conditionValue(c, action, zone) * near(base + c.mod, target, 1.2) * H.novelty('cond', c.id, 12, 2) * H.familyWeight('cond', c.family, { strength: 2 }) * mods.cond(c) };
     }).filter(Boolean);
     return items.length ? this.rng.weighted(items) : null;
-  }
-  fallback(level) {
-    const a = level === 1 ? ACTION.acariciar : level === 2 ? ACTION.besar : ACTION.lamer;
-    const zs = CE.zonesFor(a, level, this.prefs);
-    const z = zs.length ? zs[0] : ZONE.manos;
-    return { action: a.id, zone: z.id, method: 'lento', cond: null, alt: null, intensity: combinationIntensity(a, z, METHOD.lento, null), level, target: 0 };
   }
 
-  /* ---------- variantes: misma idea, más suave o más intensa ---------- */
-  getVariant(last, dir) {
-    const prefs = this.prefs, level = this.level();
-    const maxAllowed = LEVELS[level].max; // subir nunca sale del nivel elegido
-    const want = dir < 0 ? [last.intensity - 3, last.intensity - 0.8] : [last.intensity + 0.8, Math.min(10, last.intensity + 3)];
-    const inRange = v => v >= want[0] && v <= want[1] && v <= maxAllowed;
+  /* ---------- variante más suave: la misma idea con menos intensidad ---------- */
+  getVariant(last) {
+    const prefs = this.prefs, level = this.session.level;
+    const want = [last.intensity - 3, last.intensity - 0.8];
+    const inRange = v => v >= want[0] && v <= want[1];
+    const ctx = { prefs, level: Math.max(1, level - 1), session: this.session, avoids: AVOIDS };
     const tryZone = (zone, keepAction) => {
       const cands = [];
-      const actions = keepAction ? [ACTION[last.action]] : ACTIONS.filter(a => a.zones.includes(zone.id) && !prefs.actionDisabled(a) && (a.levels[level] || (dir < 0 && a.levels[level - 1]) || (dir < 0 && a.levels[1])));
+      const actions = keepAction ? [ACTION[last.action]] : ACTIONS.filter(a => a.zones.includes(zone.id) && !prefs.actionDisabled(a) && (a.levels[level] || a.levels[level - 1] || a.levels[1]));
       for (const a of actions) {
-        const ms = METHODS.filter(m => CE.methodFits(m, a, zone) && (m.levels[level] || (dir < 0 && Object.keys(m.levels).some(l => l < level))));
+        const ms = METHODS.filter(m => CE.methodFits(m, a, zone) && (m.levels[level] || Object.keys(m.levels).some(l => l < level)));
         for (const m of [null, ...ms]) {
-          const cs = CONDITIONS.filter(c => CE.conditionFits(c, a, zone, m) && !c.needsAlt && (c.levels[level] || (dir < 0 && Object.keys(c.levels).some(l => l < level))));
+          const cs = CONDITIONS.filter(c => CE.conditionFits(c, a, zone, m) && !c.needsAlt && c.slot !== 'swap' && (c.levels[level] || Object.keys(c.levels).some(l => l < level)));
           for (const c of [null, ...cs]) {
             const v = combinationIntensity(a, zone, m, c);
             if (!inRange(v)) continue;
             const combo = { action: a.id, zone: zone.id, method: m ? m.id : null, cond: c ? c.id : null, alt: null, intensity: v, level, target: v };
-            if (CombinationValidator.validate({ ...combo, phrase: this.previewPhrase(combo), names: prefs.names }, prefs).status !== 'VALID') continue;
             if (combo.action === last.action && combo.method === last.method && combo.cond === last.cond) continue;
+            combo.phrase = this.previewPhrase(combo);
+            if (CombinationValidator.validate({ ...combo, level: null, names: prefs.names }, prefs).status !== 'VALID') continue; // bajar puede salir del nivel por abajo
+            const chk = criticalCheck(combo, ctx); if (!chk.ok && !chk.reasons.every(r => r.startsWith('intensidad'))) continue;
             const changed = (combo.action !== last.action) + (combo.method !== last.method) + (combo.cond !== last.cond);
-            cands.push({ item: combo, weight: near(v, dir < 0 ? last.intensity - 1.5 : last.intensity + 1.5, 1) * (combo.action === last.action ? 1.6 : 1) / (1 + 0.3 * changed) * (m && c ? 0.5 : 1) });
+            cands.push({ item: combo, weight: near(v, last.intensity - 1.5, 1) * (combo.action === last.action ? 1.6 : 1) / (1 + 0.3 * changed) * (m && c ? 0.5 : 1) });
           }
         }
       }
@@ -186,17 +253,14 @@ export class GameEngine {
     };
     const z = ZONE[last.zone];
     let combo = tryZone(z, false);
-    if (combo) { combo.kept = 'zone'; return combo; }
-    // no se puede con la misma zona: busca una zona vecina en la misma dirección, manteniendo la acción si se puede
+    if (combo) { combo.kept = 'zone'; return this.finishVariant(combo); }
     const a = ACTION[last.action];
-    const zs = ZONES.filter(x => prefs.zoneEnabled(x) && x.id !== z.id && (dir < 0 ? x.intensity < z.intensity : x.intensity > z.intensity)).sort((p, q) => Math.abs(p.intensity - z.intensity) - Math.abs(q.intensity - z.intensity));
-    for (const nz of zs) {
-      if (!a.zones.includes(nz.id)) continue;
-      combo = tryZone(nz, true); if (combo) { combo.kept = 'action'; return combo; }
-    }
-    for (const nz of zs.slice(0, 8)) { combo = tryZone(nz, false); if (combo) { combo.kept = 'intent'; return combo; } }
+    const zs = ZONES.filter(x => prefs.zoneEnabled(x) && x.id !== z.id && x.intensity < z.intensity && !x.tags.includes('intimo')).sort((p, q) => Math.abs(p.intensity - z.intensity) - Math.abs(q.intensity - z.intensity));
+    for (const nz of zs) { if (!a.zones.includes(nz.id)) continue; combo = tryZone(nz, true); if (combo) { combo.kept = 'action'; return this.finishVariant(combo); } }
+    for (const nz of zs.slice(0, 8)) { combo = tryZone(nz, false); if (combo) { combo.kept = 'intent'; return this.finishVariant(combo); } }
     return null;
   }
+  finishVariant(combo) { combo.meta = interactionMeta(combo); combo.purpose = 'COOLDOWN'; return combo; }
 
   /* ---------- cierre de la ronda ---------- */
   round(combo, opts = {}) {
@@ -208,24 +272,23 @@ export class GameEngine {
     const performerName = names[performer] || (performer === 0 ? 'Jugador 1' : 'Jugador 2');
     const partner = names[1 - performer] || 'tu pareja';
     const phrase = NLG.phrase(combo, { partner, performer: performerName });
-    const level = combo.level || this.level();
+    const level = combo.level || this.session.level;
+    const meta = combo.meta || interactionMeta(combo);
     const round = {
       id: `${Date.now().toString(36)}-${Math.floor(this.rng.next() * 1e6).toString(36)}`,
       n: ++this.state.round, level, levelName: LEVELS[level].name, target: opts.target ?? combo.target ?? intensity, intensity, intensityLabel: INTENSITY_LABEL(intensity),
-      category: this.categoryOf(a, z, c, intensity),
+      purpose: combo.purpose || 'MAINTAIN', pattern: meta.pattern, semanticFamily: meta.semanticFamily, dims: meta.dims,
       action: combo.action, zone: combo.zone, method: combo.method, cond: combo.cond, alt: combo.alt || null,
       seconds: m && m.seconds ? m.seconds : (c && c.id === 'esperar' ? 5 : null),
       performer, performerName, partnerName: partner, phrase, faces: NLG.faces(combo), dice: this.diceFaces(combo, level),
       families: { action: a.family, actor: a.actor || null, zone: z.family, cond: c ? c.family : null, method: m ? m.dim : null },
-      variant: opts.variant || null, kept: combo.kept || null,
+      variant: opts.variant || null, kept: combo.kept || null, fallback: !!combo.fallback, quality: combo.quality ?? null,
+      canMore: !!(m && ['presion', 'ritmo', 'dinamica'].includes(m.dim)) || a.tags.includes('presion'),
       validation: CombinationValidator.validate({ ...combo, intensity, level: opts.fromFavorite ? null : level, phrase, names }, this.prefs).status,
     };
     this.history.push(round);
-    // modo progresivo: si nadie pasa ni baja, la banda puede subir cada 3 rondas
-    if (this.prefs.mode === 'progresivo' && opts.advanceTurn) {
-      const p = this.state.progressive; p.calm++;
-      if (p.calm >= 3 && p.band < 3 && this.rng.chance(0.6)) { p.band++; p.calm = 0; round.bandUp = p.band; }
-    }
+    this.director.afterRound(this.session, round);
+    round.gateDue = this.gateDue();
     return round;
   }
 
@@ -242,4 +305,4 @@ export class GameEngine {
     return { action: [f.action, ...others(actNames, f.action)], zone: [f.zone, ...others(zoneNames, f.zone)], method: [f.method, ...others(methodNames, f.method)], cond: [f.cond, ...others(condNames, f.cond)] };
   }
 }
-export { CombinationValidator, PreferenceManager, HistoryManager, NLG, combinationIntensity };
+export { CombinationValidator, PreferenceManager, HistoryManager, NLG, combinationIntensity, SessionState, SessionDirector, INTENTS, AVOIDS };
