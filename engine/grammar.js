@@ -9,14 +9,30 @@ import { COMPATIBILITY, GUIDABLE_ACTIONS, TIER_WEIGHT } from './data/compatibili
 import { BASE_RANGE, TARGET_DURATION, HUMAN_DURATIONS } from './data/durations.js';
 import { SHAPES } from './data/shapes.js';
 
+/* Tres niveles. La pareja decide cuándo cambiar; el motor solo hace que cada nivel sea excelente.
+   Deseo tiene un rango interno (low · mid · high) que nunca se muestra: el director se mueve dentro de él. */
 export const LEVELS = {
   1: { id: 1, key: 'conexion', name: 'Conexión', min: 1, lo: 1, max: 3.5, tagline: 'No tenemos que llegar a ningún sitio.' },
-  2: { id: 2, key: 'deseo', name: 'Deseo', min: 3.5, lo: 3, max: 6.5, tagline: 'Descubrir qué nos enciende.' },
-  3: { id: 3, key: 'exploracion', name: 'Exploración', min: 6, lo: 5.5, max: 8.5, tagline: 'Sin prisa, con las manos y la boca.' },
-  4: { id: 4, key: 'intimidad', name: 'Intimidad', min: 7, lo: 6.5, max: 10, tagline: 'Elegimos juntos hasta dónde queremos llegar.' },
+  2: { id: 2, key: 'deseo', name: 'Deseo', min: 3.5, lo: 3, max: 8.5, tagline: 'Explorar qué nos apetece.', bands: { low: [3, 5], mid: [5, 6.8], high: [6.8, 8.5] } },
+  3: { id: 3, key: 'intimidad', name: 'Intimidad', min: 7, lo: 6.5, max: 10, tagline: 'Nosotros decidimos hasta dónde.' },
 };
-export const LEVEL_BY_KEY = { conexion: 1, deseo: 2, exploracion: 3, intimidad: 4, relajado: 1, sensual: 2, atrevido: 3, progresivo: 1 };
-export const LEVEL_KEYS = ['conexion', 'deseo', 'exploracion', 'intimidad'];
+export const LEVEL_IDS = [1, 2, 3];
+/* claves guardadas en el teléfono (incluidas las de versiones anteriores: «exploracion» pasa a Deseo) */
+export const LEVEL_BY_KEY = { conexion: 1, deseo: 2, exploracion: 2, intimidad: 3, relajado: 1, sensual: 2, atrevido: 2, progresivo: 1 };
+export const LEVEL_KEYS = ['conexion', 'deseo', 'intimidad'];
+/* nivel guardado con la numeración anterior (01–04) → numeración actual */
+export const migrateLevelId = id => ({ 1: 1, 2: 2, 3: 2, 4: 3 }[Number(id)] || 1);
+/* banda interna de Deseo para una intensidad (solo informativa: nunca se muestra como nivel) */
+export const desireBand = v => v < LEVELS[2].bands.mid[0] ? 'low' : v < LEVELS[2].bands.high[0] ? 'mid' : 'high';
+/* peso de una acción o zona en un nivel. En Deseo el peso puede ser [bajo, alto]: perfil dentro del nivel, interpolado
+   según el objetivo de intensidad de la ronda (así una zona que antes era de Exploración sigue pesando poco en un Deseo suave) */
+export function levelWeight(weights, level, target, fallback = 1) {
+  if (!weights) return fallback;
+  const w = weights[level]; if (w == null) return fallback;
+  if (!Array.isArray(w)) return w;
+  const t = Math.max(0, Math.min(1, ((target ?? 5.5) - 4.5) / 2.5));
+  return w[0] * (1 - t) + w[1] * t;
+}
 export const PATTERNS = { GIVE: 'Dar', MUTUAL: 'A la vez', DISCOVER: 'Descubrir', GUIDED: 'Guiado por la pareja' };
 export const INTENSITY_LABEL = v => v < 2.5 ? 'Relajante' : v < 3.5 ? 'Cariñoso' : v < 5 ? 'Cercano' : v < 6.5 ? 'Sensual' : v < 8 ? 'Provocador' : 'Muy intenso';
 
@@ -104,7 +120,7 @@ export function validateData() {
     for (const s of z.allowedStyles) if (!STYLE_IDS.includes(s)) errors.push(`zona ${z.id}: estilo inexistente ${s}`);
     if (!GROUPS[z.group]) errors.push(`zona ${z.id}: grupo inexistente ${z.group}`);
     if (z.anatomy && !['vulva', 'pene'].includes(z.anatomy)) errors.push(`zona ${z.id}: anatomía inexistente`);
-    if (z.tags.includes('intimo') && z.allowedLevels.some(L => L < 4)) errors.push(`zona ${z.id}: íntima fuera de Intimidad`);
+    if (z.tags.includes('intimo') && z.allowedLevels.some(L => L < 3)) errors.push(`zona ${z.id}: íntima fuera de Intimidad`);
     if (z.anatomy && !z.tags.includes('intimo')) errors.push(`zona ${z.id}: exige anatomía pero no es íntima`);
   }
   for (const e of COMPATIBILITY) {
@@ -126,7 +142,7 @@ export function validateData() {
     if (a.styles.length && !c.styles.length && a.styleRate > 0) warn.push(`combinación ${c.key} sin ningún estilo compatible`);
     if (!realizable(c)) errors.push(`combinación ${c.key} no verbalizable (sin plantilla)`);
     const z = TARGETS[c.target];
-    if (z.anatomy && !c.levels.every(L => L === 4)) errors.push(`combinación ${c.key} con anatomía íntima fuera de Intimidad`);
+    if (z.anatomy && !c.levels.every(L => L === 3)) errors.push(`combinación ${c.key} con anatomía íntima fuera de Intimidad`);
   }
   for (const [k, r] of Object.entries(TARGET_DURATION.override)) { const [a, t] = k.split(':'); if (!ACTIONS[a] || !TARGETS[t]) errors.push(`duración: override para ${k} inexistente`); if (r[0] > r[1] || r[0] < HUMAN_DURATIONS[0]) errors.push(`duración: rango inválido en ${k}`); }
   return { ok: !errors.length, errors, warn };

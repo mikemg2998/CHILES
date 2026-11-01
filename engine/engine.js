@@ -2,7 +2,7 @@
    Director de sesión (qué pretende la ronda) → gramática (solo combinaciones aprobadas: acción + herramienta + zona, con
    nivel, estilo y duración derivados) → realizador humano (frase) → filtro de calidad → dados que la representan.
    Los dados representan conceptos; no gobiernan la lógica. */
-import { LEVELS, LEVEL_BY_KEY, ACTIONS, ACTIONS_LIST, TARGETS, ACTOR_TOOLS, STYLES, COMBO, COMBOS, combosForLevel, combinationIntensity, INTENSITY_LABEL, GROUPS, LEGACY_TARGET } from './grammar.js';
+import { LEVELS, LEVEL_BY_KEY, ACTIONS, ACTIONS_LIST, TARGETS, ACTOR_TOOLS, STYLES, COMBO, COMBOS, combosForLevel, combinationIntensity, INTENSITY_LABEL, GROUPS, LEGACY_TARGET, levelWeight, migrateLevelId } from './grammar.js';
 import { Rng } from './rng.js';
 import { HistoryManager } from './history.js';
 import { PreferenceManager } from './prefs.js';
@@ -34,7 +34,7 @@ export class GameEngine {
   level() { return this.session.level; }
   levelInfo() { return LEVELS[this.session.level]; }
   /* el nivel lo decide la pareja, en cualquier dirección; el motor nunca lo cambia solo */
-  setLevel(level) { this.director.setLevel(this.session, level); return this.session.level === Math.max(1, Math.min(4, Number(level) || 1)); }
+  setLevel(level) { this.director.setLevel(this.session, level); return this.session.level === Number(level); }
   setIntents(player, list) { this.session.intents[player] = [...new Set(list.filter(k => MOODS[k]))]; }
   setPrefs(player, map) { const out = {}; for (const k in map) if (AVOIDS[k] && (map[k] === 'quiza' || map[k] === 'no')) out[k] = map[k]; this.session.pref[player] = out; }
   setAvoid(player, list) { const m = { ...this.session.pref[player] }; for (const k in m) if (m[k] === 'no') delete m[k]; for (const k of list) if (AVOIDS[k]) m[k] = 'no'; this.session.pref[player] = m; }
@@ -97,8 +97,8 @@ export class GameEngine {
     if (target == null) target = this.director.target(purpose, S, H);
     // Intimidad sin anatomía íntima disponible para quien recibe: se juega con la banda y el repertorio de Exploración
     const intimateOk = prefs.enabledGroups.some(g => GROUPS[g].intimate) && (prefs.bodyParts[prefs.partner] || []).length > 0;
-    const band = level === 4 && !intimateOk ? 3 : level;
-    if (band !== level || S.maybeSet().has('intimo')) target = Math.min(target, 8); // «quizá» íntimo: no se asume; la intensidad se busca en lo demás
+    const band = level === 3 && !intimateOk ? 2 : level; // Intimidad sin anatomía íntima: se juega con el repertorio alto de Deseo
+    if (band !== level || S.maybeSet().has('intimo')) target = Math.min(target, 8.5); // «quizá» íntimo: no se asume; la intensidad se busca en lo demás
     target = Math.min(target, this.reachable(band)); // el objetivo nunca sube más allá de lo que el repertorio disponible puede dar
     const mods = this.director.modifiers(purpose, S, H);
     const dbg = { selectedPurpose: purpose, purposeReason: P.reason, target, level, band, intraLevelIntensity: S.intraLevelIntensity, calm: S.calm(), candidateWeights: {}, rejectedCandidates: [], rejectionReasons: {}, candidates: [], finalQualityScore: null, fallback: false, guidedChance: null };
@@ -183,7 +183,7 @@ export class GameEngine {
         if (!inBand(c.intensity) && !c.styles.some(st => inBand(c.intensity + STYLES[st].intensityMod))) continue; // fuera del nivel incluso con estilo
         const seen = H.rounds.filter(r => r.families && r.families.target === z.family).length;
         const diversity = H.rounds.length >= 6 && !seen ? 1.5 : 1;
-        const w = c.weight * (a.levelWeights[band] || 0.3) * (z.levelWeights && z.levelWeights[band] || 0.5) * near(d, 0, 1.1) * H.novelty('action', c.action, 10, 1.2) * H.novelty('target', c.target, 10, 2) * H.familyWeight('action', a.semanticFamily, { strength: mods.purpose === 'DEEPEN' ? 0.2 : 1, soft: mods.purpose === 'DEEPEN' }) * H.familyWeight('target', z.family, { strength: mods.purpose === 'DEEPEN' ? 0.3 : 1.5, soft: mods.purpose === 'DEEPEN' }) * H.familyWeight('tool', ACTOR_TOOLS[c.tool].kind, { strength: 0.5, hunger: 99 }) * (0.6 + 0.4 * c.mechanics.naturalness) * diversity * mods.combo(c);
+        const w = c.weight * levelWeight(a.levelWeights, band, target, 0.3) * levelWeight(z.levelWeights, band, target, 0.5) * near(d, 0, 1.1) * H.novelty('action', c.action, 10, 1.2) * H.novelty('target', c.target, 10, 2) * H.familyWeight('action', a.semanticFamily, { strength: mods.purpose === 'DEEPEN' ? 0.2 : 1, soft: mods.purpose === 'DEEPEN' }) * H.familyWeight('target', z.family, { strength: mods.purpose === 'DEEPEN' ? 0.3 : 1.5, soft: mods.purpose === 'DEEPEN' }) * H.familyWeight('tool', ACTOR_TOOLS[c.tool].kind, { strength: 0.5, hunger: 99 }) * (0.6 + 0.4 * c.mechanics.naturalness) * diversity * mods.combo(c);
         if (w > 0) items.push({ item: c, weight: w });
       }
       if (items.length >= 3) break;
@@ -238,7 +238,7 @@ export class GameEngine {
           const v = combinationIntensity(c.action, c.target, c.tool, st); if (!want(v)) continue;
           if (c.action === last.action && c.target === last.target && st === last.style) continue;
           const cand = this.compose(c, { style: st, guided: false, level, band: level });
-          if (!cand || !criticalCheck(cand, { ...ctx, level: Math.min(level, 4) }).ok && !criticalCheck(cand, { ...ctx, level: Math.max(1, level - 1) }).ok) continue;
+          if (!cand || !criticalCheck(cand, { ...ctx, level }).ok && !criticalCheck(cand, { ...ctx, level: Math.max(1, level - 1) }).ok) continue;
           cands.push({ item: cand, weight: near(v, last.intensity - 1.5, 1) * (c.action === last.action ? 1.6 : 1) * c.weight * (st && ['SOFT', 'SLOW'].includes(st) ? 1.3 : 1) });
         }
       }
@@ -298,8 +298,9 @@ export class GameEngine {
   }
 }
 /* favoritas guardadas con el modelo anterior (action/zone/method) → modelo nuevo; null si no se puede */
-export function migrateFavorite(fav) {
+export function migrateFavorite(fav, schema = 3) {
   if (!fav) return null;
+  if (schema < 3 && fav.level != null) { const level = migrateLevelId(fav.level); fav = { ...fav, level, levelName: LEVELS[level].name }; } // 01–04 → 01–03
   if (fav.tool && fav.target && ACTIONS[fav.action]) return fav;
   const m = LEGACY_ACTION[fav.action]; const target = LEGACY_TARGET[fav.zone];
   if (!m || !target) return null;

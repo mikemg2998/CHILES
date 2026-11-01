@@ -4,7 +4,7 @@
    node tests/stress.js [tiradas=10000] [--audit=ruta.txt] [--session=ruta.txt] */
 import { writeFileSync } from 'node:fs';
 import { GameEngine } from '../engine/engine.js';
-import { ACTIONS, TARGETS, ACTOR_TOOLS, STYLES, GROUPS, LEVELS, COMBO } from '../engine/grammar.js';
+import { ACTIONS, TARGETS, ACTOR_TOOLS, STYLES, GROUPS, LEVELS, COMBO, LEVEL_IDS } from '../engine/grammar.js';
 import { THRESHOLD, HUMAN_MIN, sessionQuality } from '../engine/quality.js';
 import { HUMAN_DURATIONS, LONG_DURATION } from '../engine/data/durations.js';
 
@@ -17,9 +17,9 @@ const top = (m, n = 8) => Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0,
 const ALL = Object.keys(GROUPS);
 const setups = [{ name: 'vulva+pene', bodyParts: [['vulva'], ['pene']] }, { name: 'pene+pene', bodyParts: [['pene'], ['pene']] }, { name: 'vulva+vulva', bodyParts: [['vulva'], ['vulva']] }, { name: 'sin anatomía íntima', bodyParts: [[], []] }];
 const R = { accepted: 0, rejected: 0, rejectionReasons: {}, action: {}, target: {}, tool: {}, style: {}, duration: {}, level: {}, pattern: {}, tier: {}, purpose: {}, actionTarget: {}, toolTarget: {}, triple: {}, shape: {}, family: {}, structure: {}, quality: [], human: [], fallbacks: 0, invalid: 0, lowQuality: 0, lowHuman: 0, badDuration: 0, unapproved: 0, intimateOutside: 0, guidedBad: 0, phrases: new Set(), recomposed: 0 };
-const byLevel = { 1: [], 2: [], 3: [], 4: [] };
-let seed = 100; const perLevel = Math.ceil(N / 4);
-for (const L of [1, 2, 3, 4]) {
+const byLevel = { 1: [], 2: [], 3: [] };
+let seed = 100; const perLevel = Math.ceil(N / 3);
+for (const L of LEVEL_IDS) {
   let done = 0;
   while (done < perLevel) {
     const setup = setups[seed % setups.length];
@@ -35,8 +35,8 @@ for (const L of [1, 2, 3, 4]) {
       const c = COMBO[`${r.action}|${r.tool}|${r.target}`];
       if (r.fallback) R.fallbacks++; if (r.validation !== 'VALID') R.invalid++; if (!r.fallback && r.quality < THRESHOLD) R.lowQuality++; if (r.humanLikeness < HUMAN_MIN) R.lowHuman++;
       if (![...HUMAN_DURATIONS, LONG_DURATION].includes(r.seconds)) R.badDuration++;
-      if (!c || !c.levels.includes(r.band || L)) R.unapproved++; // en Intimidad sin anatomía íntima se juega con el repertorio de Exploración
-      if (TARGETS[r.target].tags.includes('intimo') && L < 4) R.intimateOutside++;
+      if (!c || !c.levels.includes(r.band || L)) R.unapproved++; // en Intimidad sin anatomía íntima se juega con el repertorio alto de Deseo
+      if (TARGETS[r.target].tags.includes('intimo') && L < 3) R.intimateOutside++;
       if (r.pattern === 'GUIDED' && !(c && c.guidable)) R.guidedBad++;
       byLevel[L].push({ finalText: r.phrase, duration: r.seconds, action: r.action, actorTool: r.tool, target: r.target, style: r.style || '—', level: LEVELS[L].name, pattern: r.pattern, compatibilityTier: r.tier, qualityScore: r.quality, humanLikenessScore: r.humanLikeness, shape: r.shape, setup: setup.name });
       if (i % 4 === 1) eng.feedback('like'); else if (i % 8 === 3) eng.feedback('cambia'); else if (i % 12 === 5) eng.feedback('paso');
@@ -52,14 +52,14 @@ console.log(`  inválidas ${R.invalid} · no aprobadas ${R.unapproved} · íntim
 console.log(`  calidad: mediana ${q(.5).toFixed(3)} · p10 ${q(.1).toFixed(3)} · mín ${qs[0].toFixed(3)} · humanLikeness: mediana ${h(.5)} · p10 ${h(.1)} · mín ${hs[0]}`);
 const show = (title, m, n = 10, t = R.accepted) => console.log(`  ${title}: ${top(m, n).map(([k, v]) => `${k} ${pct(v, t)}`).join(' · ')}`);
 show('razones de rechazo', R.rejectionReasons, 12, R.rejected);
-show('niveles', R.level, 4); show('propósitos', R.purpose, 8); show('patrones', R.pattern, 4); show('tiers', R.tier, 3); show('estructura', R.structure, 4);
+show('niveles', R.level, 3); show('propósitos', R.purpose, 8); show('patrones', R.pattern, 4); show('tiers', R.tier, 3); show('estructura', R.structure, 4);
 show('acciones', R.action, 24); show('zonas', R.target, 20); show('herramientas', R.tool, 14); show('estilos', R.style, 6); show('duraciones', R.duration, 9);
 show('pares acción→zona', R.actionTarget, 14); show('pares herramienta→zona', R.toolTarget, 12); show('tripletas acción·herramienta→zona', R.triple, 12);
 show('formas de frase', R.shape, 14); show('familias semánticas', R.family, 12);
 console.log(`  formas de frase distintas: ${Object.keys(R.shape).length} · tripletas distintas: ${Object.keys(R.triple).length} de ${Object.keys(COMBO).length} aprobadas`);
 // auditoría humana: 50 por nivel, al azar reproducible
 let s = 7; const rnd = () => { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; };
-const audit = [1, 2, 3, 4].flatMap(L => [...byLevel[L]].sort(() => rnd() - 0.5).slice(0, 50));
+const audit = LEVEL_IDS.flatMap(L => [...byLevel[L]].sort(() => rnd() - 0.5).slice(0, 67));
 const lines = [`AUDITORÍA HUMANA · 200 interacciones (50 por nivel) al azar entre ${R.accepted} aceptadas · ${new Date().toISOString().slice(0, 10)}`, 'nivel · acción · herramienta → zona · estilo · duración · patrón · tier · calidad · humanLikeness · forma · anatomía', ''];
 for (const x of audit) lines.push(`[${x.level} · ${x.action} · ${x.actorTool} → ${x.target} · ${x.style} · ${x.duration}s · ${x.pattern} · ${x.compatibilityTier} · q${x.qualityScore.toFixed(2)} · h${x.humanLikenessScore} · ${x.shape} · ${x.setup}]`, `  ${x.finalText}`, '');
 if (AUDIT) { writeFileSync(AUDIT, lines.join('\n')); console.log(`\n  auditoría escrita en ${AUDIT}`); }

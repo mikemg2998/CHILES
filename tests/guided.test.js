@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { GameEngine } from '../engine/engine.js';
-import { COMBOS, COMBO, guidable, TARGETS, ACTOR_TOOLS, GROUPS, ACTIONS } from '../engine/grammar.js';
+import { COMBOS, COMBO, guidable, TARGETS, ACTOR_TOOLS, GROUPS, ACTIONS, LEVEL_IDS } from '../engine/grammar.js';
 import { GUIDABLE_ACTIONS } from '../engine/data/compatibility.js';
 import { realize, humanLikeness } from '../engine/realizer.js';
 import { criticalCheck } from '../engine/quality.js';
@@ -40,7 +40,7 @@ test('el texto guiado suena humano: una sola idea de guía, sin redundancias ni 
   assert.ok(seen.size >= 4);
 });
 test('en sesión: GUIDED aparece con razón (no al azar sobre cualquier cosa), en ambas direcciones, sin tocar el nivel', () => {
-  for (const L of [2, 3, 4]) {
+  for (const L of [2, 3]) {
     const e = mk({ level: L, seed: 70 + L });
     const rs = []; for (let i = 0; i < 300; i++) { rs.push(e.roll()); if (i % 3 === 0) e.feedback('like'); }
     const g = rs.filter(r => r.pattern === 'GUIDED');
@@ -52,7 +52,7 @@ test('en sesión: GUIDED aparece con razón (no al azar sobre cualquier cosa), e
   }
 });
 test('«hoy no: guiar con la mano» lo aparta; ME GUSTA en una guiada no cambia de nivel', () => {
-  const e = mk({ level: 3, seed: 5 }); e.setPrefs(0, { guia: 'no' });
+  const e = mk({ level: 2, seed: 5 }); e.setPrefs(0, { guia: 'no' });
   for (let i = 0; i < 200; i++) assert.notEqual(e.roll().pattern, 'GUIDED');
   const f = mk({ level: 2, seed: 8 }); let r; do { r = f.roll(); } while (r.pattern !== 'GUIDED');
   f.feedback('like'); f.roll(); assert.equal(f.level(), 2);

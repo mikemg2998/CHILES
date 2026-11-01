@@ -24,7 +24,7 @@ test('solo las combinaciones APPROVED entran; INVALID nunca; lo no revisado no e
   assert.ok(un.length > 0);
   for (const u of un) assert.equal(COMBO[`${u.action}|${u.tool}|${u.target}`], undefined);
   // ninguna combinación íntima fue inventada: todas las aprobadas con anatomía íntima proceden del catálogo migrado (nivel 4, acciones de la lista)
-  for (const c of COMBOS.filter(c => TARGETS_LIST.find(t => t.id === c.target).anatomy)) { assert.deepEqual(c.levels, [4], c.key); assert.ok(['CARESS', 'BRUSH', 'KISS', 'SUCK', 'LICK', 'HOVER', 'STIMULATE', 'INSERT'].includes(c.action), c.key); }
+  for (const c of COMBOS.filter(c => TARGETS_LIST.find(t => t.id === c.target).anatomy)) { assert.deepEqual(c.levels, [3], c.key); assert.ok(['CARESS', 'BRUSH', 'KISS', 'SUCK', 'LICK', 'HOVER', 'STIMULATE', 'INSERT'].includes(c.action), c.key); }
   assert.equal(COMBOS.filter(c => c.target === 'anus').length, 0);
 });
 test('las diez acciones base existen con metadatos propios y cada acción tiene realizador', () => {

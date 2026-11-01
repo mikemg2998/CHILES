@@ -27,6 +27,6 @@ export const STYLE_DURATION = {
   SLOW: { min: 1.3, max: 1.2, bias: 0.6 }, FAST: { min: 1, max: 0.7, bias: -0.5 }, SOFT: { min: 1, max: 1, bias: 0.1 }, FIRM: { min: 1, max: 0.85, bias: -0.1 }, INTERMITTENT: { min: 1.6, max: 1.1, bias: 0.4 },
 };
 /* el nivel: Conexión prefiere algo sostenido pero no eterno; Deseo alarga para construir anticipación; Exploración e Intimidad respetan la acción */
-export const LEVEL_DURATION = { 1: { max: 1, bias: 0.1 }, 2: { max: 1.1, bias: 0.3 }, 3: { max: 1, bias: 0 }, 4: { max: 1, bias: -0.1 } };
+export const LEVEL_DURATION = { 1: { max: 1, bias: 0.1 }, 2: { max: 1.1, bias: 0.2 }, 3: { max: 1, bias: -0.1 } };
 /* peso por posición relativa en el rango resultante (0 = mínimo, 1 = máximo): campana con sesgo */
 export const POSITION_WEIGHT = (pos, bias) => Math.exp(-6 * Math.pow(pos - (0.45 + 0.35 * bias), 2));

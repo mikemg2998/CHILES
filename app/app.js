@@ -3,13 +3,14 @@
    Privacidad: en el teléfono solo se guardan nombres, partes del cuerpo, zonas activas, "Lo nuestro", vibración y si la
    configuración inicial está hecha. La sesión (cómo llegáis hoy, sí/quizá/hoy no, feedback, nivel) vive en memoria y
    desaparece al cerrar. No hay telemetría. */
-import { GameEngine } from '../engine/engine.js';
+import { GameEngine, migrateFavorite } from '../engine/engine.js';
 import { PreferenceManager } from '../engine/prefs.js';
-import { GROUPS, LEVELS, LEVEL_KEYS, LEVEL_BY_KEY } from '../engine/grammar.js';
+import { GROUPS, LEVELS, LEVEL_IDS, LEVEL_KEYS, LEVEL_BY_KEY } from '../engine/grammar.js';
 import { formatDuration } from '../engine/duration.js';
 import { MOODS, AVOIDS, PREF_STATES, PREF_LABEL, LEVEL_COPY } from '../engine/session.js';
 
 const KEY = 'pab.v2';
+const SCHEMA = 3; // 3 = tres niveles (01 Conexión · 02 Deseo · 03 Intimidad); lo guardado con cuatro niveles se migra al cargar
 const $ = s => document.querySelector(s);
 const DICE = ['action', 'zone', 'style', 'duration'];
 const IDLE_FACE = { action: 'Acción', zone: 'Zona', style: 'Estilo', duration: 'Tiempo' };
@@ -20,16 +21,18 @@ const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; }
 const saved = load();
 const prefs = new PreferenceManager(saved.prefs || {});
 if (!LEVEL_BY_KEY[prefs.mode]) prefs.mode = 'conexion';
-prefs.mode = LEVELS[LEVEL_BY_KEY[prefs.mode]].key; // claves antiguas → nuevas
+prefs.mode = LEVELS[LEVEL_BY_KEY[prefs.mode]].key; // claves antiguas («exploracion» → Deseo) → actuales
 const engine = new GameEngine({ prefs, debug: DEBUG });
-engine.state.favorites = Array.isArray(saved.favorites) ? saved.favorites : [];
+const savedSchema = Number(saved.schema) || 2;
+engine.state.favorites = (Array.isArray(saved.favorites) ? saved.favorites : []).map(f => migrateFavorite(f, savedSchema) || f); // niveles 01–04 → 01–03
 /* la configuración inicial cuenta como hecha si ya había preferencias guardadas de una versión anterior */
 const ui = { vibrate: saved.vibrate !== false, setupDone: !!saved.setupDone || !!saved.prefs, started: false, moods: [[], []], pref: {} };
 let current = null, busy = false, ctaTimer = 0;
 if (DEBUG) window.pab = engine;
+if (savedSchema < SCHEMA && (saved.prefs || saved.favorites)) persist(); // deja lo guardado en el esquema actual
 
 function persist() {
-  try { localStorage.setItem(KEY, JSON.stringify({ prefs: prefs.toJSON(), favorites: engine.state.favorites, vibrate: ui.vibrate, setupDone: ui.setupDone })); } catch { /* sin almacenamiento: la partida sigue */ }
+  try { localStorage.setItem(KEY, JSON.stringify({ schema: SCHEMA, prefs: prefs.toJSON(), favorites: engine.state.favorites, vibrate: ui.vibrate, setupDone: ui.setupDone })); } catch { /* sin almacenamiento: la partida sigue */ }
 }
 const buzz = p => { if (ui.vibrate && navigator.vibrate) { try { navigator.vibrate(p); } catch { /* nada */ } } };
 
@@ -58,7 +61,7 @@ function renderLevel() {
   const L = LEVELS[engine.level()];
   $('#levelNum').textContent = pad(L.id); $('#levelName').textContent = L.name;
   $('#tagline').textContent = L.tagline;
-  for (const k of [1, 2, 3, 4]) document.body.classList.toggle('level-' + k, k === L.id);
+  for (const k of LEVEL_IDS) document.body.classList.toggle('level-' + k, k === L.id);
 }
 function renderLevelList() {
   const list = $('#levelList'); list.innerHTML = '';
@@ -219,6 +222,7 @@ function showRound(r) {
   current = r;
   welcome.hidden = true; endingBox.hidden = true; roundBox.hidden = false; roundBox.classList.remove('show');
   phraseNode(r.phrase, $('#phrase'));
+  $('#phrase').dataset.len = r.phrase.length > 88 ? 'long' : r.phrase.length < 42 ? 'short' : 'medium'; // la composición funciona con frases cortas, medias y largas
   setTimer(r.seconds);
   const note = $('#note');
   const msg = engine.session.lastMessage; engine.session.lastMessage = null;
@@ -267,7 +271,7 @@ function updateControls() {
   roll.hidden = ended; $('#btnNew').hidden = !ended;
   roll.textContent = engine.state.round === 0 ? 'Lanzar los dados' : 'Siguiente tirada';
   clearTimeout(ctaTimer);
-  if (engine.state.round > 0 && current && !ended) { roll.classList.add('soft'); ctaTimer = setTimeout(() => roll.classList.remove('soft'), 2600); }
+  if (engine.state.round > 0 && current && !ended) { roll.classList.add('soft'); ctaTimer = setTimeout(() => roll.classList.remove('soft'), 2000); }
   else roll.classList.remove('soft');
 }
 function setBusy(v) { busy = v; $('#btnRoll').disabled = v; $('#btnMore').disabled = v; $('#levelBtn').disabled = v; }

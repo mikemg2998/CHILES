@@ -8,9 +8,21 @@ cualquier nivel.
 
 ## Niveles
 
-01 Conexión · 02 Deseo · 03 Exploración · 04 Intimidad. Cada uno con su repertorio, su intensidad y su identidad visual
-(cuanto más íntimo, más rojo profundo y menos interfaz). «Me gusta» no es querer más intensidad: favorece
-continuaciones compatibles dentro del nivel. «Más suave» baja la intensidad dentro del nivel; «Bajar de nivel» es otra cosa.
+01 Conexión · 02 Deseo · 03 Intimidad. Tres, no cuatro: Deseo absorbe la antigua Exploración y tiene un rango interno
+(low · mid · high) que la pareja nunca ve; se entra por abajo y la banda alta llega con la curva de la sesión. Intimidad
+es el rango de mayor intimidad disponible, no una meta: la sesión está completa en cualquier nivel. «Me gusta» no es
+querer más intensidad: favorece continuaciones compatibles dentro del nivel. «Más suave» y «un poco más / menos»
+mueven la intensidad dentro del nivel; cambiar de nivel es siempre una decisión explícita de la pareja. Lo guardado con
+cuatro niveles (modo y favoritos) se migra solo al cargar (`schema` 3 en `pab.v2`).
+
+## Interfaz v7
+
+Negro profundo + rojo picante + General Sans (servida por Fontshare, su distribuidor oficial, con licencia gratuita de
+uso web). Tokens en `app/styles.css`: color, tipografía (DISPLAY · TITLE · BODY · LABEL · MICRO · BUTTON), espacio
+(4 · 8 · 12 · 16 · 24 · 32 · 48 · 64), radios, bordes, movimiento y calor por nivel. El rojo solo va en lo que tiene
+energía: CTA, nivel activo, flecha entre jugadores, nombre de quien recibe, línea del temporizador, selección. Tres masas
+en pantalla: contexto (nivel, jugadores, dados) · interacción (frase, tiempo, feedback) · siguiente. Cuanta más intimidad,
+menos interfaz.
 
 ## Arquitectura v6 (`engine/`, sin dependencias ni build)
 
@@ -31,7 +43,7 @@ Datos editables, en `engine/data/`:
 
 Motor:
 
-- `grammar.js` — compila y valida los datos, calcula las combinaciones elegibles (`COMBOS`), la intensidad de cada una, las que se pueden guiar, los niveles, y la lista de combinaciones sin revisar.
+- `grammar.js` — compila y valida los datos, calcula las combinaciones elegibles (`COMBOS`), la intensidad de cada una, las que se pueden guiar, los niveles (con `levelWeight`, que en Deseo interpola el perfil [bajo, alto] de cada acción y zona), y la lista de combinaciones sin revisar.
 - `duration.js` — motor de duraciones: rango → opciones discretas → elección ponderada.
 - `realizer.js` — convierte la interacción en una frase que suena escrita por una persona: elige estructura evitando las recientes, omite la herramienta obvia, coloca el estilo como adverbio o coletilla (nunca repite el verbo ni cuelga una segunda coletilla), añade la guía de la pareja, y puntúa `humanLikeness` (longitud, comas, palabras repetidas, nombre repetido, complementos encadenados).
 - `quality.js` — comprobaciones críticas con código de rechazo (anatomía, «hoy no», nivel, estilo, guía, duración, frase poco natural…), `qualityScore` (orden: anatomía > seguridad > biomecánica > calidad humana > nivel > sesión > novedad > diversidad), umbral y fallbacks validados a mano.
@@ -50,7 +62,7 @@ el nivel.
 
 ## Revisión de contenido
 
-`content-review/unreviewed.md` (generado con `node tools/review-queue.js`) lista las combinaciones que la gramática
+`content-review/reclasificacion-3-niveles.md` documenta cómo se reclasificó cada combinación al pasar de cuatro niveles a tres. `content-review/unreviewed.md` (generado con `node tools/review-queue.js`) lista las combinaciones que la gramática
 permitiría pero nadie ha aprobado, con la frase que saldría. Para aprobar una, se añade a `compatibility.js` con su tier;
 para rechazarla, se añade con tier INVALID. Nada entra al generador por inferencia.
 
@@ -64,7 +76,7 @@ feedback, intensidad) vive en memoria y desaparece al cerrar. No hay telemetría
 
 ```
 node tests/validate.js                 # validación estructural de los datos (falla si hay errores)
-node --test 'tests/*.test.js'          # tests de datos, duraciones, realizador, guiado y motor
+node --test 'tests/*.test.js'          # tests de datos, duraciones, realizador, guiado, motor y migración a tres niveles
 node tests/simulate.js 1000 --sample   # simulación por nivel y anatomía; debe terminar en «✓ Todo correcto»
 node tests/stress.js 10000 --audit=auditoria.txt --session=sesion.txt   # 10.000 tiradas: frecuencias, rechazos, auditoría de 200 y sesión de 50
 node tools/review-queue.js             # regenera content-review/unreviewed.md

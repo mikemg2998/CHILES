@@ -5,17 +5,18 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <title>Pollo a la brasa</title>
-<meta name="theme-color" content="#0b0809">
+<meta name="theme-color" content="#050505">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Pollo a la brasa">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
 <link rel="manifest" href="manifest.json">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="app/styles.css?v=9">
+<!-- General Sans (Indian Type Foundry) servida por Fontshare, su distribuidor oficial, con licencia gratuita de uso web; sin archivos de fuente en el repo -->
+<link rel="preconnect" href="https://api.fontshare.com">
+<link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap">
+<link rel="stylesheet" href="app/styles.css?v=10">
 </head>
 <body class="idle">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -37,10 +38,11 @@
     </div>
   </header>
 
-  <button class="level-ind" id="levelBtn" type="button" aria-label="Cambiar de nivel"><span class="num" id="levelNum">01</span><span class="name" id="levelName">Conexión</span><svg><use href="#i-chev"/></svg></button>
-  <p class="tagline" id="tagline"></p>
-
-  <div class="turn" id="turn"><b id="turnA"></b><i>→</i><b id="turnB"></b></div>
+  <section class="context">
+    <button class="level-ind" id="levelBtn" type="button" aria-label="Cambiar de nivel"><span class="num" id="levelNum">01</span><span class="name" id="levelName">Conexión</span><svg><use href="#i-chev"/></svg></button>
+    <p class="tagline" id="tagline"></p>
+    <div class="turn" id="turn"><b id="turnA"></b><i>→</i><b id="turnB"></b></div>
+  </section>
 
   <section class="dice" id="dice">
     <div class="die" data-k="action"><div class="cube"><div class="f f1"></div><div class="f f2"></div><div class="f f3"></div><div class="f f4"></div><div class="f f5"></div><div class="f f6"></div></div></div>
@@ -60,7 +62,7 @@
       <div class="feedback" id="feedback">
         <button class="chip like" id="fbLike" aria-label="Me gusta"><svg><use href="#i-heart"/></svg><span>Me gusta</span></button>
         <button class="chip more" id="btnMore" aria-label="Más opciones">•••</button>
-        <button class="fav" id="btnFav" aria-label="Guardar en Lo nuestro"><svg><use href="#i-mark"/></svg></button>
+        <button class="ib fav" id="btnFav" aria-label="Guardar en Lo nuestro"><svg><use href="#i-mark"/></svg></button>
       </div>
     </div>
     <div class="ending" id="ending" hidden>
@@ -125,6 +127,6 @@
 </section>
 
 <div class="toast" id="toast" role="status"></div>
-<script type="module" src="app/app.js?v=9"></script>
+<script type="module" src="app/app.js?v=10"></script>
 </body>
 </html>

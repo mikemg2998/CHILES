@@ -2,13 +2,13 @@
    El director controla la calidad: qué proponer, continuidad, variedad, anti-repetición, intensidad DENTRO del nivel.
    El nivel es siempre una decisión de la pareja: nextLevel = USER_DECISION. Nunca sube solo.
    Todo este estado vive en memoria: nunca se guarda ni se envía a ningún sitio. */
-import { LEVELS, ACTIONS, TARGETS } from './grammar.js';
+import { LEVELS, ACTIONS, TARGETS, desireBand } from './grammar.js';
 import { TARGET_BUCKETS } from './intensity.js';
 
 export const PURPOSES = ['CONNECT', 'BUILD', 'EXPLORE', 'DEEPEN', 'MAINTAIN', 'VARIATION', 'COOLDOWN', 'END'];
 export const PURPOSE_LABEL = { CONNECT: 'Conectar', BUILD: 'Construir', EXPLORE: 'Explorar', DEEPEN: 'Profundizar', MAINTAIN: 'Mantener', VARIATION: 'Variar', COOLDOWN: 'Bajar el ritmo', END: 'Cerrar' };
 /* copy breve al cambiar de nivel (decisión de la pareja, sin confirmación) */
-export const LEVEL_COPY = { 1: 'No tenemos que llegar a ningún sitio.', 2: 'Un poco más cerca.', 3: 'Esto nos está gustando.', 4: 'Hasta donde queráis.' };
+export const LEVEL_COPY = { 1: 'Acercarnos.', 2: 'Un poco más cerca.', 3: 'Hasta donde queramos.' };
 
 /* "¿Cómo llegas hoy?": estado de disponibilidad, no una declaración sobre sexo. Por jugador; se usa lo común, si no, la unión. */
 export const MOODS = {
@@ -60,6 +60,8 @@ export class SessionState {
   }
   avoidSet() { const [a, b] = this.avoid; return new Set([...a, ...b]); }
   calm() { return this.rounds < this.calmUntil; }
+  /* banda interna de Deseo (low · mid · high) según la última intensidad; informativa, nunca un nivel */
+  band() { if (this.level !== 2) return null; const li = this.intensityHistory[0]; return li == null ? 'low' : desireBand(li); }
 }
 
 const bump = (map, k, d) => { if (k) map[k] = (map[k] || 0) + d; };
@@ -104,14 +106,15 @@ export class SessionDirector {
     let t;
     switch (purpose) {
       case 'CONNECT': case 'COOLDOWN': t = B[0].lo + this.rng.next() * (B[Math.min(1, B.length - 1)].lo - B[0].lo + 0.5); break;
-      case 'BUILD': t = li != null ? li + 0.4 + this.rng.next() * 0.9 : pick(); break;
+      case 'BUILD': t = li != null ? li + (S.level === 2 ? 0.3 + this.rng.next() * 0.7 : 0.4 + this.rng.next() * 0.9) : pick(); break; // en Deseo la subida es más gradual: el rango es más ancho
       case 'DEEPEN': t = li != null ? li + (this.rng.next() - 0.3) * 0.8 : pick(); break;
       case 'MAINTAIN': case 'VARIATION': t = li != null ? li + (this.rng.next() - 0.5) * 0.8 : pick(); break;
-      default: t = pick();
+      default: t = li != null ? li + (this.rng.next() - 0.4) * 1.2 : pick(); // explorar: cerca de donde estamos, no un salto
     }
+    if (S.level === 2 && S.roundsInLevel < 4 && li != null) t = Math.min(t, L.bands.high[0] - 0.1); // se entra en Deseo por abajo: la banda alta llega con la sesión
     if (S.calm() && li != null) t = Math.min(t, li); // sin escalada: nunca por encima de la última
     t += S.intraLevelIntensity * (L.max - L.lo) * 0.35; // más suave / más / menos, dentro del nivel
-    return Math.round(Math.max(L.lo, Math.min(L.max - (S.level === 4 ? 0 : 0.5), t)) * 10) / 10;
+    return Math.round(Math.max(L.lo, Math.min(L.max - (S.level === 3 ? 0 : 0.5), t)) * 10) / 10;
   }
 
   /* ---- multiplicadores por propósito, intención y feedback ---- */
@@ -207,7 +210,8 @@ export class SessionDirector {
 
   /* ---- nivel: siempre decisión de la pareja, en cualquier dirección, sin confirmación ---- */
   setLevel(S, level) {
-    level = Math.max(1, Math.min(4, Number(level) || 1));
+    level = Number(level);
+    if (!LEVELS[level]) return null; // un nivel que no existe no se selecciona (ni el antiguo 04)
     if (level === S.level) return null;
     S.level = level; S.roundsInLevel = 0; S.intraLevelIntensity = 0; S.calmUntil = 0;
     S.lastMessage = LEVEL_COPY[level];

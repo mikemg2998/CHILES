@@ -19,7 +19,7 @@ export function criticalCheck(cand, ctx) {
   const c = COMBO[`${cand.action}|${cand.tool}|${cand.target}`];
   // 1. anatomía
   if (!ctx.prefs.targetEnabled(z)) reasons.push('ANATOMY_INCOMPATIBLE');
-  if (z.tags.includes('intimo') && ctx.level < 4) reasons.push('INTIMATE_OUTSIDE_L4');
+  if (z.tags.includes('intimo') && ctx.level < 3) reasons.push('INTIMATE_OUTSIDE_INTIMACY');
   // 2. seguridad / comodidad: «hoy no» de la sesión
   const av = ctx.session ? ctx.session.avoidSet() : new Set();
   for (const k of av) { const r = AVOIDS[k]; if (r && (ruleBlocksAction(r, a) || ruleBlocksTarget(r, z) || ruleBlocksPattern(r, cand.pattern))) reasons.push('AVOID_TODAY'); }
@@ -83,9 +83,8 @@ export function qualityScore(cand, ctx) {
 /* Red de seguridad: interacciones validadas a mano por nivel. Solo si la generación no encuentra nada. */
 export const FALLBACKS = {
   1: [{ action: 'MASSAGE', tool: 'bothHands', target: 'shoulders', style: 'SLOW' }, { action: 'CARESS', tool: 'oneHand', target: 'back', style: 'SOFT' }, { action: 'HOLD_HANDS', tool: 'fingers', target: 'hands' }, { action: 'HAIR_PLAY', tool: 'fingers', target: 'hair' }],
-  2: [{ action: 'KISS', tool: 'lips', target: 'neck', style: 'SLOW' }, { action: 'BRUSH', tool: 'lips', target: 'shoulders' }, { action: 'HOVER', tool: 'breath', target: 'neck' }, { action: 'BRUSH', tool: 'fingertips', target: 'waist', style: 'SOFT' }],
-  3: [{ action: 'LICK', tool: 'tongue', target: 'innerThighs', style: 'SLOW' }, { action: 'LICK', tool: 'tongueTip', target: 'lowerAbdomen' }, { action: 'SQUEEZE', tool: 'oneHand', target: 'buttocks' }, { action: 'KISS', tool: 'lips', target: 'groin' }],
-  4: [{ action: 'LICK', tool: 'tongue', target: 'innerThighs', style: 'SLOW' }, { action: 'CARESS', tool: 'oneHand', target: 'vulva', style: 'SOFT' }, { action: 'CARESS', tool: 'oneHand', target: 'penis', style: 'SLOW' }, { action: 'STIMULATE', tool: 'mouth', target: 'clitoris' }, { action: 'SUCK', tool: 'mouth', target: 'glans' }],
+  2: [{ action: 'KISS', tool: 'lips', target: 'neck', style: 'SLOW' }, { action: 'BRUSH', tool: 'lips', target: 'shoulders' }, { action: 'HOVER', tool: 'breath', target: 'neck' }, { action: 'BRUSH', tool: 'fingertips', target: 'waist', style: 'SOFT' }, { action: 'LICK', tool: 'tongue', target: 'innerThighs', style: 'SLOW' }, { action: 'LICK', tool: 'tongueTip', target: 'lowerAbdomen' }, { action: 'SQUEEZE', tool: 'oneHand', target: 'buttocks' }, { action: 'KISS', tool: 'lips', target: 'groin' }],
+  3: [{ action: 'LICK', tool: 'tongue', target: 'innerThighs', style: 'SLOW' }, { action: 'CARESS', tool: 'oneHand', target: 'vulva', style: 'SOFT' }, { action: 'CARESS', tool: 'oneHand', target: 'penis', style: 'SLOW' }, { action: 'STIMULATE', tool: 'mouth', target: 'clitoris' }, { action: 'SUCK', tool: 'mouth', target: 'glans' }],
 };
 export function fallbackFor(level, prefs, avoidKey, accept = () => true) {
   for (let L = level; L >= 1; L--) for (const f of FALLBACKS[L]) {
