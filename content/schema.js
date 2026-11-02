@@ -54,7 +54,7 @@ export const PLAY_CONSTRAINT_COPY = {
    SKIN_ACCESS    todas las partes que recibe tienen que estar a piel (sus prendas fuera)
    TOP_ACCESS     camiseta fuera · BOTTOM_ACCESS pantalón fuera · UNDERWEAR_ON ropa interior puesta · UNDERWEAR_OFF fuera
    FULL_BODY_ACCESS  camiseta, pantalón y ropa interior fuera */
-export const CLOTHING_REQUIREMENTS = ['ANY', 'CLOTHED', 'THROUGH_CLOTHING', 'SKIN_ACCESS', 'TOP_ACCESS', 'BOTTOM_ACCESS', 'UNDERWEAR_ON', 'UNDERWEAR_OFF', 'FULL_BODY_ACCESS'];
+export const CLOTHING_REQUIREMENTS = ['ANY', 'CLOTHED', 'THROUGH_CLOTHING', 'SKIN_ACCESS', 'TOP_ACCESS', 'BOTTOM_ACCESS', 'UNDERWEAR_ON', 'UNDERWEAR_OFF', 'FULL_BODY_ACCESS', 'THROUGH_BRA'];
 
 /* Familias de interacción: la idea que la pareja percibe. El historial penaliza repetir familia en cartas seguidas. */
 export const FAMILIES = {

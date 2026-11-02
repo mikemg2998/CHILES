@@ -29,6 +29,14 @@ export const INTIMACY = [
     copyBySide: { LEFT: ['Presiona suavemente el pezón izquierdo de {R} entre dos dedos.'] }, notes: 'pezón izquierdo + presión suave + 20 s' }),
   I({ id: 'I10', family: 'BITE', intraLevelIntensity: 'HIGH', source: 'MIGRATED_APPROVED', actorRequirements: [{ part: 'teeth' }], receiverRequirements: [{ part: 'nipples' }], allowedSides: ['RIGHT'], clothing: SKIN, durations: [20], tags: ['presion'],
     copyBySide: { RIGHT: ['Mordisquea el pezón derecho de {R} a ratos, sin apretar: muerde, suelta, vuelve.'] }, notes: 'pezón derecho + mordida intermitente + 20 s' }),
+  /* THROUGH_BRA · concepto aprobado por el diseñador (2026-11-02): sin camiseta y con brasier puesto, una experiencia propia sobre el
+     brasier. No es una versión de una carta de acceso directo: cuando el brasier sale, esta carta deja de existir y entran las otras. */
+  I({ id: 'I21', family: 'BREASTS', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'fingertips' }], receiverRequirements: [{ part: 'nipples' }], allowedSides: ['LEFT', 'RIGHT', 'BOTH'], clothing: { receiver: ['THROUGH_BRA'] }, durations: [25, 30],
+    copyBySide: {
+      LEFT: ['Con las yemas de los dedos, acaricia muy suave el pezón izquierdo de {R} por encima del brasier.', 'Por encima del brasier, recorre con las yemas el pezón izquierdo de {R}, apenas rozando.'],
+      RIGHT: ['Con las yemas de los dedos, acaricia muy suave el pezón derecho de {R} por encima del brasier.', 'Por encima del brasier, recorre con las yemas el pezón derecho de {R}, apenas rozando.'],
+      BOTH: ['Con las yemas de los dedos, acaricia muy suave los dos pezones de {R} por encima del brasier.'],
+    }, notes: 'THROUGH_BRA: solo con camiseta fuera y brasier puesto (nunca se transforma en acceso directo)' }),
   /* §44 · ACCESO DIRECTO · relaciones del diseñador, exactamente como se entregaron */
   I({ id: 'I11', family: 'MANUAL', intraLevelIntensity: 'HIGH', actorRequirements: [{ part: 'oneHand' }], receiverRequirements: [{ part: 'vulva' }], clothing: { receiver: ['SKIN_ACCESS', 'UNDERWEAR_OFF'] }, durations: [45, 60, 75], tags: ['intimo'],
     variants: [

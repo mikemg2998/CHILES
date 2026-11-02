@@ -25,6 +25,9 @@ export const applyRemoval = (state, g) => (state[g] === 'ON' ? { ...state, [g]: 
 /* banda interna informativa (nunca un nivel): I-A vestidos · I-B acceso parcial · I-C acceso completo */
 export const band = (a, b) => { const full = s => off(s, 'top') && off(s, 'bottoms') && off(s, 'underwear') && off(s, 'bra'); const partial = s => off(s, 'top') || off(s, 'bottoms'); if (full(a) && full(b)) return 'I-C'; if (partial(a) || partial(b) || off(a, 'underwear') || off(b, 'underwear')) return 'I-B'; return 'I-A'; };
 
+/* Acceso al pecho, conceptualmente: la camiseta tapa, el brasier tapa a su manera, o acceso directo. */
+export const chestAccess = state => !off(state, 'top') ? 'COVERED_BY_TOP' : state.bra === 'ON' ? 'COVERED_BY_BRA' : 'DIRECT';
+
 /* Requisitos de una carta para un rol, evaluados sobre el estado real. Devuelve null si cumple o el requisito que falla. */
 export function clothingFailure(requirements, state, parts, { role } = {}) {
   const accessible = role === 'actor' ? toolAccessible : partAccessible;
@@ -37,6 +40,7 @@ export function clothingFailure(requirements, state, parts, { role } = {}) {
       case 'BOTTOM_ACCESS': if (!off(state, 'bottoms')) return q; break;
       case 'UNDERWEAR_ON': if (off(state, 'underwear') || !off(state, 'bottoms')) return q; break;
       case 'UNDERWEAR_OFF': if (!off(state, 'underwear')) return q; break;
+      case 'THROUGH_BRA': if (chestAccess(state) !== 'COVERED_BY_BRA') return q; break; // brasier puesto y camiseta fuera: la superficie del brasier es el target
       case 'FULL_BODY_ACCESS': if (!(off(state, 'top') && off(state, 'bottoms') && off(state, 'underwear') && off(state, 'bra'))) return q; break;
       default: return q;
     }
