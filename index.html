@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://api.fontshare.com">
 <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap">
-<link rel="stylesheet" href="app/styles.css?v=10">
+<link rel="stylesheet" href="app/styles.css?v=11">
 </head>
 <body class="idle">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -41,19 +41,17 @@
   <section class="context">
     <button class="level-ind" id="levelBtn" type="button" aria-label="Cambiar de nivel"><span class="num" id="levelNum">01</span><span class="name" id="levelName">Conexión</span><svg><use href="#i-chev"/></svg></button>
     <p class="tagline" id="tagline"></p>
-    <div class="turn" id="turn"><b id="turnA"></b><i>→</i><b id="turnB"></b></div>
+    <div class="turn" id="turn"><b id="turnA"></b><i id="turnArrow">→</i><b id="turnB"></b></div>
   </section>
 
-  <section class="dice" id="dice">
-    <div class="die" data-k="action"><div class="cube"><div class="f f1"></div><div class="f f2"></div><div class="f f3"></div><div class="f f4"></div><div class="f f5"></div><div class="f f6"></div></div></div>
-    <div class="die" data-k="zone"><div class="cube"><div class="f f1"></div><div class="f f2"></div><div class="f f3"></div><div class="f f4"></div><div class="f f5"></div><div class="f f6"></div></div></div>
-    <div class="die" data-k="style"><div class="cube"><div class="f f1"></div><div class="f f2"></div><div class="f f3"></div><div class="f f4"></div><div class="f f5"></div><div class="f f6"></div></div></div>
-    <div class="die" data-k="duration"><div class="cube"><div class="f f1"></div><div class="f f2"></div><div class="f f3"></div><div class="f f4"></div><div class="f f5"></div><div class="f f6"></div></div></div>
+  <section class="dice" id="dice" aria-hidden="true">
+    <div class="die" data-k="a"><div class="cube"><div class="f f1"></div><div class="f f2"></div><div class="f f3"></div><div class="f f4"></div><div class="f f5"></div><div class="f f6"></div></div></div>
+    <div class="die" data-k="b"><div class="cube"><div class="f f1"></div><div class="f f2"></div><div class="f f3"></div><div class="f f4"></div><div class="f f5"></div><div class="f f6"></div></div></div>
   </section>
 
   <section class="result">
     <div class="welcome" id="welcome">
-      <p class="phrase">Una sola frase para los dos. Hasta dónde llegáis lo decidís vosotros; el juego solo propone.</p>
+      <p class="phrase">Una carta cada vez, pensada por alguien. Hasta dónde llegáis lo decidís vosotros.</p>
     </div>
     <div class="round" id="roundBox" hidden>
       <p class="phrase" id="phrase"></p>
@@ -72,7 +70,7 @@
   </section>
 
   <div class="actions">
-    <button class="btn primary" id="btnRoll">Lanzar los dados</button>
+    <button class="btn primary" id="btnRoll">Empezar</button>
     <button class="btn primary" id="btnNew" hidden>Nueva sesión</button>
   </div>
 </div>
@@ -108,15 +106,10 @@
   <div class="sheet-head"><h2>Ajustes</h2><button class="ib" data-close aria-label="Cerrar"><svg><use href="#i-x"/></svg></button></div>
   <p class="lab">Nombres</p>
   <div class="names">
-    <div class="player"><input id="name0" maxlength="16" placeholder="Jugador 1" autocomplete="off" autocapitalize="words"><div class="anat" data-p="0"><button type="button" data-a="vulva">Vulva</button><button type="button" data-a="pene">Pene</button></div></div>
-    <div class="player"><input id="name1" maxlength="16" placeholder="Jugador 2" autocomplete="off" autocapitalize="words"><div class="anat" data-p="1"><button type="button" data-a="vulva">Vulva</button><button type="button" data-a="pene">Pene</button></div></div>
+    <div class="player"><input id="name0" maxlength="16" placeholder="Jugador 1" autocomplete="off" autocapitalize="words"><div class="anat" data-p="0"></div></div>
+    <div class="player"><input id="name1" maxlength="16" placeholder="Jugador 2" autocomplete="off" autocapitalize="words"><div class="anat" data-p="1"></div></div>
   </div>
-  <p class="hint">Solo partes del cuerpo, no género: así el juego sabe qué puede recibir cada uno en Intimidad. Se guarda únicamente en este teléfono.</p>
-  <p class="lab">Zonas del cuerpo</p>
-  <div class="list" id="groups"></div>
-  <p class="lab">Anatomía íntima</p>
-  <p class="hint">Solo entra en juego en Intimidad, según las partes disponibles de quien recibe.</p>
-  <div class="list" id="groupsIntimate"></div>
+  <p class="hint">Solo partes del cuerpo, no género: así el juego sabe qué puede recibir cada uno y con qué puede actuar. Se guarda únicamente en este teléfono.</p>
   <p class="lab">Dispositivo</p>
   <div class="list"><label class="sw"><span>Vibración al lanzar</span><input type="checkbox" id="swVibe"><i></i></label></div>
   <button class="btn primary" id="btnSetupDone" hidden>Listo</button>
@@ -126,7 +119,30 @@
   </div>
 </section>
 
+<section class="sheet" id="sheetClothing" aria-hidden="true">
+  <div class="sheet-head"><h2 id="clothingTitle">Estado de ropa</h2><button class="ib" data-close aria-label="Cerrar"><svg><use href="#i-x"/></svg></button></div>
+  <p class="hint">Lo que lleva puesto cada uno ahora mismo. Las cartas solo proponen lo que la ropa permite; nada obliga a quitarse nada.</p>
+  <div class="two clothing" id="clothingGrid"></div>
+  <button class="btn primary" id="btnClothingDone">Listo</button>
+</section>
+
+<section class="sheet" id="sheetUndress" aria-hidden="true">
+  <div class="sheet-head"><h2>¿Qué se quitó?</h2></div>
+  <p class="hint">Para que las siguientes cartas sepan cómo estáis. Se puede corregir después en ••• → Estado de ropa.</p>
+  <div class="two" id="undressGrid"></div>
+  <button class="btn primary" id="btnUndressDone">Seguir</button>
+</section>
+
+<section class="sheet" id="sheetPause" aria-hidden="true">
+  <div class="sheet-head"><h2>¿Queréis seguir por vuestra cuenta?</h2></div>
+  <p class="hint">Podéis continuar juntos o dejar que el juego siga guiando.</p>
+  <div class="actions">
+    <button class="btn" id="btnPauseAlone">Seguir por nuestra cuenta</button>
+    <button class="btn primary" id="btnPauseGame">Seguir con el juego</button>
+  </div>
+</section>
+
 <div class="toast" id="toast" role="status"></div>
-<script type="module" src="app/app.js?v=10"></script>
+<script type="module" src="app/app.js?v=11"></script>
 </body>
 </html>

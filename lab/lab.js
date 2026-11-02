@@ -1,228 +1,97 @@
-/* CONTENT LAB · herramienta de curación real. Edita en memoria los mismos datos que valida la gramática (REPERTOIRE y
-   POSITIONAL), guarda el borrador solo en este navegador (localStorage «pab.lab») y exporta los ficheros de datos tal cual
-   van en engine/data/. Nada de lo que se hace aquí llega al motor hasta que el fichero exportado se guarda en el repo y pasa
-   node tests/validate.js. Nunca promociona nada solo: cada status lo elige una persona. */
-import { REPERTOIRE, POSITIONAL, TARGETS, TARGETS_LIST, GROUPS, ACTIONS, ACTIONS_LIST, ACTOR_TOOLS, STYLES, STYLE_IDS, LEVELS, LEVEL_IDS, COMBO, possibleCombinations, validateData, ALL_STATUSES, APPROVED_STATUSES, BLUEPRINT_STATUSES, ORIENTATIONS, isBodyTool } from '../engine/grammar.js';
-import { ACTOR_TOOLS_LIST } from '../engine/data/actorTools.js';
-import { realize } from '../engine/realizer.js';
-import { Rng } from '../engine/rng.js';
-import { serializeRepertoire, serializePositional } from '../engine/repertoireIO.js';
-import { suspicious } from '../engine/audit.js';
+/* CONTENT LAB · inspector de cartas y depurador del mazo. Lee los mismos datos que el motor (content/) y usa el mismo
+   selector (engine/deck.js). No edita nada: aprobar o rechazar es cambiar `status` en content/ y pasar la validación.
+   Lo que muestra por carta: ID · NIVEL · FAMILIA · TIPO · STATUS · ORIGEN · quien actúa · quien recibe · anatomía · ropa ·
+   disponibilidad · lado · variantes · PlayConstraints · tiempos · peso · elegibilidad en el escenario elegido.
+   Por selección: candidatas, rechazadas con motivo, pesos, ganadora, variante, lado, duración, propósito. */
+import { CARDS, validateContent } from '../content/index.js';
+import { BODY_PARTS, ACTOR_TOOLS, GARMENTS, GARMENT_LABEL, ANATOMY } from '../content/body.js';
+import { FAMILIES } from '../content/schema.js';
+import { GameEngine } from '../engine/engine.js';
+import { LEVELS } from '../engine/levels.js';
+import { buildDeck } from '../engine/deck.js';
 
 const $ = (s, el = document) => el.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const KEY = 'pab.lab';
-const rng = new Rng(Date.now() % 100000);
-const PARTNER = 'Ana';
-const STATUS_LABEL = { EXCELLENT: 'EXCELLENT', GOOD: 'GOOD', VALID: 'VALID', REJECTED: 'REJECTED', UNREVIEWED: 'UNREVIEWED' };
+const errors = validateContent();
+const val = $('#validation'); if (errors.length) { val.hidden = false; val.textContent = errors.join('\n'); }
+const real = CARDS.filter(c => !c.transition);
+$('#counts').textContent = `${real.length} cartas · ${real.filter(c => c.status === 'APPROVED').length} aprobadas · ${real.filter(c => c.status === 'UNREVIEWED').length} sin revisar`;
 
-/* ---------- estado: pristine (lo que hay en el repo) + borrador (localStorage) aplicado en memoria ---------- */
-const snapshot = () => JSON.stringify({ rep: REPERTOIRE, pos: POSITIONAL });
-const pristine = JSON.parse(snapshot());
-function applyDraft(d) {
-  if (!d) return;
-  for (const t of Object.keys(REPERTOIRE)) { const src = d.rep && d.rep[t]; if (!src) continue; for (const k of Object.keys(REPERTOIRE[t])) delete REPERTOIRE[t][k]; Object.assign(REPERTOIRE[t], src); }
-  if (d.pos) { POSITIONAL.length = 0; for (const b of d.pos) POSITIONAL.push(b); }
-}
-try { applyDraft(JSON.parse(localStorage.getItem(KEY) || 'null')); } catch { /* sin borrador */ }
-function persist() { try { localStorage.setItem(KEY, snapshot()); } catch { /* sin almacenamiento: se trabaja en memoria */ } refreshChrome(); }
-function changeCount() {
-  let n = 0;
-  for (const t of Object.keys(REPERTOIRE)) if (JSON.stringify(REPERTOIRE[t]) !== JSON.stringify(pristine.rep[t])) n++;
-  const pa = JSON.stringify(POSITIONAL), pb = JSON.stringify(pristine.pos); if (pa !== pb) n += Math.max(1, Math.abs(POSITIONAL.length - pristine.pos.length) || POSITIONAL.filter((b, i) => JSON.stringify(b) !== JSON.stringify(pristine.pos[i])).length);
-  return n;
-}
-
-/* ---------- repertorio en vivo ---------- */
-const rep = t => (REPERTOIRE[t] ||= { approvedActions: {} });
-const entryOf = v => typeof v === 'string' ? { status: v } : { ...v };
-function liveStatus(action, tool, target) {
-  const r = rep(target), k = `${action}|${tool}`;
-  if (r.approvedActions && r.approvedActions[k]) return entryOf(r.approvedActions[k]).status;
-  if (r.rejectedActions && r.rejectedActions[k]) return 'REJECTED';
-  return 'UNREVIEWED';
-}
-function liveEntry(action, tool, target) { const r = rep(target), k = `${action}|${tool}`; return r.approvedActions && r.approvedActions[k] ? entryOf(r.approvedActions[k]) : null; }
-function setStatus(target, action, tool, status, note) {
-  const r = rep(target), k = `${action}|${tool}`; r.approvedActions ||= {}; r.rejectedActions ||= {};
-  const prev = liveEntry(action, tool, target);
-  if (APPROVED_STATUSES.includes(status) || status === 'UNREVIEWED') {
-    delete r.rejectedActions[k];
-    if (status === 'UNREVIEWED') { delete r.approvedActions[k]; }
-    else { const e = prev || {}; e.status = status; if (note !== undefined) { if (note) e.notes = note; else delete e.notes; } r.approvedActions[k] = Object.keys(e).length === 1 ? status : e; }
-  } else if (status === 'REJECTED') {
-    delete r.approvedActions[k];
-    r.rejectedActions[k] = note || (r.rejectedActions[k] && typeof r.rejectedActions[k] === 'string' ? r.rejectedActions[k] : 'rechazada en Content Lab: no merece aparecer aquí');
-  }
-  if (!Object.keys(r.rejectedActions).length) delete r.rejectedActions;
-  persist();
-}
-function setLevels(target, action, tool, levels) {
-  const r = rep(target), k = `${action}|${tool}`; const e = liveEntry(action, tool, target); if (!e) return;
-  const a = ACTIONS[action], z = TARGETS[target]; const natural = a.allowedLevels.filter(L => z.allowedLevels.includes(L));
-  if (!levels.length || levels.length === natural.length && natural.every(L => levels.includes(L))) delete e.levels; else e.levels = levels.slice().sort();
-  r.approvedActions[k] = Object.keys(e).length === 1 ? e.status : e; persist();
-}
-function setNote(target, action, tool, note) {
-  const r = rep(target), k = `${action}|${tool}`;
-  if (r.rejectedActions && r.rejectedActions[k] !== undefined) { r.rejectedActions[k] = note || 'rechazada en Content Lab'; persist(); return; }
-  const e = liveEntry(action, tool, target); if (!e) return; if (note) e.notes = note; else delete e.notes; r.approvedActions[k] = Object.keys(e).length === 1 ? e.status : e; persist();
-}
-const UNIVERSE = possibleCombinations(); // acción admite herramienta + biomecánica posible (independiente del status)
-function rowsFor(target) {
-  const seen = new Set(), rows = [];
-  for (const u of UNIVERSE) if (u.target === target) { seen.add(`${u.action}|${u.tool}`); rows.push({ action: u.action, tool: u.tool }); }
-  const r = rep(target); for (const k of [...Object.keys(r.approvedActions || {}), ...Object.keys(r.rejectedActions || {})]) if (!seen.has(k)) { const [action, tool] = k.split('|'); if (ACTIONS[action] && ACTOR_TOOLS[tool]) { seen.add(k); rows.push({ action, tool, outside: true }); } }
-  for (const x of rows) x.status = liveStatus(x.action, x.tool, target);
-  const order = { EXCELLENT: 0, GOOD: 1, VALID: 2, REJECTED: 3, UNREVIEWED: 4 };
-  return rows.sort((p, q) => order[p.status] - order[q.status] || ACTIONS[p.action].name.localeCompare(ACTIONS[q.action].name) || p.tool.localeCompare(q.tool));
-}
-function sample(action, tool, target) {
-  const a = ACTIONS[action], z = TARGETS[target]; const levels = a.allowedLevels.filter(L => z.allowedLevels.includes(L)); const level = levels[0] || 2;
-  const r = realize({ key: `${action}|${tool}|${target}`, action, tool, target, style: null, level, pattern: a.pattern }, { partner: PARTNER, rng, recentShapes: [] });
-  return r ? r.text : '— (sin plantilla para esta combinación)';
+/* ---------- escenario (compartido por las dos pestañas) ---------- */
+const scn = { level: 3, actor: 0, names: ['Ana', 'Leo'], anatomy: [['vulva', 'senos'], ['pene']], clothing: [{ top: 'ON', bottoms: 'ON', socks: 'ON', underwear: 'ON' }, { top: 'ON', bottoms: 'ON', socks: 'ON', underwear: 'ON' }] };
+let engine = mkEngine();
+function mkEngine() { const e = new GameEngine({ prefs: { names: scn.names, bodyParts: scn.anatomy }, level: scn.level }); e.clothing = scn.clothing.map(s => ({ ...s })); return e; }
+function ctx(actor = scn.actor) { engine.prefs.bodyParts = scn.anatomy; engine.session.level = scn.level; engine.clothing = scn.clothing.map(s => ({ ...s })); engine._an = null; return engine.context(actor); }
+function renderScenario() {
+  const box = $('#scenario');
+  box.innerHTML = `<div class="group"><b>Nivel</b> ${[1, 2, 3].map(l => `<button class="chip ${scn.level === l ? 'on' : ''}" data-level="${l}">${l} ${LEVELS[l].name}</button>`).join('')}</div>
+  <div class="group"><b>Actúa</b> ${[0, 1].map(p => `<button class="chip ${scn.actor === p ? 'on' : ''}" data-actor="${p}">${scn.names[p]}</button>`).join('')}</div>` +
+  [0, 1].map(p => `<div class="group"><b>${scn.names[p]}</b> · anatomía ${Object.keys(ANATOMY).map(a => `<button class="chip ${scn.anatomy[p].includes(a) ? 'on' : ''}" data-an="${p}:${a}">${ANATOMY[a].label}</button>`).join('')}<br>` +
+    GARMENTS.map(g => `<span class="row">${GARMENT_LABEL[g]} ${['ON', 'OFF', 'NONE'].map(s => `<button class="chip small ${scn.clothing[p][g] === s ? 'on' : ''}" data-cl="${p}:${g}:${s}">${s}</button>`).join('')}</span>`).join('') + '</div>').join('');
+  box.onclick = e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.level) scn.level = Number(b.dataset.level);
+    if (b.dataset.actor) scn.actor = Number(b.dataset.actor);
+    if (b.dataset.an) { const [p, a] = b.dataset.an.split(':'); const l = scn.anatomy[p]; scn.anatomy[p] = l.includes(a) ? l.filter(x => x !== a) : [...l, a]; }
+    if (b.dataset.cl) { const [p, g, s] = b.dataset.cl.split(':'); scn.clothing[p][g] = s; }
+    renderScenario(); renderDeck(); if (currentId) renderCard(currentId);
+  };
 }
 
-/* ---------- UI: cabecera, validación, pestañas ---------- */
-function refreshChrome() {
-  const n = changeCount(); const pill = $('#changes'); pill.textContent = n ? `${n} ${n === 1 ? 'cambio' : 'cambios'} sin exportar` : 'sin cambios'; pill.classList.toggle('dirty', n > 0);
-  const v = validateData(); const el = $('#validation');
-  const mine = v.errors.filter(e => /^repertorio|^blueprint|^duración/.test(e));
-  if (mine.length) { el.hidden = false; el.className = 'validation'; el.textContent = `${mine.length} ${mine.length === 1 ? 'error' : 'errores'} de validación (el fichero exportado no pasaría node tests/validate.js):\n` + mine.slice(0, 12).map(e => '· ' + e).join('\n') + (mine.length > 12 ? `\n… y ${mine.length - 12} más` : ''); }
-  else if (n) { el.hidden = false; el.className = 'validation ok'; el.textContent = '✓ El borrador pasa la validación estructural. Exporta y guarda el fichero en engine/data/ para que entre al motor.'; }
-  else el.hidden = true;
+/* ---------- cartas ---------- */
+let currentId = null, filter = 'all', q = '';
+function renderFilters() { $('#filters').innerHTML = [['all', 'Todas'], ['1', 'Conexión'], ['2', 'Deseo'], ['3', 'Intimidad'], ['UNREVIEWED', 'Sin revisar']].map(([k, l]) => `<button class="chip ${filter === k ? 'on' : ''}" data-f="${k}">${l}</button>`).join(''); }
+$('#filters').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; filter = b.dataset.f; renderFilters(); renderList(); });
+$('#search').addEventListener('input', e => { q = e.target.value.toLowerCase(); renderList(); });
+function renderList() {
+  const list = real.filter(c => (filter === 'all' || String(c.level) === filter || c.status === filter) && (!q || c.id.toLowerCase().includes(q) || FAMILIES[c.family].toLowerCase().includes(q) || JSON.stringify(c.copy || c.copyBySide || c.variants).toLowerCase().includes(q)));
+  $('#cardList').innerHTML = list.map(c => `<button class="tItem ${c.id === currentId ? 'on' : ''} st-${c.status}" data-id="${c.id}"><b>${c.id}</b> <span>${esc(FAMILIES[c.family])} · ${c.interactionType}</span><em>${c.status}</em></button>`).join('') || '<p class="empty">Nada.</p>';
 }
-for (const b of document.querySelectorAll('.tab')) b.onclick = () => { for (const x of document.querySelectorAll('.tab')) x.classList.toggle('on', x === b); for (const p of document.querySelectorAll('.panel')) p.hidden = p.id !== `tab-${b.dataset.tab}`; if (b.dataset.tab === 'auditoria') renderAudit(); if (b.dataset.tab === 'posicionales') renderBlueprints(); };
-$('#discard').onclick = () => { if (!changeCount() || confirm('¿Descartar todos los cambios no exportados de este navegador?')) { localStorage.removeItem(KEY); location.reload(); } };
-
-/* ---------- zonas ---------- */
-let current = null, filter = 'ALL';
-function counts(t) { const c = { EXCELLENT: 0, GOOD: 0, VALID: 0, REJECTED: 0, UNREVIEWED: 0 }; for (const r of rowsFor(t)) c[r.status]++; return c; }
-function renderTargets() {
-  const q = ($('#search').value || '').toLowerCase(); let html = '';
-  for (const [gid, g] of Object.entries(GROUPS)) {
-    const list = TARGETS_LIST.filter(t => t.group === gid && (!q || t.n.toLowerCase().includes(q) || t.id.toLowerCase().includes(q)));
-    if (!list.length) continue;
-    html += `<div class="group">${esc(g.name)}</div>`;
-    for (const t of list) { const c = counts(t.id); html += `<button class="tItem ${current === t.id ? 'on' : ''}" data-t="${t.id}"><span>${esc(t.n.replace(/^(el|la|los|las) /, ''))}</span><span class="counts" title="excelentes · buenas · válidas · rechazadas · sin revisar"><span class="ex">${c.EXCELLENT}</span><span>${c.GOOD}</span><span>${c.VALID}</span><span class="rj">${c.REJECTED}</span><span class="un">${c.UNREVIEWED}</span></span></button>`; }
-  }
-  $('#targets').innerHTML = html;
-  for (const b of document.querySelectorAll('.tItem')) b.onclick = () => { current = b.dataset.t; renderTargets(); renderZone(); };
-}
-$('#search').oninput = renderTargets;
-function renderZone() {
-  const t = TARGETS[current]; const el = $('#zone'); if (!t) { el.innerHTML = '<p class="empty">Elige una zona.</p>'; return; }
-  const r = rep(t.id); const rows = rowsFor(t.id).filter(x => filter === 'ALL' || (filter === 'APPROVED' ? APPROVED_STATUSES.includes(x.status) : x.status === filter));
-  const c = counts(t.id);
-  let html = `<div class="head"><h2>${esc(t.n)}</h2><span class="meta">${t.id} · ${esc(GROUPS[t.group].name)} · sensibilidad ${t.sensitivity} · presión ${t.pressureTolerance} · niveles ${t.allowedLevels.join(' ')}${t.anatomy ? ' · anatomía ' + t.anatomy : ''}</span></div>`;
-  html += `<div class="card"><h3>Repertorio de la zona</h3><div class="row">` +
-    `<span class="pill">estilos preferidos:</span>` + STYLE_IDS.map(s => `<label class="chip ${(r.preferredStyles || []).includes(s) ? 'on' : ''} ${t.allowedStyles.includes(s) ? '' : 'off'}"><input type="checkbox" data-pref="${s}" ${(r.preferredStyles || []).includes(s) ? 'checked' : ''} ${t.allowedStyles.includes(s) ? '' : 'disabled'}>${esc(STYLES[s].label)}</label>`).join('') + `</div>` +
-    `<div class="row" style="margin-top:8px"><span class="pill">duraciones por acción (s):</span>` + Object.entries(r.durationOverrides || {}).map(([a, d]) => `<span class="dur">${esc(ACTIONS[a] ? ACTIONS[a].name : a)} <input type="number" min="15" step="5" value="${d[0]}" data-dur="${a}" data-i="0"> – <input type="number" min="15" step="5" value="${d[1]}" data-dur="${a}" data-i="1"> <button class="btn small ghost" data-deldur="${a}">×</button></span>`).join('') +
-    `<select id="addDur" class="status"><option value="">+ acción…</option>${[...new Set(rows.filter(x => APPROVED_STATUSES.includes(x.status)).map(x => x.action))].filter(a => !(r.durationOverrides || {})[a]).map(a => `<option value="${a}">${esc(ACTIONS[a].name)}</option>`).join('')}</select></div>` +
-    `<div class="row" style="margin-top:8px"><input class="note" id="zoneNote" placeholder="Nota editorial de la zona (opcional)" value="${esc(r.notes || '')}"></div></div>`;
-  html += `<div class="filters">${[['ALL', `Todas ${c.EXCELLENT + c.GOOD + c.VALID + c.REJECTED + c.UNREVIEWED}`], ['APPROVED', `Aprobadas ${c.EXCELLENT + c.GOOD + c.VALID}`], ['REJECTED', `Rechazadas ${c.REJECTED}`], ['UNREVIEWED', `Sin revisar ${c.UNREVIEWED}`]].map(([k, l]) => `<button class="chip ${filter === k ? 'on' : ''}" data-f="${k}">${l}</button>`).join('')}</div>`;
-  html += `<table><thead><tr><th>Acción · herramienta</th><th>Status</th><th>Niveles</th><th>Motivo / nota</th><th>Frase que sale</th></tr></thead><tbody>`;
-  for (const x of rows) {
-    const a = ACTIONS[x.action], tool = ACTOR_TOOLS[x.tool], e = liveEntry(x.action, x.tool, t.id);
-    const natural = a.allowedLevels.filter(L => t.allowedLevels.includes(L)); const lv = e && e.levels ? e.levels : natural;
-    const flags = APPROVED_STATUSES.includes(x.status) ? suspicious(x.action, x.tool, t.id, x.status) : [];
-    const note = x.status === 'REJECTED' ? (typeof r.rejectedActions[`${x.action}|${x.tool}`] === 'string' ? r.rejectedActions[`${x.action}|${x.tool}`] : '') : (e && e.notes) || '';
-    html += `<tr class="${x.status}" data-k="${x.action}|${x.tool}"><td><span class="combo">${esc(a.name)} · ${esc(tool.label)}<small>${x.action} · ${x.tool}${x.outside ? ' · fuera del universo técnico' : ''}</small></span>${flags.length ? `<div class="flags">⚠ ${flags.join(', ')}</div>` : ''}</td>` +
-      `<td><select class="status ${x.status}" data-status>${ALL_STATUSES.map(s => `<option value="${s}" ${s === x.status ? 'selected' : ''}>${STATUS_LABEL[s]}</option>`).join('')}</select></td>` +
-      `<td><div class="levels">${LEVEL_IDS.map(L => `<button class="lv ${lv.includes(L) ? 'on' : ''}" data-lv="${L}" ${!natural.includes(L) || !APPROVED_STATUSES.includes(x.status) ? 'disabled' : ''} title="${esc(LEVELS[L].name)}">0${L}</button>`).join('')}</div></td>` +
-      `<td><input class="note" data-note value="${esc(note)}" placeholder="${x.status === 'REJECTED' ? 'motivo del rechazo' : 'nota (opcional)'}"></td>` +
-      `<td class="phrase"><span data-sample>${esc(sample(x.action, x.tool, t.id))}</span><button data-again title="otra frase">↻</button></td></tr>`;
-  }
-  html += `</tbody></table>`;
-  el.innerHTML = html;
-  for (const b of el.querySelectorAll('[data-f]')) b.onclick = () => { filter = b.dataset.f; renderZone(); };
-  for (const i of el.querySelectorAll('[data-pref]')) i.onchange = () => { const list = [...el.querySelectorAll('[data-pref]:checked')].map(x => x.dataset.pref); if (list.length) r.preferredStyles = list; else delete r.preferredStyles; persist(); renderZone(); };
-  for (const i of el.querySelectorAll('[data-dur]')) i.onchange = () => { const d = r.durationOverrides[i.dataset.dur]; d[Number(i.dataset.i)] = Number(i.value) || 15; persist(); };
-  for (const b of el.querySelectorAll('[data-deldur]')) b.onclick = () => { delete r.durationOverrides[b.dataset.deldur]; if (!Object.keys(r.durationOverrides).length) delete r.durationOverrides; persist(); renderZone(); };
-  $('#addDur', el).onchange = ev => { const a = ev.target.value; if (!a) return; (r.durationOverrides ||= {})[a] = [15, 60]; persist(); renderZone(); };
-  $('#zoneNote', el).onchange = ev => { if (ev.target.value.trim()) r.notes = ev.target.value.trim(); else delete r.notes; persist(); };
-  for (const tr of el.querySelectorAll('tbody tr')) {
-    const [action, tool] = tr.dataset.k.split('|');
-    $('[data-status]', tr).onchange = ev => { const s = ev.target.value; const note = s === 'REJECTED' ? (prompt('Motivo del rechazo (queda documentado en el fichero):', $('[data-note]', tr).value || '') || undefined) : undefined; if (s === 'REJECTED' && note === undefined) { renderZone(); return; } setStatus(t.id, action, tool, s, note); renderTargets(); renderZone(); };
-    for (const b of tr.querySelectorAll('[data-lv]')) b.onclick = () => { const on = [...tr.querySelectorAll('[data-lv].on')].map(x => Number(x.dataset.lv)); const L = Number(b.dataset.lv); const next = on.includes(L) ? on.filter(x => x !== L) : [...on, L]; if (!next.length) return; setLevels(t.id, action, tool, next); renderZone(); };
-    $('[data-note]', tr).onchange = ev => setNote(t.id, action, tool, ev.target.value.trim());
-    $('[data-again]', tr).onclick = () => { $('[data-sample]', tr).textContent = sample(action, tool, t.id); };
-  }
+$('#cardList').addEventListener('click', e => { const b = e.target.closest('[data-id]'); if (!b) return; currentId = b.dataset.id; renderList(); renderCard(currentId); });
+const req = (list, map) => list.length ? list.map(r => `<span class="pill">${esc(map[r.part] ? map[r.part].label : r.part)}${map[r.part] && map[r.part].anatomy ? ' · ' + map[r.part].anatomy : ''}</span>`).join(' ') : '<span class="pill">—</span>';
+function renderCard(id) {
+  const c = CARDS.find(x => x.id === id); if (!c) return;
+  const deck = buildDeck([c], ctx());
+  const elig = deck.eligible.length ? `<span class="ok">ELEGIBLE ahora (${scn.names[scn.actor]} → ${scn.names[1 - scn.actor]}, nivel ${scn.level})</span>` : `<span class="bad">NO elegible: ${esc(deck.rejected[0].reason)}</span>`;
+  const copies = c.allowedSides ? Object.entries(c.copyBySide || {}).map(([s, l]) => `<b>${s}</b><ul>${l.map(t => `<li>${esc(t)}</li>`).join('')}</ul>`).join('') : `<ul>${(c.copy || []).map(t => `<li>${esc(t)}</li>`).join('')}</ul>`;
+  const variants = c.variants ? c.variants.map(v => `<div class="card"><div class="row"><b>${v.id}</b> <span class="pill st-${v.status}">${v.status}</span> ${v.anatomy ? `<span class="pill">anatomía ${v.anatomy}</span>` : ''} ${v.receiverRequirements ? req(v.receiverRequirements, BODY_PARTS) : ''}</div>${v.copyBySide ? Object.entries(v.copyBySide).map(([s, l]) => `<b>${s}</b><ul>${l.map(t => `<li>${esc(t)}</li>`).join('')}</ul>`).join('') : `<ul>${(v.copy || []).map(t => `<li>${esc(t)}</li>`).join('')}</ul>`}${v.notes ? `<p class="hint">${esc(v.notes)}</p>` : ''}</div>`).join('') : '';
+  $('#card').innerHTML = `<h2>${c.id} <span class="pill st-${c.status}">${c.status}</span> <span class="pill">${c.source}</span></h2>
+  <p class="hint">${elig}</p>
+  <div class="grid">
+    <div><b>Nivel</b> ${c.level} ${LEVELS[c.level].name}</div><div><b>Familia</b> ${esc(FAMILIES[c.family])}</div><div><b>Tipo</b> ${c.interactionType}</div><div><b>Intensidad</b> ${c.intraLevelIntensity || '—'}</div>
+    <div><b>Actúa con</b> ${req(c.actorRequirements, ACTOR_TOOLS)}</div><div><b>Recibe en</b> ${req(c.receiverRequirements, BODY_PARTS)}</div>
+    <div><b>Ropa (actúa)</b> ${c.clothing.actor.join(' · ')}</div><div><b>Ropa (recibe)</b> ${c.clothing.receiver.join(' · ')}</div>
+    <div><b>Lados</b> ${c.allowedSides ? c.allowedSides.join(' · ') : 'sin lado'}</div><div><b>PlayConstraints</b> ${c.playConstraints ? c.playConstraints.join(' · ') : '—'}</div>
+    <div><b>Tiempo</b> ${c.timerMode}${c.durations.length ? ' · ' + c.durations.join(' / ') + ' s' : ''}</div><div><b>Peso</b> ${c.baseWeight}</div>
+    ${c.requiredOrientation ? `<div><b>Orientación</b> ${c.requiredOrientation}</div>` : ''}${c.choices ? `<div><b>Elección</b> ${c.choices.map(x => x.label).join(' / ')}</div>` : ''}${c.path ? `<div><b>Trayecto</b> ${c.path.from} → ${c.path.to}</div>` : ''}${c.undress ? `<div><b>UNDRESS</b> ${esc(JSON.stringify(c.undress))}</div>` : ''}
+    <div><b>Etiquetas</b> ${c.tags.join(' · ') || '—'}</div>${c.note ? `<div><b>Nota en pantalla</b> ${esc(c.note)}</div>` : ''}
+  </div>
+  <h3>Copia</h3>${copies}${variants ? '<h3>Variantes</h3>' + variants : ''}
+  ${c.notes ? `<h3>Notas de revisión</h3><p class="hint">${esc(c.notes)}</p>` : ''}`;
 }
 
-/* ---------- blueprints posicionales ---------- */
-const BODY_TOOLS = ACTOR_TOOLS_LIST.filter(t => isBodyTool(t.id) || ['penis', 'vulva', 'nipples', 'feet', 'toes'].includes(t.id));
-function previewCopy(b, text) {
-  const z = TARGETS[b.receiverRequirements[0] && b.receiverRequirements[0].part] || { n: 'la zona', np: 'su zona' };
-  const st = b.allowedStyles && b.allowedStyles.length ? STYLES[b.allowedStyles[0]].adv[0] || '' : '';
-  let s = text.replace(/\{T:poss\}/g, z.np).replace(/\{T:bare\}/g, z.n).replace(/\{T:pron\}/g, /^(el|un) /.test(z.n) ? 'lo' : /^(los|unos) /.test(z.n) ? 'los' : /^(las|unas) /.test(z.n) ? 'las' : 'la');
-  let first = true; s = s.replace(/\{T\}/g, () => { const r = first && !text.includes('{P}') ? `${z.n} de ${PARTNER}` : z.np; first = false; return r; });
-  s = s.replace(/\{P\}/g, PARTNER).replace(/\s?\{S\}/g, st ? ' ' + st : '').replace(/\{TOOL!?\}/g, b.actorRequirements[0] && ACTOR_TOOLS[b.actorRequirements[0].part] ? ACTOR_TOOLS[b.actorRequirements[0].part].phrase : '');
-  s = s.replace(/\s+/g, ' ').replace(/\s+([,;:.])/g, '$1').replace(/\ba el\b/g, 'al').replace(/\bde el\b/g, 'del').trim();
-  return s.charAt(0).toUpperCase() + s.slice(1).replace(/[.;,]*$/, '') + '.';
+/* ---------- mazo en vivo ---------- */
+function renderDeck() {
+  const deck = buildDeck(CARDS, ctx());
+  const rej = deck.rejected.filter(r => !['LEVEL', 'TRANSITION'].includes(r.reason));
+  $('#deck').innerHTML = `<h2>${scn.names[scn.actor]} → ${scn.names[1 - scn.actor]} · nivel ${scn.level} · banda ${engine.clothingBand()}</h2>
+  <h3>Elegibles (${deck.eligible.length})</h3><p>${deck.eligible.map(e => `<span class="pill ok" data-id="${e.card.id}">${e.card.id}${e.variants ? ' (' + e.variants.map(v => v.id).join(', ') + ')' : ''}</span>`).join(' ') || '<span class="bad">MAZO VACÍO: saldría la transición neutra y se registra para el diseñador.</span>'}</p>
+  <h3>Rechazadas (${rej.length})</h3><table><tbody>${rej.map(r => `<tr><td><b>${r.id}</b></td><td>${esc(r.reason)}</td></tr>`).join('')}</tbody></table>
+  `;
 }
-function renderBlueprints() {
-  const el = $('#blueprints'); let html = '';
-  POSITIONAL.forEach((b, i) => {
-    const a = ACTIONS[b.action];
-    html += `<article class="bp ${b.status}" data-i="${i}"><div class="id"><input data-f="id" value="${esc(b.id)}" spellcheck="false"><select class="status ${b.status}" data-f="status">${BLUEPRINT_STATUSES.map(s => `<option ${s === b.status ? 'selected' : ''}>${s}</option>`).join('')}</select></div>` +
-      `<div class="grid3"><label>acción<select data-f="action">${ACTIONS_LIST.filter(x => ['BODY_CONTACT', 'HUG', 'RUB'].includes(x.id) || x.id === b.action).map(x => `<option value="${x.id}" ${x.id === b.action ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select></label>` +
-      `<label>tier (calidad)<select data-f="tier"><option value="" ${!b.tier ? 'selected' : ''}>— sin tier</option>${APPROVED_STATUSES.map(s => `<option ${s === b.tier ? 'selected' : ''}>${s}</option>`).join('')}</select></label>` +
-      `<label>orientación<select data-f="requiredOrientation"><option value="" ${!b.requiredOrientation ? 'selected' : ''}>— libre</option>${ORIENTATIONS.map(o => `<option ${o === b.requiredOrientation ? 'selected' : ''}>${o}</option>`).join('')}</select></label></div>` +
-      `<div class="grid2"><label>quien actúa (parte · anatomía)<div class="row"><select data-req="actor" data-k="part">${BODY_TOOLS.map(t => `<option value="${t.id}" ${b.actorRequirements[0] && b.actorRequirements[0].part === t.id ? 'selected' : ''}>${esc(t.label)}</option>`).join('')}</select><select data-req="actor" data-k="anatomy"><option value="" ${!(b.actorRequirements[0] && b.actorRequirements[0].anatomy) ? 'selected' : ''}>cualquiera</option><option ${b.actorRequirements[0] && b.actorRequirements[0].anatomy === 'pene' ? 'selected' : ''}>pene</option><option ${b.actorRequirements[0] && b.actorRequirements[0].anatomy === 'vulva' ? 'selected' : ''}>vulva</option></select></div></label>` +
-      `<label>quien recibe (zona · anatomía)<div class="row"><select data-req="receiver" data-k="part">${TARGETS_LIST.map(t => `<option value="${t.id}" ${b.receiverRequirements[0] && b.receiverRequirements[0].part === t.id ? 'selected' : ''}>${esc(t.n)}</option>`).join('')}</select><select data-req="receiver" data-k="anatomy"><option value="" ${!(b.receiverRequirements[0] && b.receiverRequirements[0].anatomy) ? 'selected' : ''}>la de la zona</option><option ${b.receiverRequirements[0] && b.receiverRequirements[0].anatomy === 'pene' ? 'selected' : ''}>pene</option><option ${b.receiverRequirements[0] && b.receiverRequirements[0].anatomy === 'vulva' ? 'selected' : ''}>vulva</option></select></div></label></div>` +
-      `<div class="grid3"><label>niveles<div class="levels">${LEVEL_IDS.map(L => `<button class="lv ${(b.allowedLevels || []).includes(L) ? 'on' : ''}" data-lv="${L}" title="${esc(LEVELS[L].name)}">0${L}</button>`).join('')}</div></label>` +
-      `<label>estilos<div class="row">${(a ? a.styles : STYLE_IDS).map(s => `<label class="chip ${(b.allowedStyles || []).includes(s) ? 'on' : ''}"><input type="checkbox" data-style="${s}" ${(b.allowedStyles || []).includes(s) ? 'checked' : ''}>${esc(STYLES[s].label)}</label>`).join('') || '<span class="meta">la acción no admite estilo</span>'}</div></label>` +
-      `<label>duración (s) · peso<div class="row"><span class="dur"><input type="number" min="15" step="5" data-f="dur0" value="${b.durationRange ? b.durationRange[0] : 20}"> – <input type="number" min="15" step="5" data-f="dur1" value="${b.durationRange ? b.durationRange[1] : 60}"></span><input type="number" min="0" max="3" step="0.1" data-f="weight" value="${b.weight ?? 1}" style="width:60px"></div></label></div>` +
-      `<label>copy (una frase por línea · {P} pareja · {T} zona · {T:poss} · {T:bare} · {S} estilo)<textarea class="note" data-f="copy" rows="${Math.max(2, (b.copyVariants || []).length + 1)}" spellcheck="false">${esc((b.copyVariants || []).join('\n'))}</textarea></label>` +
-      `<div>${(b.copyVariants || []).length ? b.copyVariants.map(v => `<p class="preview">${esc(previewCopy(b, v))}</p>`).join('') : '<p class="preview missing">Sin copy: redacta las frases antes de aprobar. No se inventa nada automáticamente.</p>'}</div>` +
-      `<label>notas<textarea class="note" data-f="notes" rows="2">${esc(b.notes || '')}</textarea></label>` +
-      `<div class="row" style="justify-content:space-between"><span class="meta">${b.status === 'APPROVED' ? '✓ entra al generador tras exportar y validar' : b.status === 'UNREVIEWED' ? 'pendiente de decisión humana · no sale' : 'rechazado · no sale'}</span><button class="btn small ghost" data-del>Eliminar</button></div></article>`;
-  });
-  el.innerHTML = html || '<p class="empty">Sin blueprints.</p>';
-  for (const card of el.querySelectorAll('.bp')) {
-    const b = POSITIONAL[Number(card.dataset.i)];
-    const upd = () => { persist(); renderBlueprints(); };
-    for (const inp of card.querySelectorAll('[data-f]')) inp.onchange = () => {
-      const f = inp.dataset.f, v = inp.value;
-      if (f === 'id') b.id = v.trim().replace(/\s+/g, '-').toLowerCase() || b.id;
-      else if (f === 'status') b.status = v; else if (f === 'action') b.action = v; else if (f === 'tier') b.tier = v || null; else if (f === 'requiredOrientation') b.requiredOrientation = v || null;
-      else if (f === 'dur0') { b.durationRange = b.durationRange || [20, 60]; b.durationRange[0] = Number(v) || 15; } else if (f === 'dur1') { b.durationRange = b.durationRange || [20, 60]; b.durationRange[1] = Number(v) || 60; }
-      else if (f === 'weight') b.weight = Math.max(0, Math.min(3, Number(v) || 0));
-      else if (f === 'copy') b.copyVariants = v.split('\n').map(s => s.trim()).filter(Boolean);
-      else if (f === 'notes') b.notes = v.trim() || null;
-      upd();
-    };
-    for (const sel of card.querySelectorAll('[data-req]')) sel.onchange = () => { const list = sel.dataset.req === 'actor' ? b.actorRequirements : b.receiverRequirements; list[0] ||= {}; if (sel.dataset.k === 'part') list[0].part = sel.value; else { if (sel.value) list[0].anatomy = sel.value; else delete list[0].anatomy; } upd(); };
-    for (const l of card.querySelectorAll('[data-lv]')) l.onclick = () => { const L = Number(l.dataset.lv); b.allowedLevels = (b.allowedLevels || []).includes(L) ? b.allowedLevels.filter(x => x !== L) : [...(b.allowedLevels || []), L].sort(); upd(); };
-    for (const s of card.querySelectorAll('[data-style]')) s.onchange = () => { b.allowedStyles = [...card.querySelectorAll('[data-style]:checked')].map(x => x.dataset.style); upd(); };
-    $('[data-del]', card).onclick = () => { if (confirm(`¿Eliminar el blueprint «${b.id}»?`)) { POSITIONAL.splice(POSITIONAL.indexOf(b), 1); upd(); } };
-  }
-}
-$('#newBp').onclick = () => {
-  POSITIONAL.push({ id: `nuevo-${Date.now().toString(36)}`, status: 'UNREVIEWED', type: 'POSITIONAL', action: 'BODY_CONTACT', semanticFamily: 'BODY_TO_BODY', actorRequirements: [{ part: 'chest' }], receiverRequirements: [{ part: 'back' }], requiredOrientation: null, allowedLevels: [2], allowedStyles: [], durationRange: [20, 60], copyVariants: [], weight: 1, tier: null, intensity: null, notes: 'Propuesta nueva: redactar copy, fijar nivel y decidir.' });
-  persist(); renderBlueprints(); window.scrollTo(0, document.body.scrollHeight);
-};
+$('#draw').addEventListener('click', () => {
+  engine.prefs.bodyParts = scn.anatomy; engine.session.level = scn.level; engine.clothing = scn.clothing.map(s => ({ ...s })); engine._an = null;
+  const r = engine.round(engine.generate({ actor: scn.actor }), { actor: scn.actor });
+  const d = r.debug || engine.lastDebug;
+  if (r.undress) { for (const p of r.undress.players) { const g = r.undress.garment === 'ANY' ? engine.removable(p)[0] : r.undress.garment; if (g) { engine.recordUndress(p, g); scn.clothing[p] = { ...engine.clothing[p] }; } } renderScenario(); }
+  const box = $('#draws'); const div = document.createElement('div'); div.className = 'card';
+  div.innerHTML = `<p class="phrase">${esc(r.phrase)}</p><p class="hint">${r.actorName} → ${r.receiverName} · <b>${r.cardId}</b>${r.variantId ? ' / ' + r.variantId : ''}${r.side ? ' / ' + r.side : ''}${r.playConstraint ? ' / ' + r.playConstraint : ''} · ${r.seconds ?? 'sin tiempo'} s · propósito ${d.purpose} (${esc(d.reason)})${d.fallback ? ' · MAZO VACÍO' : ''}</p>
+  <p class="hint">pesos: ${d.candidates.map(c => `${c.id} ${c.weight}`).join(' · ')}</p>`;
+  box.prepend(div);
+  if (r.undress) renderDeck();
+});
+$('#reset').addEventListener('click', () => { engine = mkEngine(); renderDeck(); });
 
-/* ---------- auditoría ---------- */
-function renderAudit() {
-  const flagged = [], valid = []; let unreviewed = 0;
-  for (const u of UNIVERSE) { const s = liveStatus(u.action, u.tool, u.target); if (s === 'UNREVIEWED') unreviewed++; if (!APPROVED_STATUSES.includes(s)) continue; const f = suspicious(u.action, u.tool, u.target, s); if (f.length) flagged.push({ ...u, status: s, flags: f }); if (s === 'VALID') valid.push({ ...u, status: s }); }
-  const row = x => `<tr class="${x.status}" data-go="${x.target}"><td><span class="combo">${esc(TARGETS[x.target].n)}</span></td><td>${esc(ACTIONS[x.action].name)} · ${esc(ACTOR_TOOLS[x.tool].label)}</td><td>${x.status}</td><td class="flags">${(x.flags || []).join(', ')}</td><td class="phrase">${esc(sample(x.action, x.tool, x.target))}</td></tr>`;
-  $('#audit').innerHTML = `<div class="card"><h3>Resumen</h3><div class="row"><span class="pill">universo técnico ${UNIVERSE.length}</span><span class="pill">aprobadas ${UNIVERSE.filter(u => APPROVED_STATUSES.includes(liveStatus(u.action, u.tool, u.target))).length}</span><span class="pill">rechazadas ${UNIVERSE.filter(u => liveStatus(u.action, u.tool, u.target) === 'REJECTED').length}</span><span class="pill">sin revisar ${unreviewed}</span><span class="pill">blueprints ${POSITIONAL.filter(b => b.status === 'APPROVED').length} aprobados · ${POSITIONAL.filter(b => b.status === 'UNREVIEWED').length} pendientes</span></div></div>` +
-    `<div class="card"><h3>Aprobadas que las heurísticas señalan (${flagged.length}) · clic para ir a la zona</h3><table><thead><tr><th>Zona</th><th>Acción · herramienta</th><th>Status</th><th>Heurísticas</th><th>Frase</th></tr></thead><tbody>${flagged.map(row).join('')}</tbody></table></div>` +
-    `<div class="card"><h3>VALID (menores) para decidir si suben o se rechazan (${valid.length})</h3><table><thead><tr><th>Zona</th><th>Acción · herramienta</th><th>Status</th><th></th><th>Frase</th></tr></thead><tbody>${valid.map(row).join('')}</tbody></table></div>`;
-  for (const tr of $('#audit').querySelectorAll('[data-go]')) tr.onclick = () => { current = tr.dataset.go; filter = 'ALL'; $('.tab[data-tab="zonas"]').click(); renderTargets(); renderZone(); window.scrollTo(0, 0); };
-}
-
-/* ---------- exportar ---------- */
-let exportName = '';
-function openExport(name, text, hint) { exportName = name; $('#exportTitle').textContent = `Exportar ${name}`; $('#exportHint').textContent = hint; $('#exportText').value = text; $('#exportDlg').showModal(); }
-$('#exportRep').onclick = () => openExport('repertoire.js', serializeRepertoire(REPERTOIRE, { summary: `Exportado desde Content Lab el ${new Date().toISOString().slice(0, 10)}.` }), 'Guarda este contenido como engine/data/repertoire.js y ejecuta node tests/validate.js y node --test. Solo así entra al motor.');
-$('#exportPos').onclick = () => openExport('positional.js', serializePositional(POSITIONAL), 'Guarda este contenido como engine/data/positional.js y ejecuta node tests/validate.js y node --test. Un blueprint UNREVIEWED sigue sin salir aunque se exporte.');
-$('#closeExport').onclick = () => $('#exportDlg').close();
-$('#copyExport').onclick = async () => { try { await navigator.clipboard.writeText($('#exportText').value); $('#copyExport').textContent = 'Copiado'; setTimeout(() => $('#copyExport').textContent = 'Copiar', 1200); } catch { $('#exportText').select(); } };
-$('#downloadExport').onclick = () => { const blob = new Blob([$('#exportText').value], { type: 'text/javascript' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = exportName; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
-
-renderTargets(); refreshChrome();
-current = 'collarbones'; renderTargets(); renderZone();
+/* ---------- pestañas ---------- */
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => { document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === t)); document.querySelectorAll('.panel').forEach(p => p.hidden = p.id !== 'tab-' + t.dataset.tab); if (t.dataset.tab === 'mazo') renderDeck(); }));
+renderFilters(); renderList(); renderScenario(); renderDeck();

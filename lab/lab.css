@@ -103,3 +103,19 @@ dialog::backdrop{background:rgba(0,0,0,.7)}
 .dlgHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--s2)}
 #exportText{width:100%;height:60vh;background:var(--black-2);border:1px solid var(--hairline);border-radius:var(--r-sm);padding:var(--s3);font:12px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--text-2)}
 @media (max-width:900px){.panel.split{grid-template-columns:1fr}.side{position:static;max-height:none}.bar{flex-wrap:wrap}.tabs{margin-left:0}.cards{grid-template-columns:1fr}}
+/* v2 · cartas */
+.tItem{display:grid;grid-template-columns:52px 1fr auto;gap:var(--s2);align-items:center;width:100%;text-align:left;background:none;border:1px solid transparent;border-radius:var(--r-sm);padding:6px 8px;color:var(--text-2)}
+.tItem.on{border-color:var(--line-strong);color:var(--text);background:var(--black-3)}
+.tItem em{font-style:normal;font-size:10.5px;letter-spacing:.06em;color:var(--text-3)}
+.tItem.st-UNREVIEWED em{color:var(--warn)}
+.pill.st-APPROVED,.ok{color:var(--ok)}.pill.st-UNREVIEWED{color:var(--warn)}.pill.st-REJECTED,.bad{color:var(--red-hot)}
+.group{margin:0 0 var(--s3);line-height:2}
+.group .row{display:inline-flex;align-items:center;gap:4px;margin-right:var(--s3);font-size:12px;color:var(--text-2)}
+.chip.small{padding:1px 7px;font-size:10.5px}
+.zone h3{margin:var(--s4) 0 var(--s2);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-3)}
+.zone table{border-collapse:collapse;width:100%}.zone td{padding:3px 8px 3px 0;border-top:1px solid var(--hairline);font-size:12.5px;color:var(--text-2)}
+.zone ul{margin:4px 0 8px;padding-left:18px}
+.card .phrase{font-size:16px;margin:0 0 4px}
+.zone .grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--s2) var(--s4);font-size:12.5px;color:var(--text-2)}.zone .grid b{color:var(--text);margin-right:6px}
+.chip.on{background:var(--black-4);color:var(--text)}
+.zone h3.lab{margin-top:var(--s5)}

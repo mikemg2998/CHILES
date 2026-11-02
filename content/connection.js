@@ -1,0 +1,53 @@
+/* CONEXIÓN V1 · 17 cartas del diseñador (2026-11-02). Nivel autosuficiente: nadie tiene que llegar a ningún sitio.
+   Nada aquí exige ropa fuera ni anatomía concreta. Las frases son las que ve la pareja; {R} es quien recibe. */
+import { card } from './schema.js';
+const C = o => card({ level: 1, status: 'APPROVED', source: 'DESIGNER_PROVIDED', ...o });
+export const CONNECTION = [
+  C({ id: 'C01', family: 'MASSAGE', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'bothHands' }], receiverRequirements: [{ part: 'back' }], durations: [45],
+    copy: ['Masajea despacio la espalda de {R}, con las manos abiertas y sin apretar demasiado.', 'Un masaje suave en la espalda de {R}: movimientos largos, sin prisa.'] }),
+  C({ id: 'C02', family: 'HUG', interactionType: 'BODY_TO_BODY', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'arms' }], receiverRequirements: [{ part: 'back' }], requiredOrientation: 'SEATED', durations: [30],
+    copy: ['Sentados, abraza a {R} y quedaos así sin hablar hasta que acabe el tiempo.', 'Abrazaos sentados, sin decir nada, durante medio minuto.'] }),
+  C({ id: 'C03', family: 'KISS', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'lips' }], receiverRequirements: [{ part: 'face' }], durations: [25],
+    copy: ['Da picos por toda la cara de {R}: frente, mejillas, nariz, barbilla.', 'Picos por el rostro de {R}, uno aquí y otro allá, sin orden.'] }),
+  C({ id: 'C04', family: 'CARESS', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'oneHand' }], receiverRequirements: [{ part: 'upperArms' }, { part: 'forearms' }], allowedSides: ['LEFT', 'RIGHT', 'BOTH'], durations: [40],
+    copyBySide: {
+      LEFT: ['{R} cierra los ojos. Acaricia su brazo izquierdo de arriba abajo, del hombro a la mano.'],
+      RIGHT: ['{R} cierra los ojos. Acaricia su brazo derecho de arriba abajo, del hombro a la mano.'],
+      BOTH: ['{R} cierra los ojos. Acaricia sus dos brazos de arriba abajo, del hombro a las manos.'],
+    } }),
+  C({ id: 'C05', family: 'CLOSENESS', interactionType: 'BODY_TO_BODY', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'forehead' }], receiverRequirements: [{ part: 'forehead' }, { part: 'hands' }], requiredOrientation: 'FACE', durations: [40],
+    copy: ['Frente con frente con {R}, tomados de las manos, hasta que acabe el tiempo.', 'Apoya tu frente en la de {R} y tomaos de las manos. Quedaos así.'] }),
+  C({ id: 'C06', family: 'MASSAGE', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'bothHands' }], receiverRequirements: [{ part: 'shoulders' }], durations: [45],
+    copy: ['{R} cierra los ojos. Masajea sus hombros con las dos manos.', 'Un masaje de hombros para {R}, con los ojos cerrados.'] }),
+  C({ id: 'C07', family: 'KISS', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'lips' }], receiverRequirements: [{ part: 'lips' }], durations: [30],
+    copy: ['Picos en los labios de {R}, uno detrás de otro, durante medio minuto.', 'Besa a {R} en los labios con picos cortos, sin parar hasta que acabe el tiempo.'] }),
+  C({ id: 'C08', family: 'MASSAGE', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'bothHands' }], receiverRequirements: [{ part: 'calves' }], allowedSides: ['LEFT', 'RIGHT', 'BOTH'], durations: [40],
+    copyBySide: {
+      LEFT: ['Masajea la pantorrilla izquierda de {R} con las dos manos.'],
+      RIGHT: ['Masajea la pantorrilla derecha de {R} con las dos manos.'],
+      BOTH: ['Masajea las pantorrillas de {R}, primero una y luego la otra.'],
+    } }),
+  C({ id: 'C09', family: 'CLOSENESS', interactionType: 'MUTUAL', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'bothHands' }], receiverRequirements: [{ part: 'hands' }], durations: [40],
+    copy: ['Tomaos de las manos y miraos a los ojos sin hablar. Reír, sonreír o hacer ruidos vale.'], note: 'No se habla. Reír cuenta.' }),
+  C({ id: 'C10', family: 'MUSIC', interactionType: 'MUTUAL', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'body' }], receiverRequirements: [{ part: 'wholeBody' }], timerMode: 'NO_TIMER',
+    copy: ['Poned una canción lenta y bailadla juntos, de principio a fin.'], note: 'Dura lo que dure la canción.' }),
+  C({ id: 'C11', family: 'HANDS', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'bothHands' }], receiverRequirements: [{ part: 'hands' }], allowedSides: ['LEFT', 'RIGHT', 'BOTH'], durations: [45],
+    copyBySide: {
+      LEFT: ['Masajea la mano izquierda de {R}: la palma, cada dedo, la muñeca.'],
+      RIGHT: ['Masajea la mano derecha de {R}: la palma, cada dedo, la muñeca.'],
+      BOTH: ['Masajea las manos de {R}, primero una y luego la otra: palma, dedos, muñeca.'],
+    }, note: 'Podéis usar aceite si os apetece.' }),
+  C({ id: 'C12', family: 'CARESS', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'fingertips' }], receiverRequirements: [{ part: 'face' }], durations: [30],
+    copy: ['{R} cierra los ojos. Recorre su rostro con las yemas de los dedos.', 'Con los ojos de {R} cerrados, pasa las yemas de los dedos por su frente, sus mejillas, sus labios.'] }),
+  C({ id: 'C13', family: 'HAIR', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'fingers' }], receiverRequirements: [{ part: 'hair' }], durations: [30, 45],
+    copy: ['{R} descansa con los ojos cerrados. Juega con su cabello.', 'Pasa los dedos por el cabello de {R} mientras descansa con los ojos cerrados.'] }),
+  C({ id: 'C14', family: 'HUG', interactionType: 'BODY_TO_BODY', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'body' }], receiverRequirements: [{ part: 'wholeBody' }], requiredOrientation: 'LYING', durations: [40, 60],
+    copy: ['Tumbados de lado, abrazaos sin hablar hasta que acabe el tiempo.'], note: 'Buscad una postura cómoda antes de empezar.' }),
+  C({ id: 'C15', family: 'MASSAGE', interactionType: 'CHOOSE', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'bothHands' }], receiverRequirements: [{ part: 'back' }, { part: 'shoulders' }, { part: 'hands' }], durations: [45],
+    choices: [{ id: 'back', label: 'espalda' }, { id: 'shoulders', label: 'hombros' }, { id: 'hands', label: 'manos' }],
+    copy: ['{R} elige su masaje: espalda, hombros o manos. Tú se lo das.'], note: 'Solo esas tres opciones.' }),
+  C({ id: 'C16', family: 'CARESS', interactionType: 'GUIDED', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'oneHand' }], receiverRequirements: [{ part: 'hair' }, { part: 'face' }, { part: 'hands' }], durations: [40],
+    copy: ['Acaricia el cabello o el rostro de {R}. {R} guía tu mano con la suya: dónde, a qué ritmo, con cuánta presión.'], tags: ['guia'] }),
+  C({ id: 'C17', family: 'MUSIC', interactionType: 'MUTUAL', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'arms' }], receiverRequirements: [{ part: 'wholeBody' }], timerMode: 'NO_TIMER',
+    copy: ['Elegid una canción entre los dos y abrazaos mientras suena.'], note: 'Dura lo que dure la canción.' }),
+];

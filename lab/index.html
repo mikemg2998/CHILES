@@ -9,53 +9,37 @@
 <link rel="preconnect" href="https://api.fontshare.com">
 <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap">
-<link rel="stylesheet" href="lab.css?v=1">
+<link rel="stylesheet" href="lab.css?v=2">
 </head>
 <body>
 <header class="bar">
-  <div class="brand"><span class="dot"></span><strong>Content Lab</strong><span class="sub">Pollo a la brasa · curación de contenido</span></div>
+  <div class="brand"><span class="dot"></span><strong>Content Lab</strong><span class="sub">Pollo a la brasa · cartas curadas</span></div>
   <nav class="tabs" role="tablist">
-    <button class="tab on" data-tab="zonas">Zonas</button>
-    <button class="tab" data-tab="posicionales">Posicionales</button>
-    <button class="tab" data-tab="auditoria">Auditoría</button>
+    <button class="tab on" data-tab="cartas">Cartas</button>
+    <button class="tab" data-tab="mazo">Mazo en vivo</button>
   </nav>
-  <div class="actions">
-    <span id="changes" class="pill">0 cambios</span>
-    <button id="exportRep" class="btn">Exportar repertoire.js</button>
-    <button id="exportPos" class="btn">Exportar positional.js</button>
-    <button id="discard" class="btn ghost">Descartar cambios</button>
-  </div>
+  <div class="actions"><span id="counts" class="pill"></span></div>
 </header>
 <div id="validation" class="validation" hidden></div>
-
 <main>
-  <section id="tab-zonas" class="panel split">
+  <section id="tab-cartas" class="panel split">
     <aside class="side">
-      <input id="search" class="search" type="search" placeholder="Buscar zona…" autocomplete="off">
-      <div id="targets" class="list"></div>
+      <input id="search" class="search" type="search" placeholder="Buscar carta…" autocomplete="off">
+      <div class="filters" id="filters"></div>
+      <div id="cardList" class="list"></div>
     </aside>
-    <div id="zone" class="zone"><p class="empty">Elige una zona para ver su repertorio: cada acción · herramienta con su clasificación, editable.</p></div>
+    <div id="card" class="zone"><p class="empty">Elige una carta: ID · NIVEL · FAMILIA · TIPO · STATUS · ORIGEN · requisitos · lados · variantes · limitaciones · tiempos · peso. Para aprobar o rechazar se edita <code>status</code> en <code>content/</code> y se pasa <code>node tests/validate.js</code>.</p></div>
   </section>
-
-  <section id="tab-posicionales" class="panel" hidden>
-    <div class="toolbar">
-      <p class="hint">Cuerpo con cuerpo: cada blueprint es una configuración concreta de los dos cuerpos, con su copy. Solo <b>APPROVED</b> con copy y tier entra al generador. Un UNREVIEWED nunca se promociona solo.</p>
-      <button id="newBp" class="btn">Nuevo blueprint</button>
-    </div>
-    <div id="blueprints" class="cards"></div>
-  </section>
-
-  <section id="tab-auditoria" class="panel" hidden>
-    <p class="hint">La auditoría solo señala. Pregunta: <b>¿esta acción merece aparecer aquí?</b> Decide en la zona (clic en la fila) y exporta.</p>
-    <div id="audit"></div>
+  <section id="tab-mazo" class="panel split" hidden>
+    <aside class="side">
+      <p class="hint">Escenario real: nivel, dirección, anatomía y ropa de cada uno. El mazo muestra qué cabe y por qué no cabe el resto.</p>
+      <div id="scenario"></div>
+      <button id="draw" class="btn hot">Sacar una carta</button>
+      <button id="reset" class="btn ghost">Sesión nueva</button>
+    </aside>
+    <div class="zone"><div id="deck"></div><h3 class="lab">Tiradas</h3><div id="draws"></div></div>
   </section>
 </main>
-
-<dialog id="exportDlg">
-  <div class="dlgHead"><strong id="exportTitle">Exportar</strong><div class="row"><button id="copyExport" class="btn">Copiar</button><button id="downloadExport" class="btn">Descargar</button><button id="closeExport" class="btn ghost">Cerrar</button></div></div>
-  <p class="hint" id="exportHint"></p>
-  <textarea id="exportText" readonly spellcheck="false"></textarea>
-</dialog>
-<script type="module" src="lab.js?v=1"></script>
+<script type="module" src="lab.js?v=2"></script>
 </body>
 </html>

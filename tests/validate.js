@@ -1,10 +1,5 @@
-/* Validación estructural de los datos del motor. Falla (exit 1) con cualquier error: zona/herramienta/acción inexistente,
-   estilo imposible, rango de duración vacío o fuera de rango, combinación sin nivel, anatomía incoherente, acción sin
-   realizador, combinación no verbalizable. Ejecutar: node tests/validate.js */
-import { validateData, COMBOS, unreviewedCombinations, ACTIONS_LIST, TARGETS_LIST } from '../engine/grammar.js';
-const v = validateData();
-console.log(`== Validación de datos · ${ACTIONS_LIST.length} acciones · ${TARGETS_LIST.length} zonas · ${COMBOS.length} combinaciones aprobadas · ${unreviewedCombinations().length} sin revisar ==`);
-for (const w of v.warn) console.log('  aviso:', w);
-for (const e of v.errors) console.log('  ERROR:', e);
-console.log(v.ok ? '✓ Datos válidos' : `✗ ${v.errors.length} errores`);
-process.exit(v.ok ? 0 : 1);
+/* Validación estructural del contenido: una carta mal formada no llega al motor. */
+import { validateContent, CARDS } from '../content/index.js';
+const errors = validateContent();
+if (errors.length) { console.error('✗ Contenido inválido:\n' + errors.map(e => '  · ' + e).join('\n')); process.exit(1); }
+console.log(`✓ Contenido válido: ${CARDS.filter(c => !c.transition).length} cartas, ${CARDS.filter(c => c.status === 'APPROVED' && !c.transition).length} aprobadas`);

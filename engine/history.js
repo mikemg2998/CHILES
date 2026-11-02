@@ -1,29 +1,35 @@
-/* HistoryManager: memoria de sesión (solo en memoria). Enfriamientos duros + penalización suave + formas de frase recientes. */
-export class HistoryManager {
-  constructor() { this.rounds = []; this.recentIntensity = []; this.recentShapes = []; }
-  push(round) {
-    this.rounds.unshift(round); if (this.rounds.length > 40) this.rounds.pop();
-    this.recentIntensity.unshift(round.intensity); if (this.recentIntensity.length > 12) this.recentIntensity.pop();
-    if (round.shapeId) { this.recentShapes.unshift(round.shapeId); if (this.recentShapes.length > 12) this.recentShapes.pop(); }
-  }
+/* HISTORY. Memoria de la sesión (solo en memoria): qué cartas, familias, variantes, lados, limitaciones, actores y
+   receptores han salido, y en Intimidad qué cambios de ropa, cartas UNDRESS y posicionales. Todo son PESOS, no vetos:
+   lo reciente pesa menos, lo que lleva mucho sin salir pesa un poco más. */
+export class History {
+  constructor() { this.reset(); }
+  reset() { this.rounds = []; this.recentClothingChanges = []; }
+  push(round) { this.rounds.unshift(round); if (this.rounds.length > 60) this.rounds.pop(); }
   last() { return this.rounds[0] || null; }
-  recent(key, n) { return this.rounds.slice(0, n).map(r => r[key]).filter(Boolean); }
-  cooling(key, id, n) { return this.recent(key, n).includes(id); }
-  /* 1 si es nuevo; cae con cada aparición reciente (las más recientes pesan más). */
-  novelty(key, id, n = 10, strength = 1) {
-    let s = 0; this.rounds.slice(0, n).forEach((r, i) => { if (r[key] === id) s += (n - i) / n; });
-    return 1 / (1 + 2 * strength * s);
-  }
-  /* azar curado por familias: la última familia pesa casi nada; una familia que lleva muchas rondas sin salir recibe un empujón */
-  familyWeight(key, family, { n = 12, strength = 1.5, hunger = 8, soft = false } = {}) {
-    if (!family) return 1;
+  get recentInteractionIds() { return this.rounds.map(r => r.cardId); }
+  get recentFamilies() { return this.rounds.map(r => r.family); }
+  get recentVariants() { return this.rounds.map(r => r.variantId).filter(Boolean); }
+  get recentSides() { return this.rounds.map(r => r.side).filter(Boolean); }
+  get recentPlayConstraints() { return this.rounds.map(r => r.playConstraint).filter(Boolean); }
+  get recentActors() { return this.rounds.map(r => r.actor); }
+  get recentReceivers() { return this.rounds.map(r => r.receiver); }
+  get recentUndressCards() { return this.rounds.filter(r => r.interactionType === 'UNDRESS'); }
+  get recentPositionalCards() { return this.rounds.filter(r => r.interactionType === 'POSITIONAL'); }
+  recordClothingChange(change) { this.recentClothingChanges.unshift(change); if (this.recentClothingChanges.length > 20) this.recentClothingChanges.pop(); }
+  /* lados recientes para esta carta y para estas partes del cuerpo (independientemente de la carta) */
+  recentSidesByInteraction(cardId, n = 6) { return this.rounds.filter(r => r.cardId === cardId && r.side).slice(0, n).map(r => r.side); }
+  recentSidesByBodyPart(parts, n = 6) { return this.rounds.filter(r => r.side && r.parts && r.parts.some(p => parts.includes(p))).slice(0, n).map(r => r.side); }
+  /* 1 si es nuevo; cae con cada aparición reciente (las más recientes pesan más) */
+  novelty(key, id, n = 12, strength = 1) { let s = 0; this.rounds.slice(0, n).forEach((r, i) => { if (r[key] === id) s += (n - i) / n; }); return 1 / (1 + 2 * strength * s); }
+  /* familia: la última pesa casi nada; una que lleva muchas cartas sin salir recibe un empujón */
+  familyWeight(family, { n = 10, strength = 1.2, hunger = 8 } = {}) {
     let s = 0, lastSeen = -1;
-    this.rounds.slice(0, n).forEach((r, i) => { if (r.families && r.families[key] === family) { s += ((n - i) / n) ** 2; if (lastSeen < 0) lastSeen = i; } });
+    this.rounds.slice(0, n).forEach((r, i) => { if (r.family === family) { s += ((n - i) / n) ** 2; if (lastSeen < 0) lastSeen = i; } });
     let w = 1 / (1 + 3 * strength * s);
-    if (!soft) { if (lastSeen === 0) w *= 0.15; else if (lastSeen === 1) w *= 0.45; }
-    if (lastSeen < 0 && this.rounds.length >= hunger) w *= 1.6;
+    if (lastSeen === 0) w *= 0.12; else if (lastSeen === 1) w *= 0.4;
+    if (lastSeen < 0 && this.rounds.length >= hunger) w *= 1.5;
     return w;
   }
-  familyCooling(key, family, n) { return !!family && this.rounds.slice(0, n).some(r => r.families && r.families[key] === family); }
-  reset() { this.rounds = []; this.recentIntensity = []; this.recentShapes = []; }
+  sinceCard(cardId) { const i = this.rounds.findIndex(r => r.cardId === cardId); return i < 0 ? Infinity : i; }
+  sinceType(type) { const i = this.rounds.findIndex(r => r.interactionType === type); return i < 0 ? Infinity : i; }
 }
