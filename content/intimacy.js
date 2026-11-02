@@ -47,6 +47,11 @@ export const INTIMACY = [
     notes: 'THROUGH_PANTIES (diseñador): contacto suave con los dedos sobre las panties. Solo con pantalón fuera y panties puestas.' }),
   I({ id: 'I24', family: 'ORAL', similarityGroup: 'CLOTHED_TEASE', intraLevelIntensity: 'MID', status: 'UNREVIEWED', actorRequirements: [{ part: 'lips' }], receiverRequirements: [], clothing: { receiver: ['THROUGH_PANTIES'] }, durations: [30], tags: ['intimo', 'boca'], copy: [],
     notes: '«Pequeños besos/picos sobre las panties en las zonas indicadas por el diseñador»: las zonas no llegaron. Sin zona no hay parte receptora ni copia. Pendiente.' }),
+  /* THROUGH_TOP · pedido del diseñador (V4 camiseta + brasier, 2026-11-02): «interacción suave sobre la camiseta en la zona del pecho
+     cuando la anatomía correspondiente esté declarada». Con camiseta puesta (haya brasier debajo o no) es la única capa accesible.
+     Llegó el estado y la intención, no la interacción (con qué se actúa, sobre qué parte, cuánto dura): sin eso no hay copia. */
+  I({ id: 'I25', family: 'BREASTS', similarityGroup: 'CLOTHED_TEASE', intraLevelIntensity: 'LOW', status: 'UNREVIEWED', actorRequirements: [], receiverRequirements: [{ part: 'breasts' }], clothing: { receiver: ['THROUGH_TOP'] }, durations: [25, 30], copy: [],
+    notes: 'THROUGH_TOP: solo con la camiseta puesta como capa exterior sobre el pecho (bra ON o NOT_WORN debajo). Falta la interacción del diseñador: herramienta, parte exacta y duración. Pendiente; nunca se transforma en I21 ni en acceso directo.' }),
   /* §44 · ACCESO DIRECTO · relaciones del diseñador, exactamente como se entregaron */
   I({ id: 'I11', family: 'MANUAL', intraLevelIntensity: 'HIGH', actorRequirements: [{ part: 'oneHand' }], receiverRequirements: [{ part: 'vulva' }], clothing: { receiver: ['SKIN_ACCESS', 'UNDERWEAR_OFF'] }, durations: [45, 60, 75], tags: ['intimo'],
     variants: [

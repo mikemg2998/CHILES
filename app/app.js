@@ -347,7 +347,7 @@ $('#btnStart').addEventListener('click', () => {
 });
 
 /* ---------- estado de ropa (Intimidad): real, por jugador, corregible en cualquier momento ---------- */
-const CLOTH_STATE = [['ON', 'Puesta'], ['OFF', 'Fuera'], ['NONE', 'No la llevo']];
+const CLOTH_STATE = [['ON', 'Puesta'], ['OFF', 'Fuera'], ['NOT_WORN', 'No la llevo']]; // NOT_WORN ≠ OFF: entró sin ella / se la quitó
 function renderClothing() {
   const box = $('#clothingGrid'); box.innerHTML = '';
   for (const p of [0, 1]) {

@@ -27,13 +27,13 @@ test('PANTALÓN exists for both players, and every garment has a layer', () => {
   const e = mk({ level: 3, seed: 1 }); assert.ok(e.garments(0).includes('bottoms') && e.garments(1).includes('bottoms'));
 });
 test('coverage knows the layer and the garment responsible', () => {
-  assert.deepEqual(coverage('vulva', st({ bottoms: 'ON', panties: 'ON' })), { access: 'COVERED_BY_OUTER', by: 'bottoms' });
-  assert.deepEqual(coverage('vulva', st({ bottoms: 'OFF', panties: 'ON', boxers: 'NONE' })), { access: 'THROUGH_UNDERWEAR', by: 'panties' });
-  assert.deepEqual(coverage('penis', st({ bottoms: 'OFF', boxers: 'ON', panties: 'NONE' })), { access: 'THROUGH_UNDERWEAR', by: 'boxers' });
-  assert.deepEqual(coverage('vulva', st({ bottoms: 'OFF', panties: 'OFF', boxers: 'NONE' })), { access: 'DIRECT', by: null });
-  assert.deepEqual(coverage('nipples', { ...NAKED(), top: 'OFF', bra: 'ON' }), { access: 'THROUGH_UNDERWEAR', by: 'bra' });
-  assert.deepEqual(coverage('nipples', { ...NAKED(), top: 'ON', bra: 'OFF' }), { access: 'COVERED_BY_OUTER', by: 'top' });
-  assert.deepEqual(coverage('abdomen', { ...NAKED(), top: 'OFF' }), { access: 'DIRECT', by: null });
+  assert.deepEqual(coverage('vulva', st({ bottoms: 'ON', panties: 'ON' })), { access: 'COVERED_BY_OUTER', by: 'bottoms', mode: 'THROUGH_BOTTOMS' });
+  assert.deepEqual(coverage('vulva', st({ bottoms: 'OFF', panties: 'ON', boxers: 'NONE' })), { access: 'THROUGH_UNDERWEAR', by: 'panties', mode: 'THROUGH_PANTIES' });
+  assert.deepEqual(coverage('penis', st({ bottoms: 'OFF', boxers: 'ON', panties: 'NONE' })), { access: 'THROUGH_UNDERWEAR', by: 'boxers', mode: 'THROUGH_BOXERS' });
+  assert.deepEqual(coverage('vulva', st({ bottoms: 'OFF', panties: 'OFF', boxers: 'NONE' })), { access: 'DIRECT', by: null, mode: 'DIRECT_SKIN_ACCESS' });
+  assert.deepEqual(coverage('nipples', { ...NAKED(), top: 'OFF', bra: 'ON' }), { access: 'THROUGH_UNDERWEAR', by: 'bra', mode: 'THROUGH_BRA' });
+  assert.deepEqual(coverage('nipples', { ...NAKED(), top: 'ON', bra: 'OFF' }), { access: 'COVERED_BY_OUTER', by: 'top', mode: 'THROUGH_TOP' });
+  assert.deepEqual(coverage('abdomen', { ...NAKED(), top: 'OFF' }), { access: 'DIRECT', by: null, mode: 'DIRECT_SKIN_ACCESS' });
 });
 test('THROUGH_GARMENT requirement: underwear on and its outer layer off; aliases resolve', () => {
   assert.equal(THROUGH_GARMENT('panties'), 'THROUGH_PANTIES'); assert.equal(throughGarmentOf('THROUGH_BOXERS'), 'boxers'); assert.equal(throughGarmentOf('SKIN_ACCESS'), null);

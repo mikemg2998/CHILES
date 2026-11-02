@@ -16,7 +16,14 @@ export const ANATOMY_IDS = Object.keys(ANATOMY);
    panties en el resto de casos. En coveredBy, 'underwear' significa «la prenda interior de abajo que lleve ese jugador». */
 export const GARMENTS = ['top', 'bottoms', 'socks', 'bra', 'panties', 'boxers'];
 export const GARMENT_LABEL = { top: 'Camiseta', bottoms: 'Pantalón', socks: 'Calcetines', bra: 'Brasier', panties: 'Panties', boxers: 'Calzoncillos' };
-export const GARMENT_STATES = ['ON', 'OFF', 'NONE']; // puesta · quitada · no la lleva hoy / no aplica
+/* Estados de una prenda. Dos ausencias distintas, porque son historias distintas:
+     ON        puesta ahora
+     OFF       la llevaba y ya se la quitó en esta sesión
+     NOT_WORN  entró a esta sesión sin ella («No la llevo»): nunca se ofrece quitarla ni se asume que apareció después
+     NONE      no aplica a su configuración (NOT_APPLICABLE): no existe para ese jugador
+   OFF, NOT_WORN y NONE dejan pasar al acceso directo igual; se distinguen para el historial, UNDRESS, la interfaz y el depurador. */
+export const GARMENT_STATES = ['ON', 'OFF', 'NOT_WORN', 'NONE'];
+export const NOT_APPLICABLE = 'NONE';
 /* CAPAS DE ROPA. Cada prenda tiene capa (OUTER · UNDERWEAR), zona (TORSO · LOWER · FEET) y, si es interior, la prenda exterior
    que la cubre (`under`): solo puede quitarse normalmente cuando esa exterior está fuera. Lo que tapa cada prenda lo dicen las
    partes del cuerpo (coveredBy). Las tres columnas: CAPA EXTERIOR → CAPA INTERIOR → ACCESO DIRECTO. */

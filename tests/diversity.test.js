@@ -97,5 +97,5 @@ test('anatomy declared after the engine exists: garments that become applicable 
   e.prefs.bodyParts = [['vulva', 'senos'], ['pene']];
   assert.deepEqual(e.garments(0), ['top', 'bottoms', 'socks', 'bra', 'panties']); e.syncClothing();
   assert.equal(e.clothing[0].bra, 'ON'); assert.equal(e.clothing[0].panties, 'ON'); assert.equal(e.clothing[1].boxers, 'ON'); assert.equal(e.clothing[1].panties, 'NONE');
-  e.setClothing(0, { ...e.clothing[0], socks: 'NONE' }); e.syncClothing(); assert.equal(e.clothing[0].socks, 'NONE', 'lo que eligió la pareja se respeta');
+  e.setClothing(0, { ...e.clothing[0], socks: 'NOT_WORN' }); e.syncClothing(); assert.equal(e.clothing[0].socks, 'NOT_WORN', 'lo que eligió la pareja se respeta'); e.setClothing(0, { ...e.clothing[0], bra: 'NONE' }); assert.equal(e.clothing[0].bra, 'NOT_WORN', 'NONE sobre una prenda que aplica = no la llevo, nunca «no aplica»');
 });

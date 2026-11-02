@@ -29,7 +29,7 @@ function renderScenario() {
   box.innerHTML = `<div class="group"><b>Nivel</b> ${[1, 2, 3].map(l => `<button class="chip ${scn.level === l ? 'on' : ''}" data-level="${l}">${l} ${LEVELS[l].name}</button>`).join('')}</div>
   <div class="group"><b>Actúa</b> ${[0, 1].map(p => `<button class="chip ${scn.actor === p ? 'on' : ''}" data-actor="${p}">${scn.names[p]}</button>`).join('')}</div>` +
   [0, 1].map(p => `<div class="group"><b>${scn.names[p]}</b> · anatomía ${Object.keys(ANATOMY).map(a => `<button class="chip ${scn.anatomy[p].includes(a) ? 'on' : ''}" data-an="${p}:${a}">${ANATOMY[a].label}</button>`).join('')}<br>` +
-    garmentsFor(scn.anatomy[p]).map(g => `<span class="row">${GARMENT_LABEL[g]} ${['ON', 'OFF', 'NONE'].map(s => `<button class="chip small ${scn.clothing[p][g] === s ? 'on' : ''}" data-cl="${p}:${g}:${s}">${s}</button>`).join('')}</span>`).join('') + '</div>').join('');
+    garmentsFor(scn.anatomy[p]).map(g => `<span class="row">${GARMENT_LABEL[g]} ${['ON', 'OFF', 'NOT_WORN'].map(s => `<button class="chip small ${scn.clothing[p][g] === s ? 'on' : ''}" data-cl="${p}:${g}:${s}">${s}</button>`).join('')}</span>`).join('') + '</div>').join('');
   box.onclick = e => {
     const b = e.target.closest('button'); if (!b) return;
     if (b.dataset.level) scn.level = Number(b.dataset.level);

@@ -58,7 +58,14 @@ export class GameEngine {
   /* prendas interiores del jugador (Ajustes) o las que sugiere su configuración corporal; única fuente de verdad para la UI y el selector */
   wear(player) { return typeof this.prefs.underwearFor === 'function' ? this.prefs.underwearFor(player) : null; }
   garments(player) { return applicableGarments(this.anatomy(player).declared, this.wear(player)); }
-  setClothing(player, state) { const before = this.eligibleIds(); this.clothing[player] = normalizeClothing(state, this.anatomy(player).declared, this.wear(player)); this.history.recordClothingChange({ player, state: { ...this.clothing[player] }, manual: true, round: this.state.round }); this.markUnlocked(before); }
+  /* corrección manual (Estado de ropa): el estado actual siempre gana y la baraja se recalcula al momento; el historial guarda de qué a qué pasó cada prenda */
+  setClothing(player, state) {
+    const before = this.eligibleIds(), prev = this.clothing[player];
+    this.clothing[player] = normalizeClothing(state, this.anatomy(player).declared, this.wear(player));
+    const changes = Object.keys(this.clothing[player]).filter(g => prev[g] !== this.clothing[player][g]).map(g => ({ garment: g, from: prev[g], to: this.clothing[player][g] }));
+    this.history.recordClothingChange({ player, state: { ...this.clothing[player] }, changes, manual: true, round: this.state.round });
+    this.markUnlocked(before);
+  }
   eligibleIds() { this.syncClothing(); const out = new Set(); for (const a of [0, 1]) for (const e of buildDeck(CARDS, this.context(a)).eligible) out.add(e.card.id); return out; }
   /* NEWLY UNLOCKED: lo que un cambio de ropa acaba de hacer posible recibe un pequeño empujón durante 3 cartas; después compite igual */
   markUnlocked(before) { for (const id of this.eligibleIds()) if (!before.has(id)) this.unlocked.set(id, this.state.round + 3); }
@@ -69,7 +76,7 @@ export class GameEngine {
     const before = this.eligibleIds();
     this.clothing[player] = applyRemoval(this.clothing[player], garment);
     this.markUnlocked(before);
-    this.history.recordClothingChange({ player, garment, round: this.state.round });
+    this.history.recordClothingChange({ player, garment, changes: [{ garment, from: 'ON', to: 'OFF' }], round: this.state.round });
     const last = this.history.last(); if (last && last.undress) last.undress.applied = true;
     return true;
   }
