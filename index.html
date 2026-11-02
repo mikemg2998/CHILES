@@ -9,16 +9,17 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Pollo a la brasa">
-<link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
+<link rel="icon" href="assets/favicon-64.png" sizes="64x64" type="image/png">
+<link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
 <link rel="manifest" href="manifest.json">
 <!-- General Sans (Indian Type Foundry) servida por Fontshare, su distribuidor oficial, con licencia gratuita de uso web; sin archivos de fuente en el repo -->
 <link rel="preconnect" href="https://api.fontshare.com">
 <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap">
-<link rel="stylesheet" href="app/styles.css?v=11">
+<link rel="stylesheet" href="app/styles.css?v=12">
 </head>
-<body class="idle">
+<body class="idle home">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="i-mark" viewBox="0 0 24 24"><path d="M7 3.5h10a1 1 0 0 1 1 1V21l-6-4.2L6 21V4.5a1 1 0 0 1 1-1z"/></symbol>
   <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></symbol>
@@ -31,7 +32,7 @@
 
 <div class="wrap">
   <header class="top">
-    <div class="brand"><img src="icon-192.png" alt="" width="30" height="30"><h1>Pollo a la brasa</h1></div>
+    <div class="brand"><img src="assets/symbol.png" alt="" width="28" height="28"><h1>Pollo a la brasa</h1></div>
     <div class="icons">
       <button class="ib" id="btnFavs" aria-label="Favoritas"><svg><use href="#i-mark"/></svg><span class="count" id="favCount" hidden></span></button>
       <button class="ib" id="btnSettings" aria-label="Ajustes"><svg><use href="#i-sliders"/></svg></button>
@@ -44,30 +45,30 @@
     <div class="turn" id="turn"><b id="turnA"></b><i id="turnArrow">→</i><b id="turnB"></b></div>
   </section>
 
-  <section class="dice" id="dice" aria-hidden="true">
-    <div class="die" data-k="a"><div class="cube"><div class="f f1"></div><div class="f f2"></div><div class="f f3"></div><div class="f f4"></div><div class="f f5"></div><div class="f f6"></div></div></div>
-    <div class="die" data-k="b"><div class="cube"><div class="f f1"></div><div class="f f2"></div><div class="f f3"></div><div class="f f4"></div><div class="f f5"></div><div class="f f6"></div></div></div>
-  </section>
 
-  <section class="result">
-    <div class="welcome" id="welcome">
+  <main class="stage" id="stage">
+    <div class="home-block" id="welcome">
+      <img class="logo" src="assets/logo-full.png" alt="Pollo a la brasa" width="960" height="660">
       <p class="phrase">Una carta cada vez, pensada por alguien. Hasta dónde llegáis lo decidís vosotros.</p>
     </div>
-    <div class="round" id="roundBox" hidden>
+    <div class="deck">
+    <div class="layers" aria-hidden="true"><i class="layer l2"></i><i class="layer l1"></i></div>
+    <div class="round" id="roundBox" hidden aria-live="polite">
       <p class="phrase" id="phrase"></p>
       <button class="timer" id="timer" type="button" hidden><span class="t">00:30</span><span class="hint">toca para empezar</span><span class="bar"></span></button>
       <p class="note" id="note" hidden></p>
       <div class="feedback" id="feedback">
         <button class="chip like" id="fbLike" aria-label="Me gusta"><svg><use href="#i-heart"/></svg><span>Me gusta</span></button>
-        <button class="chip more" id="btnMore" aria-label="Más opciones">•••</button>
+        <button class="chip more" id="btnMore" aria-label="Más opciones" aria-haspopup="menu">•••</button>
         <button class="ib fav" id="btnFav" aria-label="Guardar en Lo nuestro"><svg><use href="#i-mark"/></svg></button>
       </div>
+    </div>
     </div>
     <div class="ending" id="ending" hidden>
       <p class="phrase" id="endingText"></p>
     </div>
     <pre class="debug" id="debug" hidden></pre>
-  </section>
+  </main>
 
   <div class="actions">
     <button class="btn primary" id="btnRoll">Empezar</button>
@@ -75,7 +76,7 @@
   </div>
 </div>
 
-<div class="level-flash" id="levelFlash" hidden><span class="num" id="flashNum"></span><b id="flashName"></b><p id="flashCopy"></p></div>
+<div class="level-flash" id="levelFlash" role="status" hidden><span class="num" id="flashNum"></span><b id="flashName"></b><p id="flashCopy"></p></div>
 
 <div class="backdrop" id="backdrop" hidden></div>
 
@@ -111,7 +112,7 @@
   </div>
   <p class="hint">Solo partes del cuerpo y prendas, no género: así el juego sabe qué puede recibir cada uno, con qué puede actuar y qué ropa entra en juego. Se guarda únicamente en este teléfono.</p>
   <p class="lab">Dispositivo</p>
-  <div class="list"><label class="sw"><span>Vibración al lanzar</span><input type="checkbox" id="swVibe"><i></i></label></div>
+  <div class="list"><label class="sw"><span>Vibración</span><input type="checkbox" id="swVibe"><i></i></label></div>
   <button class="btn primary" id="btnSetupDone" hidden>Listo</button>
   <div class="danger">
     <button class="btn" id="btnReset">Empezar sesión nueva</button>
@@ -143,6 +144,6 @@
 </section>
 
 <div class="toast" id="toast" role="status"></div>
-<script type="module" src="app/app.js?v=11"></script>
+<script type="module" src="app/app.js?v=12"></script>
 </body>
 </html>

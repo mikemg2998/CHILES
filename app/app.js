@@ -1,6 +1,6 @@
 /* Interfaz de Pollo a la brasa. El motor (engine/) elige entre cartas curadas; la pareja dirige la sesión.
-   QUIÉN · QUÉ · SIGUIENTE: nada técnico llega a la pantalla. Los dados son solo un ritual de azar (revelación);
-   no representan nada del contenido.
+   QUIÉN · QUÉ · SIGUIENTE: nada técnico llega a la pantalla. Sin dados: al pedir la siguiente carta, la frase se
+   «baraja» (una microanimación breve, sin azar visual) y entra la nueva.
    Privacidad: en el teléfono solo se guardan nombres, anatomía, «Lo nuestro», vibración y si la configuración inicial
    está hecha. La sesión (ropa, humor, feedback, nivel, historial) vive en memoria y desaparece al cerrar. Sin telemetría. */
 import { GameEngine, migrateFavorite } from '../engine/engine.js';
@@ -13,7 +13,6 @@ import { GARMENT_LABEL, ANATOMY, UNDERWEAR_GARMENTS } from '../content/body.js';
 const KEY = 'pab.v2';
 const SCHEMA = 5; // 4 = cartas curadas · 5 = prendas interiores por jugador (un guardado antiguo sin `underwear` se deriva de la configuración corporal, nunca se lee como «no la llevo»)
 const $ = s => document.querySelector(s);
-const DICE = ['a', 'b'];
 const DEBUG = new URLSearchParams(location.search).has('debug');
 
 /* ---------- estado persistente (solo preferencias) ---------- */
@@ -84,8 +83,10 @@ async function chooseLevel(id) {
 function levelFlash(id) {
   const f = $('#levelFlash'), L = LEVELS[id];
   $('#flashNum').textContent = pad(id); $('#flashName').textContent = L.name; $('#flashCopy').textContent = LEVEL_COPY[id];
+  const pill = $('#levelBtn'); pill.classList.remove('changed'); void pill.offsetWidth; pill.classList.add('changed');
   f.hidden = false; void f.offsetWidth; f.classList.add('show');
-  return wait(1500).then(() => { f.classList.remove('show'); return wait(380); }).then(() => { f.hidden = true; });
+  const hold = REDUCED.matches ? 900 : 1300, out = REDUCED.matches ? 20 : 300;
+  return wait(hold).then(() => { f.classList.remove('show'); return wait(out); }).then(() => { f.hidden = true; });
 }
 $('#levelBtn').addEventListener('click', () => { if (busy) return; renderLevelList(); open($('#sheetLevel')); });
 
@@ -97,110 +98,23 @@ function renderTurn() {
   $('#turnA').textContent = a; $('#turnB').textContent = b; $('#turnArrow').textContent = mutual ? '·' : '→';
 }
 
-/* ---------- dados: ritual de azar. Caras con puntos; no representan nada del contenido ---------- */
-const dieEls = Object.fromEntries(DICE.map(k => [k, document.querySelector(`.die[data-k="${k}"]`)]));
-const diceSec = $('#dice');
-const RX = -8, RY = 10, REST = `rotateX(${RX}deg) rotateY(${RY}deg)`;
-const ro = new ResizeObserver(entries => { for (const e of entries) e.target.style.setProperty('--hs', (e.contentRect.width / 2) + 'px'); });
-for (const k of DICE) ro.observe(dieEls[k].querySelector('.cube'));
-const PIPS = { 1: [5], 2: [1, 9], 3: [1, 5, 9], 4: [1, 3, 7, 9], 5: [1, 3, 5, 7, 9], 6: [1, 3, 4, 6, 7, 9] };
-function paint(faceEl, n) {
-  faceEl.innerHTML = '';
-  if (!n) { faceEl.classList.add('blank'); return; }
-  faceEl.classList.remove('blank');
-  for (const p of PIPS[n]) faceEl.appendChild(el('i', 'pip p' + p));
+/* ---------- barajar: una microanimación (250–400 ms) al pedir la siguiente carta. Sin azar visual.
+   Con «reducir movimiento» no se espera nada: fundido casi instantáneo. ---------- */
+const stage = $('#stage');
+const REDUCED = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
+const SHUFFLE_MS = 320;
+async function shuffle() {
+  if (roundBox.hidden || REDUCED.matches) return;
+  stage.classList.add('shuffling');
+  await wait(SHUFFLE_MS);
+  stage.classList.remove('shuffling');
 }
-function setFaces(k, faces) { for (let i = 0; i < 6; i++) paint(dieEls[k].querySelector('.f' + (i + 1)), faces[i]); }
-function idleDice() { for (const k of DICE) setFaces(k, [0, 0, 0, 0, 0, 0]); }
-const rollFaces = () => { const r = 1 + Math.floor(Math.random() * 6); const rest = [1, 2, 3, 4, 5, 6].filter(x => x !== r); return [r, ...rest]; };
-
-function throwDice() {
-  return new Promise(resolve => {
-    const rect = diceSec.getBoundingClientRect();
-    const slots = DICE.map(k => { const r = dieEls[k].querySelector('.cube').getBoundingClientRect(); return { x: r.left - rect.left, y: r.top - rect.top, s: r.width }; });
-    const size = slots[0].s, W = rect.width, H = Math.max(rect.height, size * 1.7);
-    diceSec.classList.add('throwing'); diceSec.style.minHeight = H + 'px';
-    const g = 0.0048, now = performance.now();
-    const rnd = (a, b) => a + Math.random() * (b - a), sgn = () => (Math.random() < 0.5 ? -1 : 1);
-    const bodies = DICE.map((k, i) => {
-      setFaces(k, rollFaces());
-      const el = dieEls[k], cube = el.querySelector('.cube');
-      el.classList.remove('settle'); el.classList.add('rolling');
-      return { el, cube, k, x: slots[i].x, y: slots[i].y, z: 0, slot: slots[i],
-        vx: (i % 2 ? -1 : 1) * rnd(0.28, 0.5) * (W / 390), vy: rnd(-0.16, 0.16), vz: rnd(0.68, 0.82),
-        rx: RX, ry: RY, rz: 0, wx: rnd(1.6, 2.6) * sgn(), wy: rnd(1.2, 2.4) * sgn(), wz: rnd(-0.9, 0.9),
-        t0: now + i * rnd(30, 70), grounded: false, tween: null, done: false };
-    });
-    let last = now;
-    const paintBody = b => {
-      b.el.style.transform = `translate3d(${b.x - b.slot.x}px,${b.y - b.slot.y}px,0)`;
-      b.el.style.zIndex = String(10 + Math.round(b.y));
-      b.el.style.setProperty('--lift', Math.min(1, b.z / 70).toFixed(3));
-      b.cube.style.transform = `translateY(${-b.z}px) rotateX(${b.rx}deg) rotateY(${b.ry}deg) rotateZ(${b.rz}deg)`;
-    };
-    const step = t => {
-      const dt = Math.min(32, t - last); last = t;
-      let allDone = true;
-      for (const b of bodies) {
-        if (b.done) continue; allDone = false;
-        if (t < b.t0) continue;
-        if (b.tween) {
-          const p = Math.min(1, (t - b.tween.t0) / b.tween.dur), e = 1 - Math.pow(1 - p, 3);
-          b.rx = b.tween.rx0 + (b.tween.rx1 - b.tween.rx0) * e; b.ry = b.tween.ry0 + (b.tween.ry1 - b.tween.ry0) * e; b.rz = b.tween.rz0 + (b.tween.rz1 - b.tween.rz0) * e;
-          b.x += b.vx * dt * (1 - e); b.y += b.vy * dt * (1 - e);
-          paintBody(b);
-          if (p >= 1) { b.done = true; b.el.classList.remove('rolling'); b.el.classList.add('settle'); buzz(5); }
-          continue;
-        }
-        b.z += b.vz * dt; b.vz -= g * dt;
-        if (b.z <= 0) { b.z = 0; if (b.vz < -0.1) { b.vz = -b.vz * 0.42; b.vx *= 0.7; b.vy *= 0.7; b.wx *= 0.55; b.wy *= 0.55; b.wz *= 0.6; b.wz += rnd(-0.3, 0.3); } else { b.vz = 0; b.grounded = true; } }
-        if (b.grounded) { const f = Math.exp(-0.006 * dt); b.vx *= f; b.vy *= f; b.wx *= Math.exp(-0.004 * dt); b.wy *= Math.exp(-0.004 * dt); b.wz *= Math.exp(-0.005 * dt); }
-        b.x += b.vx * dt; b.y += b.vy * dt;
-        if (b.x < 0) { b.x = 0; b.vx = -b.vx * 0.6; b.wz += rnd(-0.4, 0.4); } else if (b.x > W - size) { b.x = W - size; b.vx = -b.vx * 0.6; b.wz += rnd(-0.4, 0.4); }
-        if (b.y < 0) { b.y = 0; b.vy = -b.vy * 0.6; } else if (b.y > H - size) { b.y = H - size; b.vy = -b.vy * 0.6; }
-        for (const o of bodies) {
-          if (o === b || o.done || t < o.t0 || Math.abs(o.z - b.z) > size * 0.6) continue;
-          const dx = (o.x - b.x), dy = (o.y - b.y), d = Math.hypot(dx, dy), min = size * 0.92;
-          if (d > 0 && d < min) {
-            const nx = dx / d, ny = dy / d, push = (min - d) / 2;
-            b.x -= nx * push; b.y -= ny * push; o.x += nx * push; o.y += ny * push;
-            const rv = (b.vx - o.vx) * nx + (b.vy - o.vy) * ny;
-            if (rv > 0) { const j = rv * 0.75; b.vx -= j * nx; b.vy -= j * ny; o.vx += j * nx; o.vy += j * ny; b.wz += rnd(-0.5, 0.5); o.wz += rnd(-0.5, 0.5); }
-          }
-        }
-        b.rx += b.wx * dt; b.ry += b.wy * dt; b.rz += b.wz * dt;
-        const speed = Math.hypot(b.vx, b.vy), spin = Math.abs(b.wx) + Math.abs(b.wy) + Math.abs(b.wz);
-        const age = t - b.t0;
-        if ((b.grounded && speed < 0.06 && spin < 0.9 && age > 480) || age > 900) {
-          const snap = (v, rest, w) => { const base = v - rest, k = Math.ceil(base / 360 + (w >= 0 ? 0.25 : -0.25)); return rest + (w >= 0 ? Math.max(k, Math.floor(base / 360) + 1) : Math.min(k, Math.ceil(base / 360) - 1)) * 360; };
-          b.tween = { t0: t, dur: rnd(220, 300), rx0: b.rx, ry0: b.ry, rz0: b.rz, rx1: snap(b.rx, RX, b.wx), ry1: snap(b.ry, RY, b.wy), rz1: Math.round(b.rz / 360) * 360 };
-        }
-        paintBody(b);
-      }
-      if (allDone) resolve(); else requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  });
-}
-async function rollDice(round) { await throwDice(); regroup(round); }
-async function regroup(round) {
-  await wait(140);
-  diceSec.classList.add('regroup');
-  for (const k of DICE) { const el = dieEls[k]; el.style.transform = ''; el.querySelector('.cube').style.transform = REST; el.style.setProperty('--lift', '0'); }
-  await wait(430);
-  diceSec.classList.remove('throwing', 'regroup'); diceSec.style.minHeight = '';
-  for (const k of DICE) dieEls[k].style.zIndex = '';
-  await wait(700);
-  if (!round || current !== round) return;
-  diceSec.classList.add('settled');
-}
-async function wakeDice() { diceSec.classList.remove('settled'); await wait(60); }
 
 /* ---------- QUÉ ---------- */
 const roundBox = $('#roundBox'), welcome = $('#welcome'), endingBox = $('#ending');
 function showRound(r) {
   current = r;
-  welcome.hidden = true; endingBox.hidden = true; roundBox.hidden = false; roundBox.classList.remove('show');
+  welcome.hidden = true; endingBox.hidden = true; roundBox.hidden = false; roundBox.classList.remove('show'); stage.classList.add('live');
   phraseNode(r.phrase, $('#phrase'));
   $('#phrase').dataset.len = r.phrase.length > 88 ? 'long' : r.phrase.length < 42 ? 'short' : 'medium';
   setTimer(r.seconds);
@@ -260,11 +174,11 @@ async function play(fn, emptyMsg) {
   try { r = fn(); } catch (e) { console.error(e); toast('No he podido preparar la siguiente carta.'); return; }
   if (!r) { if (emptyMsg) toast(emptyMsg); updateControls(); return; }
   setBusy(true); buzz(14);
-  document.body.classList.remove('idle');
-  roundBox.classList.remove('show'); welcome.hidden = true; endingBox.hidden = true;
-  await wakeDice();
+  document.body.classList.remove('idle', 'home');
+  welcome.hidden = true; endingBox.hidden = true;
+  await shuffle();
+  roundBox.classList.remove('show');
   current = r;
-  await rollDice(r);
   showRound(r);
   setBusy(false);
 }
@@ -398,12 +312,12 @@ $('#btnPauseAlone').addEventListener('click', () => { engine.continueAlone(); cl
 function showEnding() {
   stopTimer(); current = null; roundBox.hidden = true; welcome.hidden = true; endingBox.hidden = false;
   $('#endingText').textContent = engine.session.lastMessage || 'Hasta aquí estuvo bien.';
-  document.body.classList.add('idle'); wakeDice(); idleDice(); renderTurn(); updateControls();
+  document.body.classList.add('idle'); stage.classList.remove('live'); renderTurn(); updateControls();
 }
 function newSession() {
   engine.newSession(engine.level()); current = null; ui.started = false; ui.moods = [[], []]; ui.pref = {}; ui.clothingAsked = false; ui.pauseShownAt = null;
   roundBox.hidden = true; roundBox.classList.remove('show'); endingBox.hidden = true; welcome.hidden = false;
-  document.body.classList.add('idle'); wakeDice(); idleDice(); renderTurn(); renderLevel(); updateControls();
+  document.body.classList.add('idle', 'home'); stage.classList.remove('live'); renderTurn(); renderLevel(); updateControls();
 }
 
 /* ---------- Lo nuestro: lo que os funciona, guardado solo en este teléfono ---------- */
@@ -501,4 +415,4 @@ $('#btnClearFavs').addEventListener('click', e => {
 });
 
 /* ---------- arranque ---------- */
-renderLevel(); renderTurn(); idleDice(); renderFavCount(); updateControls();
+renderLevel(); renderTurn(); renderFavCount(); updateControls();
