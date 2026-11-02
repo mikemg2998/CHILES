@@ -29,7 +29,12 @@ export const GARMENT_LAYERS = {
   socks: { layer: 'OUTER', zone: 'FEET', under: null },
 };
 export const UNDERWEAR_GARMENTS = GARMENTS.filter(g => GARMENT_LAYERS[g].layer === 'UNDERWEAR');
-export const garmentsFor = (declared = []) => ['top', 'bottoms', 'socks', ...(declared.includes('senos') ? ['bra'] : []), declared.includes('pene') && !declared.includes('vulva') ? 'boxers' : 'panties'];
+/* Prendas interiores de un jugador: lo que indique en Ajustes (`underwear`) o, si no lo ha indicado, lo que sugiere su
+   configuración corporal. Nunca un género: brasier si declara senos o vulva; panties si declara vulva o no declara pene;
+   calzoncillos si declara pene sin vulva. Cualquier combinación se puede corregir a mano. */
+export const UNDERWEAR_DEFAULT = { bra: d => d.includes('senos') || d.includes('vulva'), panties: d => d.includes('vulva') || !d.includes('pene'), boxers: d => d.includes('pene') && !d.includes('vulva') };
+export const defaultUnderwear = (declared = []) => ['bra', 'panties', 'boxers'].filter(g => UNDERWEAR_DEFAULT[g](declared));
+export const garmentsFor = (declared = [], underwear = null) => { const u = Array.isArray(underwear) ? underwear : defaultUnderwear(declared); return ['top', 'bottoms', 'socks', ...['bra', 'panties', 'boxers'].filter(g => u.includes(g))]; };
 
 /* regiones corporales (para medir y ponderar diversidad; nunca para filtrar) */
 export const BODY_REGIONS = ['FACE', 'NECK', 'ARMS_HANDS', 'CHEST', 'ABDOMEN', 'BACK', 'HIPS_GLUTES', 'THIGHS_LEGS', 'FEET', 'INTIMATE', 'FULL_BODY'];

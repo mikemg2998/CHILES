@@ -8,10 +8,10 @@ import { PreferenceManager } from '../engine/prefs.js';
 import { LEVELS, LEVEL_IDS, LEVEL_KEYS, LEVEL_BY_KEY, LEVEL_COPY } from '../engine/levels.js';
 import { formatDuration } from '../engine/duration.js';
 import { MOODS, AVOIDS, PREF_STATES, PREF_LABEL } from '../engine/session.js';
-import { GARMENT_LABEL, ANATOMY } from '../content/body.js';
+import { GARMENT_LABEL, ANATOMY, UNDERWEAR_GARMENTS } from '../content/body.js';
 
 const KEY = 'pab.v2';
-const SCHEMA = 4; // 4 = cartas curadas (las favoritas del generador anterior se conservan como recuerdos)
+const SCHEMA = 5; // 4 = cartas curadas · 5 = prendas interiores por jugador (un guardado antiguo sin `underwear` se deriva de la configuración corporal, nunca se lee como «no la llevo»)
 const $ = s => document.querySelector(s);
 const DICE = ['a', 'b'];
 const DEBUG = new URLSearchParams(location.search).has('debug');
@@ -468,6 +468,16 @@ function renderAnatomy() {
     for (const [a, v] of Object.entries(ANATOMY)) {
       const b = el('button', parts.includes(a) ? 'on' : '', v.label); b.type = 'button'; b.setAttribute('aria-pressed', String(parts.includes(a)));
       b.addEventListener('click', () => { const bp = prefs.bodyParts.map(p => [...p]); const cur = bp[i] || []; bp[i] = cur.includes(a) ? cur.filter(x => x !== a) : [...cur, a]; prefs.bodyParts = bp; persist(); renderAnatomy(); buzz(6); });
+      box.appendChild(b);
+    }
+  });
+  /* prendas interiores: misma fuente de verdad que Estado de ropa, UNDRESS y el selector (engine.garments) */
+  document.querySelectorAll('.uw').forEach(box => {
+    const i = Number(box.dataset.p), chosen = prefs.underwearFor(i);
+    box.innerHTML = '';
+    for (const g of UNDERWEAR_GARMENTS) {
+      const b = el('button', chosen.includes(g) ? 'on' : '', GARMENT_LABEL[g]); b.type = 'button'; b.setAttribute('aria-pressed', String(chosen.includes(g)));
+      b.addEventListener('click', () => { const uw = prefs.underwear.map(u => (u ? [...u] : null)); const cur = prefs.underwearFor(i); uw[i] = cur.includes(g) ? cur.filter(x => x !== g) : [...cur, g]; prefs.underwear = uw; persist(); engine.syncClothing(); renderAnatomy(); buzz(6); });
       box.appendChild(b);
     }
   });

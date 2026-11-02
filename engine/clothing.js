@@ -7,14 +7,14 @@ import { throughGarmentOf } from '../content/schema.js';
 
 const ALL_ON = () => Object.fromEntries(GARMENTS.map(g => [g, 'ON']));
 /* estado inicial (todo puesto) para una anatomía; las prendas que no aplican quedan NONE */
-export const DEFAULT_CLOTHING = (declared = []) => normalizeClothing(ALL_ON(), declared);
-export const fullAccess = (declared = []) => normalizeClothing(Object.fromEntries(GARMENTS.map(g => [g, 'OFF'])), declared);
-export function normalizeClothing(s, declared = []) {
-  const applicable = garmentsFor(declared), out = {};
+export const DEFAULT_CLOTHING = (declared = [], underwear = null) => normalizeClothing(ALL_ON(), declared, underwear);
+export const fullAccess = (declared = [], underwear = null) => normalizeClothing(Object.fromEntries(GARMENTS.map(g => [g, 'OFF'])), declared, underwear);
+export function normalizeClothing(s, declared = [], underwear = null) {
+  const applicable = garmentsFor(declared, underwear), out = {};
   for (const g of GARMENTS) out[g] = !applicable.includes(g) ? 'NONE' : (s && ['ON', 'OFF', 'NONE'].includes(s[g]) ? s[g] : (s && g === 'panties' && s.underwear) || (s && g === 'boxers' && s.underwear) || 'ON'); // `underwear` antiguo → prenda real
   return out;
 }
-export const applicableGarments = declared => garmentsFor(declared);
+export const applicableGarments = (declared, underwear = null) => garmentsFor(declared, underwear);
 const off = (state, g) => g === 'underwear' ? state.panties !== 'ON' && state.boxers !== 'ON' : state[g] !== 'ON';
 /* ¿está a piel esta parte (de quien recibe) o esta herramienta (de quien actúa)? */
 export const partAccessible = (partId, state) => { const p = BODY_PARTS[partId]; return !!p && p.coveredBy.every(g => off(state, g)); };

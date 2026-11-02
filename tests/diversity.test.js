@@ -73,11 +73,12 @@ test('fullAccess ≠ more explicit: with full access the intimate region does no
   for (const g of ['CHEST', 'ABDOMEN', 'NECK', 'HIPS_GLUTES', 'THIGHS_LEGS']) assert.ok((counts[g] || 0) / n > 0.05, `${g} ${counts[g]}/${n}`);
 });
 
-test('garments follow anatomy, not gender: bra only with senos; boxers only with pene and no vulva; otherwise panties', () => {
+test('garments follow anatomy or the player\'s own choice, never gender', () => {
   assert.deepEqual(garmentsFor(['vulva', 'senos']), ['top', 'bottoms', 'socks', 'bra', 'panties']);
   assert.deepEqual(garmentsFor(['pene']), ['top', 'bottoms', 'socks', 'boxers']);
   assert.deepEqual(garmentsFor(['pene', 'senos']), ['top', 'bottoms', 'socks', 'bra', 'boxers']);
-  assert.deepEqual(garmentsFor(['vulva']), ['top', 'bottoms', 'socks', 'panties']);
+  assert.deepEqual(garmentsFor(['vulva']), ['top', 'bottoms', 'socks', 'bra', 'panties']); // vulva sin marcar senos: el brasier se ofrece igualmente (se puede quitar en Ajustes)
+  assert.deepEqual(garmentsFor(['vulva'], ['panties']), ['top', 'bottoms', 'socks', 'panties']); assert.deepEqual(garmentsFor(['pene'], ['bra', 'boxers']), ['top', 'bottoms', 'socks', 'bra', 'boxers']);
   const fa = fullAccess(['pene']); assert.equal(fa.bra, 'NONE'); assert.equal(fa.panties, 'NONE'); assert.equal(fa.boxers, 'OFF');
   const e = mk({ level: 3, seed: 5 }); assert.deepEqual(e.garments(0), ['top', 'bottoms', 'socks', 'bra', 'panties']); assert.deepEqual(e.garments(1), ['top', 'bottoms', 'socks', 'boxers']);
 });

@@ -19,8 +19,8 @@ export class GameEngine {
     this.history = new History();
     this.director = new SessionDirector(this.rng);
     this.session = new SessionState(level || LEVEL_BY_KEY[this.prefs.mode] || 1);
-    this.clothing = [DEFAULT_CLOTHING(this.anatomy(0).declared), DEFAULT_CLOTHING(this.anatomy(1).declared)];
-    this.applicable = [applicableGarments(this.anatomy(0).declared), applicableGarments(this.anatomy(1).declared)];
+    this.clothing = [DEFAULT_CLOTHING(this.anatomy(0).declared, this.wear(0)), DEFAULT_CLOTHING(this.anatomy(1).declared, this.wear(1))];
+    this.applicable = [this.garments(0), this.garments(1)];
     this.unlocked = new Map(); // cartas recién desbloqueadas por un cambio de ropa → ronda en la que expira su empujón
     this.state = { round: 0, actor: 0, favorites: [] };
     this.stats = { emptyDecks: [], rejectedReasons: {} };
@@ -33,7 +33,7 @@ export class GameEngine {
   setLevel(level) { this.director.setLevel(this.session, level); return this.session.level === Number(level); }
   setIntents(player, list) { this.session.intents[player] = [...new Set(list.filter(k => MOODS[k]))]; }
   setPrefs(player, map) { const out = {}; for (const k in map) if (AVOIDS[k] && (map[k] === 'quiza' || map[k] === 'no')) out[k] = map[k]; this.session.pref[player] = out; }
-  newSession(level) { this.history.reset(); this.state.round = 0; this.state.actor = 0; this.session = new SessionState(level || this.session.level); this.clothing = [DEFAULT_CLOTHING(this.anatomy(0).declared), DEFAULT_CLOTHING(this.anatomy(1).declared)]; this.unlocked = new Map(); this.stats = { emptyDecks: [], rejectedReasons: {} }; }
+  newSession(level) { this.history.reset(); this.state.round = 0; this.state.actor = 0; this.session = new SessionState(level || this.session.level); this.clothing = [DEFAULT_CLOTHING(this.anatomy(0).declared, this.wear(0)), DEFAULT_CLOTHING(this.anatomy(1).declared, this.wear(1))]; this.unlocked = new Map(); this.stats = { emptyDecks: [], rejectedReasons: {} }; }
   ended() { return this.session.ended; }
   feedback(kind) { this.director.feedback(this.session, this.history.last(), kind); }
   endSession(how) { return this.director.end(this.session, how); }
@@ -50,13 +50,15 @@ export class GameEngine {
   syncClothing() {
     this.applicable = this.applicable || [null, null];
     for (const p of [0, 1]) {
-      const now = applicableGarments(this.anatomy(p).declared), was = this.applicable[p];
+      const now = this.garments(p), was = this.applicable[p];
       const s = { ...this.clothing[p] }; if (was) for (const g of now) if (!was.includes(g)) s[g] = 'ON';
-      this.clothing[p] = normalizeClothing(s, this.anatomy(p).declared); this.applicable[p] = now;
+      this.clothing[p] = normalizeClothing(s, this.anatomy(p).declared, this.wear(p)); this.applicable[p] = now;
     }
   }
-  garments(player) { return applicableGarments(this.anatomy(player).declared); }
-  setClothing(player, state) { const before = this.eligibleIds(); this.clothing[player] = normalizeClothing(state, this.anatomy(player).declared); this.history.recordClothingChange({ player, state: { ...this.clothing[player] }, manual: true, round: this.state.round }); this.markUnlocked(before); }
+  /* prendas interiores del jugador (Ajustes) o las que sugiere su configuración corporal; única fuente de verdad para la UI y el selector */
+  wear(player) { return typeof this.prefs.underwearFor === 'function' ? this.prefs.underwearFor(player) : null; }
+  garments(player) { return applicableGarments(this.anatomy(player).declared, this.wear(player)); }
+  setClothing(player, state) { const before = this.eligibleIds(); this.clothing[player] = normalizeClothing(state, this.anatomy(player).declared, this.wear(player)); this.history.recordClothingChange({ player, state: { ...this.clothing[player] }, manual: true, round: this.state.round }); this.markUnlocked(before); }
   eligibleIds() { this.syncClothing(); const out = new Set(); for (const a of [0, 1]) for (const e of buildDeck(CARDS, this.context(a)).eligible) out.add(e.card.id); return out; }
   /* NEWLY UNLOCKED: lo que un cambio de ropa acaba de hacer posible recibe un pequeño empujón durante 3 cartas; después compite igual */
   markUnlocked(before) { for (const id of this.eligibleIds()) if (!before.has(id)) this.unlocked.set(id, this.state.round + 3); }
