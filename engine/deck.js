@@ -2,9 +2,10 @@
    ropa de cada uno ∩ disponibilidad corporal ∩ físicamente posible ∩ sesión), después PONDERA (historial, familias,
    feedback, propósito) y por último ELIGE. Nunca repara una carta incompatible: si no cabe, no sale.
    Cada rechazo lleva su razón, para el depurador y para el Content Lab. */
-import { BODY_PARTS, ACTOR_TOOLS } from '../content/body.js';
+import { BODY_PARTS, ACTOR_TOOLS, GARMENT_LAYERS } from '../content/body.js';
 import { AVOIDS } from './session.js';
-import { clothingFailure, partAccessible, undressPossible } from './clothing.js';
+import { clothingFailure, partAccessible, undressPossible, removableGarments, coverage } from './clothing.js';
+import { throughGarmentOf } from '../content/schema.js';
 import { copyOptions } from './realizer.js';
 import { regionOf, partsOf } from '../content/index.js';
 
@@ -20,7 +21,9 @@ function unitFailure(card, variant, ctx) {
   const fr = clothingFailure(card.clothing.receiver, ctx.receiverClothing, parts, { role: 'receiver' }); if (fr) return `CLOTHING:receiver:${fr}`;
   const fa = clothingFailure(card.clothing.actor, ctx.actorClothing, tools, { role: 'actor' }); if (fa) return `CLOTHING:actor:${fa}`;
   // PARTE QUE EXISTE ≠ ACCESIBLE: anatomía íntima siempre a piel, declare lo que declare la carta
-  if (parts.some(p => INTIMATE(p) && !partAccessible(p, ctx.receiverClothing))) return 'BODY_NOT_AVAILABLE';
+  // …salvo que la carta esté aprobada específicamente SOBRE la prenda interior que la tapa (THROUGH_GARMENT)
+  const through = card.clothing.receiver.map(throughGarmentOf).filter(Boolean);
+  if (parts.some(p => INTIMATE(p) && !partAccessible(p, ctx.receiverClothing) && !through.includes(coverage(p, ctx.receiverClothing).by))) return 'BODY_NOT_AVAILABLE';
   if (tools.some(t => ACTOR_TOOLS[t].anatomy && ['vulva', 'pene'].includes(ACTOR_TOOLS[t].anatomy) && !ACTOR_TOOLS[t].coveredBy.every(g => ctx.actorClothing[g] !== 'ON'))) return 'BODY_NOT_AVAILABLE:actor';
   if (card.interactionType === 'UNDRESS' && !undressPossible(card.undress, ctx.actorClothing, ctx.receiverClothing)) return 'UNDRESS_IMPOSSIBLE';
   const sides = card.allowedSides || [null];
@@ -57,13 +60,28 @@ export function buildDeck(cards, ctx) {
    Los filtros duros ya pasaron (anatomía, ropa, propiedad, físico, status). Aquí solo pesos blandos:
    baseWeight · cardRecency · familyDiversity · bodyRegionDiversity · regionStarvation · targetDiversity · typeSpacing ·
    newlyUnlockedBoost · sessionPurpose (+ feedbackAffinity) · favorFamily. Ninguna región gana peso por ser íntima. */
-export function weighDeck(deck, { history, session, director, purpose, favorFamily = null, unlocked = null, round = 0 }) {
+/* sameRegionUndressCooldown: acaba de salir una prenda exterior de una zona → quitar la interior de esa misma zona pesa poco durante
+   unas cartas, para que la fase intermedia (THROUGH_BRA · THROUGH_PANTIES · THROUGH_BOXERS) tenga tiempo real. Peso, no veto. */
+export function undressCooldown(card, { history, round, actor, clothing }) {
+  if (card.interactionType !== 'UNDRESS' || !history || !clothing) return 1;
+  const u = card.undress, players = u.who === 'BOTH' ? [actor, 1 - actor] : [u.who === 'ACTOR' ? actor : 1 - actor];
+  let f = 1;
+  for (const p of players) {
+    const options = u.garment === 'ANY' ? removableGarments(clothing[p]) : [u.garment];
+    const inner = options.filter(g => GARMENT_LAYERS[g] && GARMENT_LAYERS[g].layer === 'UNDERWEAR');
+    if (!inner.length || inner.length < options.length) continue; // hay alternativas exteriores: no se penaliza
+    const since = Math.min(...inner.map(g => history.sinceOuterRemoved(p, GARMENT_LAYERS[g].zone, round, GARMENT_LAYERS)));
+    f *= since <= 1 ? 0.15 : since <= 3 ? 0.35 : since <= 5 ? 0.7 : 1;
+  }
+  return f;
+}
+export function weighDeck(deck, { history, session, director, purpose, favorFamily = null, unlocked = null, round = 0, actor = 0, clothing = null }) {
   const regions = history.recentRegions, targets = history.recentTargets;
   const eligibleRegions = new Set(deck.eligible.map(e => regionOf(e.card, null)));
   const starving = new Set([...eligibleRegions].filter(r => history.sinceRegion(r) >= 8 && history.rounds.length >= 8)); // región con cartas elegibles que lleva mucho sin salir
   return deck.eligible.map(e => {
     const c = e.card, region = regionOf(c, null), parts = partsOf(c, null);
-    const f = { base: c.baseWeight, cardRecency: 1, family: 1, region: 1, starvation: 1, target: 1, type: 1, unlocked: 1, purpose: 1, favor: 1 };
+    const f = { base: c.baseWeight, cardRecency: 1, family: 1, region: 1, starvation: 1, target: 1, type: 1, unlocked: 1, undressCooldown: 1, purpose: 1, favor: 1 };
     f.cardRecency = history.novelty('cardId', c.id, 14, 1.6);
     const since = history.sinceCard(c.id); if (since === 0) f.cardRecency = 0; else if (since <= 2) f.cardRecency *= 0.05; else if (since <= 4) f.cardRecency *= 0.4; // la anterior nunca vuelve seguida
     f.family = history.familyWeight(c.family);
@@ -75,6 +93,7 @@ export function weighDeck(deck, { history, session, director, purpose, favorFami
     }
     if (['CHOOSE', 'GUIDED', 'PATH', 'POSITIONAL'].includes(c.interactionType) && history.sinceType(c.interactionType) <= 1) f.type = 0.3;
     if (unlocked && unlocked.has(c.id) && unlocked.get(c.id) > round) f.unlocked = 1.6; // recién desbloqueada por un cambio de ropa: pequeño empujón que expira
+    f.undressCooldown = undressCooldown(c, { history, round, actor, clothing });
     if (director) f.purpose = director.weight(purpose, session, history, c);
     if (favorFamily && c.family === favorFamily) f.favor = 2.5;
     const weight = Object.values(f).reduce((a, b) => a * b, 1);

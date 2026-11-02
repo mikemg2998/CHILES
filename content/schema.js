@@ -54,7 +54,12 @@ export const PLAY_CONSTRAINT_COPY = {
    SKIN_ACCESS    todas las partes que recibe tienen que estar a piel (sus prendas fuera)
    TOP_ACCESS     camiseta fuera · BOTTOM_ACCESS pantalón fuera · UNDERWEAR_ON ropa interior puesta · UNDERWEAR_OFF fuera
    FULL_BODY_ACCESS  camiseta, pantalón y ropa interior fuera */
-export const CLOTHING_REQUIREMENTS = ['ANY', 'CLOTHED', 'THROUGH_CLOTHING', 'SKIN_ACCESS', 'TOP_ACCESS', 'BOTTOM_ACCESS', 'UNDERWEAR_ON', 'UNDERWEAR_OFF', 'FULL_BODY_ACCESS', 'THROUGH_BRA'];
+export const CLOTHING_REQUIREMENTS = ['ANY', 'CLOTHED', 'THROUGH_CLOTHING', 'SKIN_ACCESS', 'TOP_ACCESS', 'BOTTOM_ACCESS', 'UNDERWEAR_ON', 'UNDERWEAR_OFF', 'FULL_BODY_ACCESS', 'THROUGH_BRA', 'THROUGH_PANTIES', 'THROUGH_BOXERS'];
+/* THROUGH_GARMENT('bra' | 'panties' | 'boxers'): la prenda interior sigue puesta y la exterior que la cubre está fuera; la carta
+   actúa SOBRE la prenda. THROUGH_BRA · THROUGH_PANTIES · THROUGH_BOXERS son alias de lectura. Nunca convierte una carta de
+   acceso directo: solo cartas aprobadas específicamente para esa prenda. */
+export const THROUGH_GARMENT = g => `THROUGH_${g.toUpperCase()}`;
+export const throughGarmentOf = q => (/^THROUGH_(BRA|PANTIES|BOXERS)$/.test(q) ? q.slice(8).toLowerCase() : null);
 
 /* Familias de interacción: la idea que la pareja percibe. El historial penaliza repetir familia en cartas seguidas. */
 export const FAMILIES = {

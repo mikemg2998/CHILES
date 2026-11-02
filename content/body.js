@@ -17,6 +17,18 @@ export const ANATOMY_IDS = Object.keys(ANATOMY);
 export const GARMENTS = ['top', 'bottoms', 'socks', 'bra', 'panties', 'boxers'];
 export const GARMENT_LABEL = { top: 'Camiseta', bottoms: 'Pantalón', socks: 'Calcetines', bra: 'Brasier', panties: 'Panties', boxers: 'Calzoncillos' };
 export const GARMENT_STATES = ['ON', 'OFF', 'NONE']; // puesta · quitada · no la lleva hoy / no aplica
+/* CAPAS DE ROPA. Cada prenda tiene capa (OUTER · UNDERWEAR), zona (TORSO · LOWER · FEET) y, si es interior, la prenda exterior
+   que la cubre (`under`): solo puede quitarse normalmente cuando esa exterior está fuera. Lo que tapa cada prenda lo dicen las
+   partes del cuerpo (coveredBy). Las tres columnas: CAPA EXTERIOR → CAPA INTERIOR → ACCESO DIRECTO. */
+export const GARMENT_LAYERS = {
+  top: { layer: 'OUTER', zone: 'TORSO', under: null },
+  bra: { layer: 'UNDERWEAR', zone: 'TORSO', under: 'top', requiresOuterRemovedForUndress: true },
+  bottoms: { layer: 'OUTER', zone: 'LOWER', under: null },
+  panties: { layer: 'UNDERWEAR', zone: 'LOWER', under: 'bottoms', requiresOuterRemovedForUndress: true },
+  boxers: { layer: 'UNDERWEAR', zone: 'LOWER', under: 'bottoms', requiresOuterRemovedForUndress: true },
+  socks: { layer: 'OUTER', zone: 'FEET', under: null },
+};
+export const UNDERWEAR_GARMENTS = GARMENTS.filter(g => GARMENT_LAYERS[g].layer === 'UNDERWEAR');
 export const garmentsFor = (declared = []) => ['top', 'bottoms', 'socks', ...(declared.includes('senos') ? ['bra'] : []), declared.includes('pene') && !declared.includes('vulva') ? 'boxers' : 'panties'];
 
 /* regiones corporales (para medir y ponderar diversidad; nunca para filtrar) */

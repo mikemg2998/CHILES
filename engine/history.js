@@ -19,6 +19,8 @@ export class History {
   get recentUndressCards() { return this.rounds.filter(r => r.interactionType === 'UNDRESS'); }
   get recentPositionalCards() { return this.rounds.filter(r => r.interactionType === 'POSITIONAL'); }
   recordClothingChange(change) { this.recentClothingChanges.unshift(change); if (this.recentClothingChanges.length > 20) this.recentClothingChanges.pop(); }
+  /* hace cuántas rondas se quitó por última vez una prenda EXTERIOR de esta zona a este jugador (Infinity si nunca) */
+  sinceOuterRemoved(player, zone, round, layers) { const c = this.recentClothingChanges.find(x => x.player === player && x.garment && layers[x.garment] && layers[x.garment].layer === 'OUTER' && layers[x.garment].zone === zone); return c ? round - c.round : Infinity; }
   /* lados recientes para esta carta y para estas partes del cuerpo (independientemente de la carta) */
   recentSidesByInteraction(cardId, n = 6) { return this.rounds.filter(r => r.cardId === cardId && r.side).slice(0, n).map(r => r.side); }
   recentSidesByBodyPart(parts, n = 6) { return this.rounds.filter(r => r.side && r.parts && r.parts.some(p => parts.includes(p))).slice(0, n).map(r => r.side); }

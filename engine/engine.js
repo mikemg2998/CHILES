@@ -125,7 +125,7 @@ export class GameEngine {
     const ctx = { ...this.context(actor), avoidIds };
     const deck = buildDeck(CARDS, ctx);
     for (const r of deck.rejected) { const k = r.reason.split(':')[0]; this.stats.rejectedReasons[k] = (this.stats.rejectedReasons[k] || 0) + 1; }
-    let weighted = weighDeck(deck, { history: H, session: S, director: this.director, purpose, favorFamily, unlocked: this.unlocked, round: this.state.round });
+    let weighted = weighDeck(deck, { history: H, session: S, director: this.director, purpose, favorFamily, unlocked: this.unlocked, round: this.state.round, actor, clothing: this.clothing });
     if (!weighted.some(w => w.weight > 0) && weighted.length) weighted = weighted.map(w => ({ ...w, weight: 1 })); // todo pesa cero: azar plano entre lo elegible
     const dbg = { purpose, reason: P.reason, actor, level: S.level, band: S.level === 3 ? this.clothingBand() : null, candidates: weighted.map(w => ({ id: w.card.id, weight: Math.round(w.weight * 1000) / 1000, factors: Object.fromEntries(Object.entries(w.factors).map(([k, v]) => [k, Math.round(v * 100) / 100])) })), rejected: deck.rejected, winner: null, variant: null, side: null, playConstraint: null, seconds: null, fallback: false };
     let sel = null;
