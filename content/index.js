@@ -57,6 +57,7 @@ export function validateContent(cards = CARDS) {
     }
     if (c.playConstraints) { for (const p of c.playConstraints) if (!PLAY_CONSTRAINTS.includes(p)) e(`PlayConstraint inválida ${p}`); if (!c.playConstraints.includes('FREE')) e('PlayConstraints sin FREE'); }
     if (c.requiredOrientation && !ORIENTATIONS.includes(c.requiredOrientation)) e('orientación inválida');
+    if (c.minIntimacyCards != null && (!Number.isInteger(c.minIntimacyCards) || c.minIntimacyCards < 1 || c.level !== 3)) e('minIntimacyCards solo en Intimidad y entero positivo');
     if (c.interactionType === 'CHOOSE' && !(c.choices && c.choices.length >= 2)) e('CHOOSE sin opciones');
     if (c.interactionType === 'PATH' && !c.path) e('PATH sin trayecto');
     if (c.interactionType === 'UNDRESS') { const u = c.undress; if (!u || !['ACTOR', 'RECEIVER', 'BOTH'].includes(u.who) || !(u.garment === 'ANY' || GARMENTS.includes(u.garment))) e('UNDRESS mal definida'); if (u && u.garment === 'ANY' && !u.chooser) e('UNDRESS ANY sin quien elige'); }

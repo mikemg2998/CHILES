@@ -42,6 +42,8 @@ export function buildDeck(cards, ctx) {
     if (card.level !== ctx.level) { rej('LEVEL'); continue; }
     if (avoid.some(t => card.tags.includes(t))) { rej('SESSION:hoy-no'); continue; }
     if (ctx.avoidIds && ctx.avoidIds.includes(card.id)) { rej('SESSION:avoid'); continue; }
+    // LATE_SESSION: contenido reservado a una fase muy avanzada; antes del umbral no existe, después compite con su peso bajo
+    if (card.minIntimacyCards != null && ((ctx.session && ctx.session.intimacyCardCount) || 0) < card.minIntimacyCards) { rej(`LATE_SESSION:${(ctx.session && ctx.session.intimacyCardCount) || 0}/${card.minIntimacyCards}`); continue; }
     if (card.variants) {
       const ok = [], why = [];
       for (const v of card.variants) { if (v.status !== 'APPROVED') { why.push(`${v.id}:STATUS`); continue; } const f = unitFailure(card, v, ctx); if (f) why.push(`${v.id}:${f}`); else ok.push(v); }

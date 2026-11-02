@@ -100,4 +100,33 @@ export const INTIMACY = [
   I({ id: 'I20', family: 'BODY', interactionType: 'BODY_TO_BODY', intraLevelIntensity: 'MID', actorRequirements: [{ part: 'body' }], receiverRequirements: [{ part: 'wholeBody' }], requiredOrientation: 'STANDING',
     clothing: { actor: ['FULL_BODY_ACCESS'], receiver: ['FULL_BODY_ACCESS'] }, durations: [60],
     copy: ['De pie y completamente desnudos, abrazaos y moveos muy despacio, piel con piel.'], notes: 'abrazo de pie completamente desnudos con contacto corporal lento (BODY_TO_BODY)' }),
+  /* ======== CLÍTORIS · relaciones del diseñador (2026-11-02), una carta por relación, sin variantes añadidas ========
+     Target `clitoris` (nunca se intercambia por vulva). Acceso directo: pantalón y panties fuera / no la lleva. */
+  I({ id: 'I26', family: 'MANUAL', similarityGroup: 'INTIMATE_TOUCH', intraLevelIntensity: 'HIGH', actorRequirements: [{ part: 'fingers' }], receiverRequirements: [{ part: 'clitoris' }], clothing: { receiver: ['SKIN_ACCESS', 'UNDERWEAR_OFF'] }, durations: [30, 45], tags: ['intimo'],
+    copy: ['Frota el clítoris de {R} con los dedos, despacio.', 'Con los dedos sobre el clítoris de {R}, frótalo con un ritmo lento y constante.'], notes: 'frotar el clítoris (diseñador): dedos → clítoris, DIRECT' }),
+  I({ id: 'I27', family: 'ORAL', similarityGroup: 'ORAL', intraLevelIntensity: 'HIGH', actorRequirements: [{ part: 'tongue' }], receiverRequirements: [{ part: 'clitoris' }], clothing: { receiver: ['SKIN_ACCESS', 'UNDERWEAR_OFF'] }, durations: [30, 45, 60], tags: ['intimo', 'boca'],
+    copy: ['Lame el clítoris de {R}, despacio y sin cambiar de ritmo.', 'Con la lengua sobre el clítoris de {R}: lento, sin prisa.'], notes: 'lamer el clítoris (diseñador): lengua → clítoris, DIRECT' }),
+  I({ id: 'I28', family: 'FEET', similarityGroup: 'INTIMATE_TOUCH', intraLevelIntensity: 'HIGH', actorRequirements: [{ part: 'feet' }], receiverRequirements: [{ part: 'clitoris' }], clothing: { actor: ['ANY'], receiver: ['SKIN_ACCESS', 'UNDERWEAR_OFF'] }, durations: [30, 45], tags: ['intimo'],
+    copy: ['Con el pie, roza y estimula el clítoris de {R}, muy despacio.'], notes: 'tocar / estimular el clítoris con los pies (diseñador): pies → clítoris, DIRECT. Como en I12, el requisito «descalzo» está pendiente de decisión (actor ANY).' }),
+  I({ id: 'I29', family: 'BODY', interactionType: 'POSITIONAL', similarityGroup: 'BODY_CONTACT', intraLevelIntensity: 'HIGH', actorRequirements: [{ part: 'glans' }], receiverRequirements: [{ part: 'clitoris' }], requiredOrientation: 'FACE',
+    clothing: { actor: ['FULL_BODY_ACCESS'], receiver: ['SKIN_ACCESS', 'UNDERWEAR_OFF'] }, durations: [30, 45], tags: ['intimo'],
+    copy: ['Frota el clítoris de {R} con el glande, despacio, sin entrar.'], notes: 'frotar el clítoris con el glande (diseñador): POSITIONAL de frente; exige pene en quien actúa y vulva en quien recibe; ambos a piel' }),
+  /* ======== VAGINA · relaciones del diseñador (2026-11-02). Target `vagina`, DIRECT siempre; nunca THROUGH_PANTIES ========
+     Variantes de número de dedos: SOLO las dos que el diseñador dio (2 y 3), sobre el movimiento de entrada / salida. */
+  I({ id: 'I30', family: 'MANUAL', similarityGroup: 'INTIMATE_TOUCH', intraLevelIntensity: 'HIGH', actorRequirements: [{ part: 'oneFinger' }], receiverRequirements: [{ part: 'vagina' }], clothing: { receiver: ['SKIN_ACCESS', 'UNDERWEAR_OFF'] }, durations: [45, 60], tags: ['intimo'],
+    copy: ['Introduce un dedo en la vagina de {R} y muévelo dentro, despacio.'], notes: 'introducir 1 dedo en la vagina y moverlo dentro (diseñador): DIRECT' }),
+  I({ id: 'I31', family: 'MANUAL', similarityGroup: 'INTIMATE_TOUCH', intraLevelIntensity: 'HIGH', actorRequirements: [{ part: 'oneFinger' }], receiverRequirements: [{ part: 'vagina' }], clothing: { receiver: ['SKIN_ACCESS', 'UNDERWEAR_OFF'] }, durations: [45, 60], tags: ['intimo'],
+    variants: [
+      { id: 'un-dedo', status: 'APPROVED', actorRequirements: [{ part: 'oneFinger' }], copy: ['Introduce un dedo en la vagina de {R} y muévelo dentro y fuera, despacio.'] },
+      { id: 'dos-dedos', status: 'APPROVED', weight: 0.7, actorRequirements: [{ part: 'twoFingers' }], copy: ['Introduce dos dedos en la vagina de {R} y muévelos dentro y fuera, despacio.'] },
+      { id: 'tres-dedos', status: 'APPROVED', weight: 0.5, actorRequirements: [{ part: 'threeFingers' }], copy: ['Introduce tres dedos en la vagina de {R} y muévelos dentro y fuera, despacio.'] },
+    ], notes: 'introducir 1 dedo con movimiento de entrada / salida (diseñador), con las variantes de 2 y 3 dedos que el diseñador proporcionó. Ninguna otra.' }),
+  /* ======== LATE_SESSION · contenido muy tardío (diseñador, 2026-11-02): solo a partir de 35 cartas de Intimidad, peso bajo,
+     nunca garantizado, sin progresión automática hacia ellas. POSITIONAL tumbados; pene a piel y vagina a piel. ======== */
+  I({ id: 'I32', family: 'BODY', interactionType: 'POSITIONAL', similarityGroup: 'BODY_CONTACT', intraLevelIntensity: 'HIGH', minIntimacyCards: 35, baseWeight: 0.5, actorRequirements: [{ part: 'penis' }], receiverRequirements: [{ part: 'vagina' }], requiredOrientation: 'LYING',
+    clothing: { actor: ['FULL_BODY_ACCESS'], receiver: ['SKIN_ACCESS', 'UNDERWEAR_OFF'] }, durations: [60, 90], tags: ['intimo'],
+    copy: ['Introduce el pene en la vagina de {R} muy lentamente.'], notes: 'LATE_SESSION (≥ 35 cartas de Intimidad): introducir el pene en la vagina muy lentamente (diseñador)' }),
+  I({ id: 'I33', family: 'BODY', interactionType: 'POSITIONAL', similarityGroup: 'BODY_CONTACT', intraLevelIntensity: 'HIGH', minIntimacyCards: 35, baseWeight: 0.5, actorRequirements: [{ part: 'penis' }], receiverRequirements: [{ part: 'vagina' }], requiredOrientation: 'LYING',
+    clothing: { actor: ['FULL_BODY_ACCESS'], receiver: ['SKIN_ACCESS', 'UNDERWEAR_OFF'] }, durations: [45, 60], tags: ['intimo'],
+    copy: ['Deja el pene en la entrada de la vagina de {R} y frótalo ahí, sin entrar.'], notes: 'LATE_SESSION (≥ 35 cartas de Intimidad): dejar el pene en la entrada de la vagina y frotarlo (diseñador)' }),
 ];

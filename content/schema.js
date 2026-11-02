@@ -23,6 +23,8 @@
      choices             CHOOSE: [{ id, label }]      · path: PATH: { from, to }   · undress: UNDRESS: { who, garment, chooser, limitation }
      requiredOrientation POSITIONAL / BODY_TO_BODY: 'FACE' | 'BEHIND' | 'LYING' | 'SEATED' | 'STANDING'
      note                línea breve que ve la pareja debajo de la frase (opcional)
+     minIntimacyCards    LATE_SESSION: solo elegible cuando la sesión lleva al menos N cartas de Intimidad (null = sin umbral). Antes del umbral,
+                         INELEGIBLE; después, elegible con su baseWeight (bajo). Nunca es una progresión: la sesión puede acabar antes.
      baseWeight          frecuencia relativa (1 = normal)
      tags · notes        para la sesión («hoy no») y para la revisión humana
    } */
@@ -80,7 +82,7 @@ const DEFAULTS = {
   intraLevelIntensity: null, status: 'UNREVIEWED', source: 'DESIGNER_PROVIDED', interactionType: 'STANDARD',
   actorRequirements: [], receiverRequirements: [], clothing: { actor: ['ANY'], receiver: ['ANY'] }, allowedSides: null,
   copy: null, copyBySide: null, variants: null, playConstraints: null, durations: [30], timerMode: 'FIXED',
-  choices: null, path: null, undress: null, requiredOrientation: null, note: null, baseWeight: 1, tags: [], notes: null, transition: false, similarityGroup: null,
+  choices: null, path: null, undress: null, requiredOrientation: null, note: null, baseWeight: 1, minIntimacyCards: null, tags: [], notes: null, transition: false, similarityGroup: null,
 };
 /* constructor con valores por defecto; el id y el nivel son obligatorios */
 export function card(o) {
