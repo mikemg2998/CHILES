@@ -11,11 +11,18 @@ export const ANATOMY = {
 };
 export const ANATOMY_IDS = Object.keys(ANATOMY);
 
-export const GARMENTS = ['top', 'bottoms', 'socks', 'underwear'];
-export const GARMENT_LABEL = { top: 'Camiseta', bottoms: 'Pantalón', socks: 'Calcetines', underwear: 'Ropa interior' };
-export const GARMENT_STATES = ['ON', 'OFF', 'NONE']; // puesta · quitada · no la lleva hoy
+/* Prendas reales e independientes. Camiseta ≠ brasier; pantalón ≠ panties / calzoncillos. Qué prendas existen para un
+   jugador depende de su configuración corporal (no de un género): brasier si declaró senos; calzoncillos si declaró pene;
+   panties en el resto de casos. En coveredBy, 'underwear' significa «la prenda interior de abajo que lleve ese jugador». */
+export const GARMENTS = ['top', 'bottoms', 'socks', 'bra', 'panties', 'boxers'];
+export const GARMENT_LABEL = { top: 'Camiseta', bottoms: 'Pantalón', socks: 'Calcetines', bra: 'Brasier', panties: 'Panties', boxers: 'Calzoncillos' };
+export const GARMENT_STATES = ['ON', 'OFF', 'NONE']; // puesta · quitada · no la lleva hoy / no aplica
+export const garmentsFor = (declared = []) => ['top', 'bottoms', 'socks', ...(declared.includes('senos') ? ['bra'] : []), declared.includes('pene') && !declared.includes('vulva') ? 'boxers' : 'panties'];
 
-const P = (id, label, o = {}) => Object.assign({ id, label, anatomy: null, lateral: false, coveredBy: [] }, o);
+/* regiones corporales (para medir y ponderar diversidad; nunca para filtrar) */
+export const BODY_REGIONS = ['FACE', 'NECK', 'ARMS_HANDS', 'CHEST', 'ABDOMEN', 'BACK', 'HIPS_GLUTES', 'THIGHS_LEGS', 'FEET', 'INTIMATE', 'FULL_BODY'];
+const REGION_OF = { hair: 'FACE', forehead: 'FACE', face: 'FACE', cheeks: 'FACE', ears: 'FACE', lips: 'FACE', neck: 'NECK', nape: 'NECK', shoulders: 'BACK', collarbones: 'CHEST', back: 'BACK', lowerBack: 'BACK', chest: 'CHEST', abdomen: 'ABDOMEN', lowerAbdomen: 'ABDOMEN', waist: 'ABDOMEN', flanks: 'ABDOMEN', hips: 'HIPS_GLUTES', breasts: 'CHEST', nipples: 'CHEST', upperArms: 'ARMS_HANDS', forearms: 'ARMS_HANDS', hands: 'ARMS_HANDS', fingers: 'ARMS_HANDS', palms: 'ARMS_HANDS', wrists: 'ARMS_HANDS', outerThighs: 'THIGHS_LEGS', innerThighs: 'THIGHS_LEGS', legs: 'THIGHS_LEGS', backOfLegs: 'THIGHS_LEGS', poplitealArea: 'THIGHS_LEGS', calves: 'THIGHS_LEGS', ankles: 'FEET', feet: 'FEET', toes: 'FEET', buttocks: 'HIPS_GLUTES', hipCrease: 'HIPS_GLUTES', groin: 'INTIMATE', vulva: 'INTIMATE', clitoris: 'INTIMATE', vagina: 'INTIMATE', penis: 'INTIMATE', glans: 'INTIMATE', testicles: 'INTIMATE', anus: 'INTIMATE', wholeBody: 'FULL_BODY' };
+const P = (id, label, o = {}) => Object.assign({ id, label, anatomy: null, lateral: false, coveredBy: [], region: REGION_OF[id] }, o);
 export const BODY_PARTS_LIST = [
   // cabeza y cuello
   P('hair', 'el cabello'), P('forehead', 'la frente'), P('face', 'el rostro'), P('cheeks', 'las mejillas', { lateral: true }),
@@ -25,7 +32,7 @@ export const BODY_PARTS_LIST = [
   P('back', 'la espalda', { coveredBy: ['top'] }), P('lowerBack', 'la zona lumbar', { coveredBy: ['top'] }),
   P('chest', 'el pecho', { coveredBy: ['top'] }), P('abdomen', 'el abdomen', { coveredBy: ['top'] }), P('lowerAbdomen', 'el bajo vientre', { coveredBy: ['top'] }),
   P('waist', 'la cintura', { coveredBy: ['top'] }), P('flanks', 'los costados', { lateral: true, coveredBy: ['top'] }), P('hips', 'las caderas', { lateral: true, coveredBy: ['bottoms'] }),
-  P('breasts', 'los senos', { anatomy: 'senos', lateral: true, coveredBy: ['top'] }), P('nipples', 'los pezones', { anatomy: 'senos', lateral: true, coveredBy: ['top'] }),
+  P('breasts', 'los senos', { anatomy: 'senos', lateral: true, coveredBy: ['top', 'bra'] }), P('nipples', 'los pezones', { anatomy: 'senos', lateral: true, coveredBy: ['top', 'bra'] }),
   // brazos y manos
   P('upperArms', 'los brazos', { lateral: true }), P('forearms', 'los antebrazos', { lateral: true }), P('hands', 'las manos', { lateral: true }),
   P('fingers', 'los dedos', { lateral: true }), P('palms', 'las palmas', { lateral: true }), P('wrists', 'las muñecas', { lateral: true }),
@@ -43,7 +50,7 @@ export const BODY_PARTS_LIST = [
   P('penis', 'el pene', { anatomy: 'pene', coveredBy: ['bottoms', 'underwear'] }), P('glans', 'el glande', { anatomy: 'pene', coveredBy: ['bottoms', 'underwear'] }),
   P('testicles', 'los testículos', { anatomy: 'pene', lateral: true, coveredBy: ['bottoms', 'underwear'] }),
   P('anus', 'el ano', { coveredBy: ['bottoms', 'underwear'] }),
-  P('wholeBody', 'todo el cuerpo', { coveredBy: ['top', 'bottoms', 'underwear'] }), // solo para cartas de cuerpo entero (abrazo desnudos)
+  P('wholeBody', 'todo el cuerpo', { coveredBy: ['top', 'bottoms', 'underwear', 'bra'] }), // solo para cartas de cuerpo entero (abrazo desnudos)
 ];
 export const BODY_PARTS = Object.fromEntries(BODY_PARTS_LIST.map(p => [p.id, p]));
 
@@ -57,7 +64,7 @@ export const ACTOR_TOOLS_LIST = [
   A('thigh', 'el muslo', { kind: 'leg', lateral: true }), A('legs', 'las piernas', { kind: 'leg' }), A('feet', 'los pies', { kind: 'leg', lateral: true, coveredBy: ['socks'] }),
   A('body', 'el cuerpo', { kind: 'body' }),
   A('penis', 'el pene', { kind: 'pelvis', anatomy: 'pene', coveredBy: ['bottoms', 'underwear'] }), A('glans', 'el glande', { kind: 'pelvis', anatomy: 'pene', coveredBy: ['bottoms', 'underwear'] }),
-  A('breasts', 'los senos', { kind: 'torso', anatomy: 'senos', coveredBy: ['top'] }),
+  A('breasts', 'los senos', { kind: 'torso', anatomy: 'senos', coveredBy: ['top', 'bra'] }),
 ];
 export const ACTOR_TOOLS = Object.fromEntries(ACTOR_TOOLS_LIST.map(t => [t.id, t]));
 export const MOUTH_TOOLS = ACTOR_TOOLS_LIST.filter(t => t.kind === 'mouth').map(t => t.id);

@@ -4,7 +4,8 @@
    disponibilidad · lado · variantes · PlayConstraints · tiempos · peso · elegibilidad en el escenario elegido.
    Por selección: candidatas, rechazadas con motivo, pesos, ganadora, variante, lado, duración, propósito. */
 import { CARDS, validateContent } from '../content/index.js';
-import { BODY_PARTS, ACTOR_TOOLS, GARMENTS, GARMENT_LABEL, ANATOMY } from '../content/body.js';
+import { BODY_PARTS, ACTOR_TOOLS, GARMENT_LABEL, ANATOMY, garmentsFor } from '../content/body.js';
+import { normalizeClothing } from '../engine/clothing.js';
 import { FAMILIES } from '../content/schema.js';
 import { GameEngine } from '../engine/engine.js';
 import { LEVELS } from '../engine/levels.js';
@@ -18,7 +19,8 @@ const real = CARDS.filter(c => !c.transition);
 $('#counts').textContent = `${real.length} cartas · ${real.filter(c => c.status === 'APPROVED').length} aprobadas · ${real.filter(c => c.status === 'UNREVIEWED').length} sin revisar`;
 
 /* ---------- escenario (compartido por las dos pestañas) ---------- */
-const scn = { level: 3, actor: 0, names: ['Ana', 'Leo'], anatomy: [['vulva', 'senos'], ['pene']], clothing: [{ top: 'ON', bottoms: 'ON', socks: 'ON', underwear: 'ON' }, { top: 'ON', bottoms: 'ON', socks: 'ON', underwear: 'ON' }] };
+const scn = { level: 3, actor: 0, names: ['Ana', 'Leo'], anatomy: [['vulva', 'senos'], ['pene']], clothing: [{}, {}] };
+scn.clothing = scn.clothing.map((c, p) => normalizeClothing(c, scn.anatomy[p]));
 let engine = mkEngine();
 function mkEngine() { const e = new GameEngine({ prefs: { names: scn.names, bodyParts: scn.anatomy }, level: scn.level }); e.clothing = scn.clothing.map(s => ({ ...s })); return e; }
 function ctx(actor = scn.actor) { engine.prefs.bodyParts = scn.anatomy; engine.session.level = scn.level; engine.clothing = scn.clothing.map(s => ({ ...s })); engine._an = null; return engine.context(actor); }
@@ -27,12 +29,12 @@ function renderScenario() {
   box.innerHTML = `<div class="group"><b>Nivel</b> ${[1, 2, 3].map(l => `<button class="chip ${scn.level === l ? 'on' : ''}" data-level="${l}">${l} ${LEVELS[l].name}</button>`).join('')}</div>
   <div class="group"><b>Actúa</b> ${[0, 1].map(p => `<button class="chip ${scn.actor === p ? 'on' : ''}" data-actor="${p}">${scn.names[p]}</button>`).join('')}</div>` +
   [0, 1].map(p => `<div class="group"><b>${scn.names[p]}</b> · anatomía ${Object.keys(ANATOMY).map(a => `<button class="chip ${scn.anatomy[p].includes(a) ? 'on' : ''}" data-an="${p}:${a}">${ANATOMY[a].label}</button>`).join('')}<br>` +
-    GARMENTS.map(g => `<span class="row">${GARMENT_LABEL[g]} ${['ON', 'OFF', 'NONE'].map(s => `<button class="chip small ${scn.clothing[p][g] === s ? 'on' : ''}" data-cl="${p}:${g}:${s}">${s}</button>`).join('')}</span>`).join('') + '</div>').join('');
+    garmentsFor(scn.anatomy[p]).map(g => `<span class="row">${GARMENT_LABEL[g]} ${['ON', 'OFF', 'NONE'].map(s => `<button class="chip small ${scn.clothing[p][g] === s ? 'on' : ''}" data-cl="${p}:${g}:${s}">${s}</button>`).join('')}</span>`).join('') + '</div>').join('');
   box.onclick = e => {
     const b = e.target.closest('button'); if (!b) return;
     if (b.dataset.level) scn.level = Number(b.dataset.level);
     if (b.dataset.actor) scn.actor = Number(b.dataset.actor);
-    if (b.dataset.an) { const [p, a] = b.dataset.an.split(':'); const l = scn.anatomy[p]; scn.anatomy[p] = l.includes(a) ? l.filter(x => x !== a) : [...l, a]; }
+    if (b.dataset.an) { const [p, a] = b.dataset.an.split(':'); const l = scn.anatomy[p]; scn.anatomy[p] = l.includes(a) ? l.filter(x => x !== a) : [...l, a]; scn.clothing[p] = normalizeClothing(scn.clothing[p], scn.anatomy[p]); }
     if (b.dataset.cl) { const [p, g, s] = b.dataset.cl.split(':'); scn.clothing[p][g] = s; }
     renderScenario(); renderDeck(); if (currentId) renderCard(currentId);
   };
@@ -50,6 +52,7 @@ function renderList() {
 $('#cardList').addEventListener('click', e => { const b = e.target.closest('[data-id]'); if (!b) return; currentId = b.dataset.id; renderList(); renderCard(currentId); });
 const req = (list, map) => list.length ? list.map(r => `<span class="pill">${esc(map[r.part] ? map[r.part].label : r.part)}${map[r.part] && map[r.part].anatomy ? ' · ' + map[r.part].anatomy : ''}</span>`).join(' ') : '<span class="pill">—</span>';
 function renderCard(id) {
+  if (!id) return;
   const c = CARDS.find(x => x.id === id); if (!c) return;
   const deck = buildDeck([c], ctx());
   const elig = deck.eligible.length ? `<span class="ok">ELEGIBLE ahora (${scn.names[scn.actor]} → ${scn.names[1 - scn.actor]}, nivel ${scn.level})</span>` : `<span class="bad">NO elegible: ${esc(deck.rejected[0].reason)}</span>`;
@@ -86,7 +89,7 @@ $('#draw').addEventListener('click', () => {
   if (r.undress) { for (const p of r.undress.players) { const g = r.undress.garment === 'ANY' ? engine.removable(p)[0] : r.undress.garment; if (g) { engine.recordUndress(p, g); scn.clothing[p] = { ...engine.clothing[p] }; } } renderScenario(); }
   const box = $('#draws'); const div = document.createElement('div'); div.className = 'card';
   div.innerHTML = `<p class="phrase">${esc(r.phrase)}</p><p class="hint">${r.actorName} → ${r.receiverName} · <b>${r.cardId}</b>${r.variantId ? ' / ' + r.variantId : ''}${r.side ? ' / ' + r.side : ''}${r.playConstraint ? ' / ' + r.playConstraint : ''} · ${r.seconds ?? 'sin tiempo'} s · propósito ${d.purpose} (${esc(d.reason)})${d.fallback ? ' · MAZO VACÍO' : ''}</p>
-  <p class="hint">pesos: ${d.candidates.map(c => `${c.id} ${c.weight}`).join(' · ')}</p>`;
+  <p class="hint">pesos: ${d.candidates.map(c => `${c.id} ${c.weight}`).join(' · ')}</p><details><summary class="hint">factores</summary><table><tbody>${d.candidates.map(c => `<tr><td><b>${c.id}</b></td><td>${Object.entries(c.factors).map(([k, v]) => `${k} ${v}`).join(' · ')}</td></tr>`).join('')}</tbody></table></details>`;
   box.prepend(div);
   if (r.undress) renderDeck();
 });

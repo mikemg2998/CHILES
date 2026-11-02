@@ -6,8 +6,9 @@ import { buildDeck } from '../engine/deck.js';
 import { partAccessible, clothingFailure, removableGarments, band } from '../engine/clothing.js';
 import { mk, play, DRESSED, NAKED } from './helpers.js';
 
-const UND = () => ({ top: 'OFF', bottoms: 'OFF', socks: 'OFF', underwear: 'ON' });
-const NOTOP = () => ({ top: 'OFF', bottoms: 'ON', socks: 'ON', underwear: 'ON' });
+const UND = () => ({ top: 'OFF', bottoms: 'OFF', socks: 'OFF', bra: 'ON', panties: 'ON', boxers: 'ON' }); // en ropa interior (brasier y panties / calzoncillos puestos)
+const NOTOP = () => ({ top: 'OFF', bottoms: 'ON', socks: 'ON', bra: 'OFF', panties: 'ON', boxers: 'ON' });
+const BRA = () => ({ top: 'OFF', bottoms: 'ON', socks: 'ON', bra: 'ON', panties: 'ON', boxers: 'ON' }); // camiseta fuera, brasier puesto
 const ids = (e, actor = 1) => buildDeck(CARDS, e.context(actor)).eligible.map(x => x.card.id);
 const needsSkin = CARDS.filter(c => c.level === 3 && c.clothing.receiver.includes('SKIN_ACCESS')).map(c => c.id);
 
@@ -27,16 +28,38 @@ test('both without underwear: full access both ways, naked hug available', () =>
 test('removed garments never come back: UNDRESS for a removed garment is not eligible and state only moves ON → OFF', () => {
   const e = mk({ level: 3, seed: 5 }); let prev = [DRESSED(), DRESSED()];
   for (const r of play(e, 120)) { for (const p of [0, 1]) for (const g of Object.keys(prev[p])) assert.ok(!(prev[p][g] !== 'ON' && e.clothing[p][g] === 'ON'), `${g} volvió`); prev = e.clothing.map(s => ({ ...s })); if (r.undress && r.undress.garment !== 'ANY') for (const p of r.undress.players) assert.equal(e.clothing[p][r.undress.garment], 'OFF'); }
-  const f = mk({ level: 3, clothing: [{ top: 'OFF', bottoms: 'ON', socks: 'ON', underwear: 'ON' }, DRESSED()] }); assert.ok(!ids(f, 1).includes('U03'));
+  const f = mk({ level: 3, clothing: [NOTOP(), DRESSED()] }); assert.ok(!ids(f, 1).includes('U03'));
 });
 test('manual selection updates state immediately; underwear only after bottoms', () => {
   const e = mk({ level: 3 }); assert.deepEqual(removableGarments(e.clothing[0]), ['top', 'bottoms', 'socks']);
-  assert.equal(e.recordUndress(0, 'underwear'), false); assert.ok(e.recordUndress(0, 'bottoms')); assert.ok(e.recordUndress(0, 'underwear')); assert.equal(e.clothing[0].underwear, 'OFF'); assert.equal(e.recordUndress(0, 'bottoms'), false);
+  assert.equal(e.recordUndress(0, 'panties'), false); assert.equal(e.recordUndress(0, 'bra'), false);
+  assert.ok(e.recordUndress(0, 'bottoms')); assert.ok(e.recordUndress(0, 'panties')); assert.equal(e.clothing[0].panties, 'OFF'); assert.equal(e.recordUndress(0, 'bottoms'), false);
+  assert.ok(e.recordUndress(0, 'top')); assert.ok(e.recordUndress(0, 'bra'));
 });
 test('manual correction (••• → Estado de ropa) recalculates candidates', () => {
   const e = mk({ level: 3 }); assert.ok(!ids(e, 1).includes('I05'));
-  e.setClothing(0, { top: 'OFF', bottoms: 'ON', socks: 'NONE', underwear: 'ON' }); assert.ok(ids(e, 1).includes('I05')); assert.ok(!ids(e, 1).includes('U03c'));
+  e.setClothing(0, { top: 'OFF', bottoms: 'ON', socks: 'NONE', bra: 'OFF', panties: 'ON' }); assert.ok(ids(e, 1).includes('I05')); assert.ok(!ids(e, 1).includes('U03c'));
   e.setClothing(0, DRESSED()); assert.ok(!ids(e, 1).includes('I05'));
+});
+test('garments depend on body configuration, not gender: bra with senos, boxers with pene, panties otherwise', () => {
+  const e = mk({ level: 3, prefs: { bodyParts: [['vulva', 'senos'], ['pene']] } });
+  assert.deepEqual(e.garments(0), ['top', 'bottoms', 'socks', 'bra', 'panties']); assert.deepEqual(e.garments(1), ['top', 'bottoms', 'socks', 'boxers']);
+  assert.equal(e.clothing[0].boxers, 'NONE'); assert.equal(e.clothing[1].bra, 'NONE'); assert.equal(e.clothing[1].panties, 'NONE');
+  assert.deepEqual(mk({ prefs: { bodyParts: [['pene', 'senos'], []] } }).garments(0), ['top', 'bottoms', 'socks', 'bra', 'boxers']);
+  assert.deepEqual(mk({ prefs: { bodyParts: [[], []] } }).garments(1), ['top', 'bottoms', 'socks', 'panties']);
+});
+test('TOP OFF + BRA ON is not chest access; BOTTOMS OFF + PANTIES ON is not intimate access', () => {
+  const e = mk({ level: 3, clothing: [BRA(), DRESSED()] }); const l = ids(e, 1);
+  assert.ok(l.includes('I05') && !l.includes('I03') && !l.includes('I08') && !l.includes('I09') && !l.includes('I10'));
+  e.setClothing(0, { ...BRA(), bra: 'OFF' }); assert.ok(ids(e, 1).includes('I03') && ids(e, 1).includes('I08'));
+  const f = mk({ level: 3, clothing: [UND(), DRESSED()] }); assert.ok(!ids(f, 1).includes('I11') && !ids(f, 1).includes('I18'));
+  f.setClothing(0, { ...UND(), panties: 'OFF' }); assert.ok(ids(f, 1).includes('I11') && ids(f, 1).includes('I18'));
+  const g = mk({ level: 3, prefs: { bodyParts: [['pene'], ['vulva', 'senos']] }, clothing: [UND(), DRESSED()] }); assert.ok(!ids(g, 1).includes('I11')); g.setClothing(0, { ...UND(), boxers: 'OFF' }); assert.ok(ids(g, 1).includes('I11'));
+});
+test('UNDRESS with choice only offers garments currently on, and records the real garment', () => {
+  const e = mk({ level: 3, clothing: [BRA(), DRESSED()] });
+  assert.deepEqual(e.removable(0), ['bottoms', 'socks', 'bra']); assert.deepEqual(e.removable(1), ['top', 'bottoms', 'socks']);
+  assert.ok(e.recordUndress(0, 'bra')); assert.equal(e.clothing[0].bra, 'OFF'); assert.deepEqual(e.removable(0), ['bottoms', 'socks']);
 });
 test('SKIN_ACCESS and UNDERWEAR_OFF block when due; THROUGH_CLOTHING works', () => {
   assert.equal(clothingFailure(['SKIN_ACCESS'], DRESSED(), ['back']), 'SKIN_ACCESS'); assert.equal(clothingFailure(['SKIN_ACCESS'], NOTOP(), ['back']), null);

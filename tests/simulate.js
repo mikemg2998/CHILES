@@ -11,7 +11,7 @@ import { FAMILIES } from '../content/schema.js';
 const N = Number(process.argv.find(a => /^\d+$/.test(a)) || 100);
 const OUT = (process.argv.find(a => a.startsWith('--out=')) || '').slice(6);
 const ANATOMIES = [[['vulva', 'senos'], ['pene']], [['pene'], ['vulva', 'senos']], [['vulva', 'senos'], ['vulva', 'senos']], [['pene'], ['pene']], [['vulva'], ['pene', 'senos']], [[], []]];
-const CLOTH = [{ top: 'ON', bottoms: 'ON', socks: 'ON', underwear: 'ON' }, { top: 'ON', bottoms: 'ON', socks: 'NONE', underwear: 'ON' }, { top: 'OFF', bottoms: 'ON', socks: 'ON', underwear: 'ON' }, { top: 'OFF', bottoms: 'OFF', socks: 'OFF', underwear: 'ON' }];
+const CLOTH = [{ top: 'ON', bottoms: 'ON', socks: 'ON', bra: 'ON', panties: 'ON', boxers: 'ON' }, { top: 'ON', bottoms: 'ON', socks: 'NONE', bra: 'ON', panties: 'ON', boxers: 'ON' }, { top: 'OFF', bottoms: 'ON', socks: 'ON', bra: 'ON', panties: 'ON', boxers: 'ON' }, { top: 'OFF', bottoms: 'OFF', socks: 'OFF', bra: 'OFF', panties: 'ON', boxers: 'ON' }];
 const problems = [], stats = { sessions: 0, cards: 0, backToBack: 0, within5: 0, byLevel: {}, family: {}, side: {}, constraint: {}, variant: {}, duration: {}, actors: [0, 0], undress: 0, intimacy: 0, empty: 0, transitions: 0, pauses: [], clothingChanges: 0, asymmetricRounds: 0, neverSeen: new Set(APPROVED.map(c => c.id)), typeCount: {}, bands: {}, directionEmpty: {} };
 const inc = (m, k) => { m[k] = (m[k] || 0) + 1; };
 

@@ -13,6 +13,9 @@ export class History {
   get recentPlayConstraints() { return this.rounds.map(r => r.playConstraint).filter(Boolean); }
   get recentActors() { return this.rounds.map(r => r.actor); }
   get recentReceivers() { return this.rounds.map(r => r.receiver); }
+  get recentRegions() { return this.rounds.map(r => r.region).filter(Boolean); }
+  get recentTargets() { return this.rounds.map(r => r.parts || []); }
+  sinceRegion(region) { const i = this.rounds.findIndex(r => r.region === region); return i < 0 ? Infinity : i; }
   get recentUndressCards() { return this.rounds.filter(r => r.interactionType === 'UNDRESS'); }
   get recentPositionalCards() { return this.rounds.filter(r => r.interactionType === 'POSITIONAL'); }
   recordClothingChange(change) { this.recentClothingChanges.unshift(change); if (this.recentClothingChanges.length > 20) this.recentClothingChanges.pop(); }

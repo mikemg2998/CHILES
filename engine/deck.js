@@ -6,6 +6,7 @@ import { BODY_PARTS, ACTOR_TOOLS } from '../content/body.js';
 import { AVOIDS } from './session.js';
 import { clothingFailure, partAccessible, undressPossible } from './clothing.js';
 import { copyOptions } from './realizer.js';
+import { regionOf, partsOf } from '../content/index.js';
 
 const INTIMATE = p => BODY_PARTS[p] && ['vulva', 'pene'].includes(BODY_PARTS[p].anatomy);
 
@@ -52,18 +53,32 @@ export function buildDeck(cards, ctx) {
   return { eligible, rejected };
 }
 
-/* ---------- ponderación y elección ---------- */
-export function weighDeck(deck, { history, session, director, purpose, favorFamily = null }) {
+/* ---------- ponderación: factores independientes, nunca un «intensity score» ----------
+   Los filtros duros ya pasaron (anatomía, ropa, propiedad, físico, status). Aquí solo pesos blandos:
+   baseWeight · cardRecency · familyDiversity · bodyRegionDiversity · regionStarvation · targetDiversity · typeSpacing ·
+   newlyUnlockedBoost · sessionPurpose (+ feedbackAffinity) · favorFamily. Ninguna región gana peso por ser íntima. */
+export function weighDeck(deck, { history, session, director, purpose, favorFamily = null, unlocked = null, round = 0 }) {
+  const regions = history.recentRegions, targets = history.recentTargets;
+  const eligibleRegions = new Set(deck.eligible.map(e => regionOf(e.card, null)));
+  const starving = new Set([...eligibleRegions].filter(r => history.sinceRegion(r) >= 8 && history.rounds.length >= 8)); // región con cartas elegibles que lleva mucho sin salir
   return deck.eligible.map(e => {
-    const c = e.card;
-    let w = c.baseWeight * history.novelty('cardId', c.id, 14, 1.6) * history.familyWeight(c.family);
-    const since = history.sinceCard(c.id); if (since === 0) w = 0; else if (since <= 2) w *= 0.05; // la carta anterior nunca vuelve seguida; las dos últimas, casi nunca
-    if (director) w *= director.weight(purpose, session, history, c);
-    if (favorFamily && c.family === favorFamily) w *= 2.5;
-    // tipos de carta poco frecuentes no se amontonan
-    if (['CHOOSE', 'GUIDED', 'PATH', 'POSITIONAL'].includes(c.interactionType) && history.sinceType(c.interactionType) <= 1) w *= 0.3;
-    if (history.rounds.length >= 6 && !history.rounds.some(r => r.family === c.family)) w *= 1.3; // diversidad
-    return { ...e, weight: Math.max(0, w) };
+    const c = e.card, region = regionOf(c, null), parts = partsOf(c, null);
+    const f = { base: c.baseWeight, cardRecency: 1, family: 1, region: 1, starvation: 1, target: 1, type: 1, unlocked: 1, purpose: 1, favor: 1 };
+    f.cardRecency = history.novelty('cardId', c.id, 14, 1.6);
+    const since = history.sinceCard(c.id); if (since === 0) f.cardRecency = 0; else if (since <= 2) f.cardRecency *= 0.05; else if (since <= 4) f.cardRecency *= 0.4; // la anterior nunca vuelve seguida
+    f.family = history.familyWeight(c.family);
+    if (c.interactionType !== 'UNDRESS') { // diversidad corporal: la región de la última carta pesa poco; dos de las tres últimas, menos aún
+      if (regions[0] === region) f.region *= 0.35; if (regions.slice(0, 3).filter(r => r === region).length >= 2) f.region *= 0.5;
+      if (history.rounds.length >= 6 && !regions.slice(0, 6).includes(region)) f.region *= 1.25;
+      if (starving.has(region)) f.starvation = 1.5;
+      if (parts.some(pt => targets[0] && targets[0].includes(pt))) f.target *= 0.5; if (parts.some(pt => (targets[1] || []).includes(pt))) f.target *= 0.75;
+    }
+    if (['CHOOSE', 'GUIDED', 'PATH', 'POSITIONAL'].includes(c.interactionType) && history.sinceType(c.interactionType) <= 1) f.type = 0.3;
+    if (unlocked && unlocked.has(c.id) && unlocked.get(c.id) > round) f.unlocked = 1.6; // recién desbloqueada por un cambio de ropa: pequeño empujón que expira
+    if (director) f.purpose = director.weight(purpose, session, history, c);
+    if (favorFamily && c.family === favorFamily) f.favor = 2.5;
+    const weight = Object.values(f).reduce((a, b) => a * b, 1);
+    return { ...e, weight: Math.max(0, weight), factors: f };
   });
 }
 export function pickVariant(entry, history, rng) {

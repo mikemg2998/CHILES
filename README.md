@@ -30,7 +30,7 @@ cambia solo la pareja desde el indicador, en cualquier dirección y sin confirma
   UNDRESS | POSITIONAL | SPECIAL · actorRequirements · receiverRequirements · clothing · allowedSides · copy / copyBySide ·
   variants · playConstraints · durations · timerMode FIXED | WEIGHTED | NO_TIMER · choices · path · undress · requiredOrientation ·
   note · baseWeight · tags · notes), familias, PlayConstraints con su copia, requisitos de ropa.
-- `body.js` — partes que reciben y partes con las que se actúa, con anatomía requerida (vulva · pene · senos), lado y prendas que las tapan.
+- `body.js` — partes que reciben y partes con las que se actúa, con anatomía requerida (vulva · pene · senos), lado, prendas que las tapan y **región corporal** (FACE · NECK · ARMS_HANDS · CHEST · ABDOMEN · BACK · HIPS_GLUTES · THIGHS_LEGS · FEET · INTIMATE · FULL_BODY) para la diversidad del selector. Prendas: camiseta · pantalón · calcetines · brasier · panties · calzoncillos, según anatomía, no género.
 - `connection.js` (C01–C17) · `desire.js` (D01–D14) · `intimacy.js` (I01–I20) · `undress.js` (U01–U08) · `transitions.js` (solo para mazo vacío).
 - `index.js` — junta los mazos, deriva etiquetas («hoy no») y valida la estructura (`validateContent`).
 
@@ -40,8 +40,8 @@ diseñador, no un hueco que rellenar. Nunca se infieren relaciones nuevas ni se 
 ## Motor (`engine/`, sin dependencias ni build)
 
 - `anatomy.js` — `PlayerAnatomy { playerId, availableTargets, availableActorTools }` a partir de lo que cada jugador declaró. Las dos anatomías nunca se mezclan.
-- `clothing.js` — `PlayerClothingState { top, bottoms, socks, underwear }` con ON · OFF · NONE; accesibilidad por parte (PARTE QUE EXISTE ≠ PARTE ACCESIBLE); requisitos ANY · CLOTHED · THROUGH_CLOTHING · SKIN_ACCESS · TOP_ACCESS · BOTTOM_ACCESS · UNDERWEAR_ON · UNDERWEAR_OFF · FULL_BODY_ACCESS; bandas informativas I-A / I-B / I-C.
-- `deck.js` — el selector: **filtrar** (aprobada ∩ nivel ∩ anatomía ∩ ropa ∩ disponibilidad ∩ físico ∩ sesión, cada rechazo con razón) → **ponderar** (historial, familias, feedback, propósito, diversidad) → **elegir** carta, variante, lado (memoria de lateralidad como peso) y PlayConstraint (FREE siempre; la reciente pesa poco).
+- `clothing.js` — `PlayerClothingState { top, bottoms, socks, bra, panties, boxers }` con ON · OFF · NONE (brasier solo con senos; calzoncillos con pene sin vulva; panties en el resto; la prenda que no aplica queda NONE y no se muestra). Camiseta ≠ brasier, pantalón ≠ panties/calzoncillos: cada prenda cubre lo suyo; accesibilidad por parte (PARTE QUE EXISTE ≠ PARTE ACCESIBLE); requisitos ANY · CLOTHED · THROUGH_CLOTHING · SKIN_ACCESS · TOP_ACCESS · BOTTOM_ACCESS · UNDERWEAR_ON · UNDERWEAR_OFF · FULL_BODY_ACCESS; bandas informativas I-A / I-B / I-C.
+- `deck.js` — el selector: **filtrar** (aprobada ∩ nivel ∩ anatomía ∩ ropa ∩ disponibilidad ∩ físico ∩ sesión, cada rechazo con razón) → **ponderar** con factores independientes, nunca un «intensity score» (baseWeight · cardRecency · familyDiversity · bodyRegionDiversity · regionStarvation · targetDiversity · typeSpacing · newlyUnlockedBoost · sessionPurpose · favorFamily; la región íntima no gana peso por serlo: desnudez aumenta posibilidades, no reduce el cuerpo a la anatomía íntima) → **elegir** carta, variante, lado (memoria de lateralidad como peso) y PlayConstraint (FREE siempre; la reciente pesa poco).
 - `history.js` — cartas, familias, variantes, lados por carta y por parte, limitaciones, actores, receptores, cambios de ropa.
 - `session.js` — director (CONNECT · BUILD · EXPLORE · DEEPEN · MAINTAIN · VARIATION · SOFTEN · COOLDOWN · END; en Intimidad favorece oportunidades, nunca decide que la pareja «está lista»), feedback suave (ME GUSTA favorece familias afines; nunca repite, nunca sube), check-in, sí / quizá / hoy no, pausa de continuidad.
 - `realizer.js` — de carta + variante + lado + limitación a una frase: varía entre las estructuras aprobadas, nunca el significado.
@@ -52,6 +52,8 @@ diseñador, no un hueco que rellenar. Nunca se infieren relaciones nuevas ni se 
 Los dados son un ritual de azar (caras con puntos) que no representa nada del contenido.
 
 ## Comprobaciones
+
+`node tests/diversity.js --out=informe.md` genera la auditoría de diversidad corporal: cartas APPROVED por región, 1 000 selecciones de Intimidad con acceso completo y 100 sesiones reales empezando vestidos.
 
 ```
 node tests/validate.js              # estructura del contenido

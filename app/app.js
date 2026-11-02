@@ -8,7 +8,7 @@ import { PreferenceManager } from '../engine/prefs.js';
 import { LEVELS, LEVEL_IDS, LEVEL_KEYS, LEVEL_BY_KEY, LEVEL_COPY } from '../engine/levels.js';
 import { formatDuration } from '../engine/duration.js';
 import { MOODS, AVOIDS, PREF_STATES, PREF_LABEL } from '../engine/session.js';
-import { GARMENTS, GARMENT_LABEL, ANATOMY } from '../content/body.js';
+import { GARMENT_LABEL, ANATOMY } from '../content/body.js';
 
 const KEY = 'pab.v2';
 const SCHEMA = 4; // 4 = cartas curadas (las favoritas del generador anterior se conservan como recuerdos)
@@ -352,7 +352,7 @@ function renderClothing() {
   const box = $('#clothingGrid'); box.innerHTML = '';
   for (const p of [0, 1]) {
     const col = el('div', 'col'); col.appendChild(el('h3', null, nameOf(p)));
-    for (const g of GARMENTS) {
+    for (const g of engine.garments(p)) {
       const row = el('div', 'garment'); row.appendChild(el('span', null, GARMENT_LABEL[g]));
       const seg = el('div', 'seg'); seg.setAttribute('role', 'radiogroup');
       for (const [s, label] of CLOTH_STATE) {

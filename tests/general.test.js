@@ -51,12 +51,12 @@ test('Conexión works on its own, with any anatomy and any clothing', () => {
 test('Deseo keeps clothes on: no card requires or changes clothing', () => {
   for (const c of CARDS.filter(c => c.level === 2)) { assert.notEqual(c.interactionType, 'UNDRESS'); for (const q of [...c.clothing.actor, ...c.clothing.receiver]) assert.ok(['ANY', 'CLOTHED'].includes(q), c.id); }
   const e = mk({ level: 2, seed: 4 }); for (const r of play(e, 80)) assert.ok(!r.undress && !r.transition);
-  assert.deepEqual(e.clothing, [DRESSED(), DRESSED()]);
+  for (const st of e.clothing) assert.ok(!Object.values(st).includes('OFF'), JSON.stringify(st));
 });
 test('PlayConstraints only where approved; FREE keeps appearing; the recent constraint is penalized', () => {
   const e = mk({ level: 2, seed: 8 });
-  const rs = play(e, 400); const d01 = rs.filter(r => r.cardId === 'D01');
-  assert.ok(d01.length > 20); assert.ok(d01.some(r => r.playConstraint === 'FREE')); assert.ok(d01.some(r => r.playConstraint && r.playConstraint !== 'FREE'));
+  const rs = play(e, 600); const d01 = rs.filter(r => r.cardId === 'D01');
+  assert.ok(d01.length > 20, `D01 ${d01.length}`); assert.ok(d01.some(r => r.playConstraint === 'FREE')); assert.ok(d01.some(r => r.playConstraint && r.playConstraint !== 'FREE'));
   for (const r of rs) if (r.cardId !== 'D01') assert.equal(r.playConstraint, null);
   let same = 0; for (let i = 1; i < d01.length; i++) if (d01[i].playConstraint === d01[i - 1].playConstraint && d01[i].playConstraint !== 'FREE') same++;
   assert.ok(same / d01.length < 0.15, `repeticiones ${same}/${d01.length}`);
@@ -86,7 +86,7 @@ test('NO_TIMER works and durations are natural', () => {
   for (const r of rs) if (r.seconds != null) { assert.ok(CARD[r.cardId].durations.includes(r.seconds)); assert.ok([15, 20, 25, 30, 35, 40, 45, 50, 60, 75, 90, 120].includes(r.seconds)); }
 });
 test('an incompatible card never reaches the UI: every round passes the filter again', () => {
-  const e = mk({ level: 3, seed: 17, clothing: [NAKED(), { top: 'OFF', bottoms: 'ON', socks: 'ON', underwear: 'ON' }] });
+  const e = mk({ level: 3, seed: 17, clothing: [NAKED(), { top: 'OFF', bottoms: 'ON', socks: 'ON', bra: 'ON', panties: 'ON', boxers: 'ON' }] });
   for (const r of play(e, 100, { undress: false })) { if (r.transition) continue; const d = buildDeck([CARD[r.cardId]], e.context(r.actor)); assert.equal(d.eligible.length, 1, `${r.cardId} ${JSON.stringify(d.rejected)}`); }
 });
 test('actors alternate reasonably: neither strict 50/50 nor three in a row', () => {

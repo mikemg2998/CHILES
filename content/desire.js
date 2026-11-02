@@ -1,6 +1,6 @@
 /* DESEO V1 · 14 cartas del diseñador (2026-11-02). Regla del nivel: CON ROPA. Ninguna carta exige ropa fuera ni la
    cambia; lo que se hace, se hace vestidos. Deseo en banda alta NO es Intimidad: el nivel lo cambia la pareja.
-   D07 llega sin la interacción concreta del diseñador: queda UNREVIEWED (no se inventa). */
+   D07 (experiencia sensorial con los dedos) es del diseñador: dedos, ritmo lento, ojos cerrados, 40 s, lateralidad de mano. */
 import { card } from './schema.js';
 const D = o => card({ level: 2, status: 'APPROVED', source: 'DESIGNER_PROVIDED', clothing: { actor: ['CLOTHED'], receiver: ['CLOTHED'] }, ...o });
 export const DESIRE = [
@@ -33,9 +33,11 @@ export const DESIRE = [
     } }),
   D({ id: 'D06', family: 'ABDOMEN', intraLevelIntensity: 'MID', actorRequirements: [{ part: 'lips' }], receiverRequirements: [{ part: 'lowerAbdomen' }], durations: [30],
     copy: ['Da picos en el bajo vientre de {R}, por encima de la ropa.', 'Picos cortos en el bajo vientre de {R}, sin apartar la ropa.'] }),
-  D({ id: 'D07', family: 'HANDS', intraLevelIntensity: 'LOW', status: 'UNREVIEWED', actorRequirements: [{ part: 'fingers' }], receiverRequirements: [{ part: 'fingers' }], allowedSides: ['LEFT', 'RIGHT'], durations: [40],
-    copyBySide: { LEFT: ['{R} cierra los ojos y te da su mano izquierda.'], RIGHT: ['{R} cierra los ojos y te da su mano derecha.'] },
-    notes: 'Experiencia sensorial con los dedos: el diseñador no ha entregado la interacción concreta (qué se hace con los dedos). Sin esa decisión no entra en producción.' }),
+  D({ id: 'D07', family: 'HANDS', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'fingertips' }], receiverRequirements: [{ part: 'fingers' }, { part: 'hands' }], allowedSides: ['LEFT', 'RIGHT'], durations: [40],
+    copyBySide: {
+      LEFT: ['{R} cierra los ojos y te da su mano izquierda. Recorre despacio cada uno de sus dedos con las yemas de los tuyos.', '{R} cierra los ojos. Toma su mano izquierda y pasa las yemas de tus dedos por los suyos, uno a uno, muy despacio.'],
+      RIGHT: ['{R} cierra los ojos y te da su mano derecha. Recorre despacio cada uno de sus dedos con las yemas de los tuyos.', '{R} cierra los ojos. Toma su mano derecha y pasa las yemas de tus dedos por los suyos, uno a uno, muy despacio.'],
+    }, notes: 'Experiencia sensorial con los dedos (diseñador): dedos de la mano, ritmo lento, receptor con ojos cerrados, 40 s, lateralidad de mano.' }),
   D({ id: 'D08', family: 'BREASTS', intraLevelIntensity: 'HIGH', source: 'MIGRATED_APPROVED', actorRequirements: [{ part: 'oneHand' }], receiverRequirements: [{ part: 'breasts' }], allowedSides: ['LEFT', 'RIGHT', 'BOTH'], durations: [30],
     copyBySide: {
       LEFT: ['Acaricia el seno izquierdo de {R} con la mano, por encima de la ropa.'],

@@ -5,7 +5,7 @@ import { DESIRE } from './desire.js';
 import { INTIMACY } from './intimacy.js';
 import { UNDRESS } from './undress.js';
 import { TRANSITIONS } from './transitions.js';
-import { BODY_PARTS, ACTOR_TOOLS, MOUTH_TOOLS, GARMENTS, ANATOMY_IDS } from './body.js';
+import { BODY_PARTS, ACTOR_TOOLS, MOUTH_TOOLS, GARMENTS, ANATOMY_IDS, BODY_REGIONS } from './body.js';
 import { STATUSES, SOURCES, INTERACTION_TYPES, INTENSITIES, SIDES, TIMER_MODES, ORIENTATIONS, DURATIONS, PLAY_CONSTRAINTS, CLOTHING_REQUIREMENTS, FAMILIES } from './schema.js';
 
 export const CARDS = [...CONNECTION, ...DESIRE, ...INTIMACY, ...UNDRESS, ...TRANSITIONS];
@@ -23,6 +23,8 @@ for (const c of CARDS) {
   if (c.interactionType === 'GUIDED') tags.add('guia');
   if (parts.some(p => BODY_PARTS[p] && ['vulva', 'pene'].includes(BODY_PARTS[p].anatomy))) tags.add('intimo');
   c.tags = [...tags];
+  /* región corporal de la carta: la de su primera parte receptora (las variantes pueden cambiarla: regionOf) */
+  c.region = c.interactionType === 'UNDRESS' ? 'FULL_BODY' : (parts.length && BODY_PARTS[parts[0]] ? BODY_PARTS[parts[0]].region : 'FULL_BODY');
   /* variantes heredan lo que no redefinen */
   if (c.variants) for (const v of c.variants) { v.status ||= 'APPROVED'; v.weight ??= 1; v.actorRequirements ||= null; v.receiverRequirements ||= null; }
 }
@@ -74,3 +76,7 @@ export function validateContent(cards = CARDS) {
   return errors;
 }
 export const TRANSITIONS_BY_LEVEL = Object.fromEntries(TRANSITIONS.map(t => [t.level, t]));
+/* región efectiva de una selección (carta + variante) y partes receptoras */
+export const partsOf = (card, variant) => ((variant && variant.receiverRequirements) || card.receiverRequirements).map(r => r.part);
+export const regionOf = (card, variant) => { if (card.interactionType === 'UNDRESS') return 'FULL_BODY'; const p = partsOf(card, variant)[0]; return p && BODY_PARTS[p] ? BODY_PARTS[p].region : 'FULL_BODY'; };
+export { BODY_REGIONS };

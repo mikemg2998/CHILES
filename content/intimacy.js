@@ -56,7 +56,7 @@ export const INTIMACY = [
     clothing: { actor: ['FULL_BODY_ACCESS'], receiver: ['TOP_ACCESS'] }, durations: [30, 45, 60], tags: ['intimo'], copy: [],
     notes: 'Configuración corporal entre pene y senos. Ya estaba UNREVIEWED y sin copia en el sistema anterior (propuesta del diseñador del 2026-11-01); sigue así hasta que el diseñador escriba la copia y decida aprobarla o rechazarla.' }),
   I({ id: 'I17', family: 'BODY', interactionType: 'POSITIONAL', intraLevelIntensity: 'HIGH', actorRequirements: [{ part: 'glans' }], receiverRequirements: [{ part: 'nipples' }], allowedSides: ['LEFT', 'RIGHT'], requiredOrientation: 'FACE',
-    clothing: { actor: ['FULL_BODY_ACCESS'], receiver: ['TOP_ACCESS'] }, durations: [25], tags: ['intimo'],
+    clothing: { actor: ['FULL_BODY_ACCESS'], receiver: ['SKIN_ACCESS'] }, durations: [25], tags: ['intimo'],
     copyBySide: { LEFT: ['Roza el pezón izquierdo de {R} con el glande, despacio.'], RIGHT: ['Roza el pezón derecho de {R} con el glande, despacio.'] }, notes: 'glande y pezones con lateralidad (POSITIONAL)' }),
   I({ id: 'I18', family: 'ORAL', intraLevelIntensity: 'MID', actorRequirements: [{ part: 'lips' }], receiverRequirements: [{ part: 'vulva' }], clothing: { receiver: ['SKIN_ACCESS', 'UNDERWEAR_OFF'] }, durations: [30], tags: ['intimo', 'boca'],
     copy: ['Besa la vulva de {R}, despacio, como besarías su boca.'], notes: 'beso sobre vulva (STANDARD)' }),

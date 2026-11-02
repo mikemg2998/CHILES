@@ -1,11 +1,11 @@
 /* GameEngine · cartas dinámicas curadas. CARTA CURADA → VARIANTES APROBADAS → COMPATIBILIDAD DE SESIÓN → SELECCIÓN
    PONDERADA → FRASE → TIEMPO → PANTALLA. El azar elige entre buenas experiencias; la pareja decide la dirección. */
-import { CARDS, CARD, TRANSITIONS_BY_LEVEL } from '../content/index.js';
+import { CARDS, CARD, TRANSITIONS_BY_LEVEL, regionOf } from '../content/index.js';
 import { Rng } from './rng.js';
 import { History } from './history.js';
 import { PreferenceManager } from './prefs.js';
 import { anatomyOf } from './anatomy.js';
-import { DEFAULT_CLOTHING, normalizeClothing, applyRemoval, removableGarments, band } from './clothing.js';
+import { DEFAULT_CLOTHING, normalizeClothing, applyRemoval, removableGarments, applicableGarments, band } from './clothing.js';
 import { SessionState, SessionDirector, MOODS, AVOIDS } from './session.js';
 import { buildDeck, weighDeck, pickVariant, pickSide, pickConstraint } from './deck.js';
 import { realize } from './realizer.js';
@@ -19,7 +19,9 @@ export class GameEngine {
     this.history = new History();
     this.director = new SessionDirector(this.rng);
     this.session = new SessionState(level || LEVEL_BY_KEY[this.prefs.mode] || 1);
-    this.clothing = [DEFAULT_CLOTHING(), DEFAULT_CLOTHING()];
+    this.clothing = [DEFAULT_CLOTHING(this.anatomy(0).declared), DEFAULT_CLOTHING(this.anatomy(1).declared)];
+    this.applicable = [applicableGarments(this.anatomy(0).declared), applicableGarments(this.anatomy(1).declared)];
+    this.unlocked = new Map(); // cartas recién desbloqueadas por un cambio de ropa → ronda en la que expira su empujón
     this.state = { round: 0, actor: 0, favorites: [] };
     this.stats = { emptyDecks: [], rejectedReasons: {} };
     this.debug = debug; this.lastDebug = null;
@@ -31,7 +33,7 @@ export class GameEngine {
   setLevel(level) { this.director.setLevel(this.session, level); return this.session.level === Number(level); }
   setIntents(player, list) { this.session.intents[player] = [...new Set(list.filter(k => MOODS[k]))]; }
   setPrefs(player, map) { const out = {}; for (const k in map) if (AVOIDS[k] && (map[k] === 'quiza' || map[k] === 'no')) out[k] = map[k]; this.session.pref[player] = out; }
-  newSession(level) { this.history.reset(); this.state.round = 0; this.state.actor = 0; this.session = new SessionState(level || this.session.level); this.clothing = [DEFAULT_CLOTHING(), DEFAULT_CLOTHING()]; this.stats = { emptyDecks: [], rejectedReasons: {} }; }
+  newSession(level) { this.history.reset(); this.state.round = 0; this.state.actor = 0; this.session = new SessionState(level || this.session.level); this.clothing = [DEFAULT_CLOTHING(this.anatomy(0).declared), DEFAULT_CLOTHING(this.anatomy(1).declared)]; this.unlocked = new Map(); this.stats = { emptyDecks: [], rejectedReasons: {} }; }
   ended() { return this.session.ended; }
   feedback(kind) { this.director.feedback(this.session, this.history.last(), kind); }
   endSession(how) { return this.director.end(this.session, how); }
@@ -42,16 +44,34 @@ export class GameEngine {
 
   /* ---------- anatomía y ropa ---------- */
   anatomy(player) { const sig = JSON.stringify(this.prefs.bodyParts[player] || []); this._an ||= [null, null]; if (!this._an[player] || this._an[player].sig !== sig) this._an[player] = { sig, value: anatomyOf(player, this.prefs.bodyParts) }; return this._an[player].value; }
-  setClothing(player, state) { this.clothing[player] = normalizeClothing(state); this.history.recordClothingChange({ player, state: { ...this.clothing[player] }, manual: true, round: this.state.round }); }
+  /* las prendas que aplican dependen de la anatomía declarada; un estado antiguo (`underwear`) se traduce a la prenda real */
+  /* la anatomía puede cambiar después de crear el motor (ajustes): una prenda que ACABA de volverse aplicable empieza puesta;
+     «No la llevo» solo sobrevive cuando la prenda ya aplicaba antes (lo eligió la pareja) */
+  syncClothing() {
+    this.applicable = this.applicable || [null, null];
+    for (const p of [0, 1]) {
+      const now = applicableGarments(this.anatomy(p).declared), was = this.applicable[p];
+      const s = { ...this.clothing[p] }; if (was) for (const g of now) if (!was.includes(g)) s[g] = 'ON';
+      this.clothing[p] = normalizeClothing(s, this.anatomy(p).declared); this.applicable[p] = now;
+    }
+  }
+  garments(player) { return applicableGarments(this.anatomy(player).declared); }
+  setClothing(player, state) { const before = this.eligibleIds(); this.clothing[player] = normalizeClothing(state, this.anatomy(player).declared); this.history.recordClothingChange({ player, state: { ...this.clothing[player] }, manual: true, round: this.state.round }); this.markUnlocked(before); }
+  eligibleIds() { this.syncClothing(); const out = new Set(); for (const a of [0, 1]) for (const e of buildDeck(CARDS, this.context(a)).eligible) out.add(e.card.id); return out; }
+  /* NEWLY UNLOCKED: lo que un cambio de ropa acaba de hacer posible recibe un pequeño empujón durante 3 cartas; después compite igual */
+  markUnlocked(before) { for (const id of this.eligibleIds()) if (!before.has(id)) this.unlocked.set(id, this.state.round + 3); }
   /* lo que realmente pasó en una carta UNDRESS: actualiza el estado al momento */
   recordUndress(player, garment) {
+    this.syncClothing();
     if (!removableGarments(this.clothing[player]).includes(garment)) return false;
+    const before = this.eligibleIds();
     this.clothing[player] = applyRemoval(this.clothing[player], garment);
+    this.markUnlocked(before);
     this.history.recordClothingChange({ player, garment, round: this.state.round });
     const last = this.history.last(); if (last && last.undress) last.undress.applied = true;
     return true;
   }
-  removable(player) { return removableGarments(this.clothing[player]); }
+  removable(player) { this.syncClothing(); return removableGarments(this.clothing[player]); }
   clothingBand() { return band(this.clothing[0], this.clothing[1]); }
 
   /* ---------- API de rondas ---------- */
@@ -91,6 +111,7 @@ export class GameEngine {
 
   /* ---------- contexto de compatibilidad para una dirección actor → receptor ---------- */
   context(actor) {
+    this.syncClothing();
     const receiver = 1 - actor;
     return { level: this.session.level, actor: this.anatomy(actor), receiver: this.anatomy(receiver), actorClothing: this.clothing[actor], receiverClothing: this.clothing[receiver], session: this.session, actorId: actor, receiverId: receiver };
   }
@@ -104,9 +125,9 @@ export class GameEngine {
     const ctx = { ...this.context(actor), avoidIds };
     const deck = buildDeck(CARDS, ctx);
     for (const r of deck.rejected) { const k = r.reason.split(':')[0]; this.stats.rejectedReasons[k] = (this.stats.rejectedReasons[k] || 0) + 1; }
-    let weighted = weighDeck(deck, { history: H, session: S, director: this.director, purpose, favorFamily });
+    let weighted = weighDeck(deck, { history: H, session: S, director: this.director, purpose, favorFamily, unlocked: this.unlocked, round: this.state.round });
     if (!weighted.some(w => w.weight > 0) && weighted.length) weighted = weighted.map(w => ({ ...w, weight: 1 })); // todo pesa cero: azar plano entre lo elegible
-    const dbg = { purpose, reason: P.reason, actor, level: S.level, band: S.level === 3 ? this.clothingBand() : null, candidates: weighted.map(w => ({ id: w.card.id, weight: Math.round(w.weight * 1000) / 1000 })), rejected: deck.rejected, winner: null, variant: null, side: null, playConstraint: null, seconds: null, fallback: false };
+    const dbg = { purpose, reason: P.reason, actor, level: S.level, band: S.level === 3 ? this.clothingBand() : null, candidates: weighted.map(w => ({ id: w.card.id, weight: Math.round(w.weight * 1000) / 1000, factors: Object.fromEntries(Object.entries(w.factors).map(([k, v]) => [k, Math.round(v * 100) / 100])) })), rejected: deck.rejected, winner: null, variant: null, side: null, playConstraint: null, seconds: null, fallback: false };
     let sel = null;
     if (weighted.length) {
       const e = this.rng.weighted(weighted.map(w => ({ item: w, weight: w.weight })));
@@ -142,7 +163,7 @@ export class GameEngine {
     const round = {
       id: `${Date.now().toString(36)}-${Math.floor(this.rng.next() * 1e6).toString(36)}`,
       n: ++this.state.round, level, levelName: LEVELS[level].name,
-      cardId: c.id, family: c.family, interactionType: c.interactionType, variantId: sel.variant ? sel.variant.id : null, side: sel.side, parts, playConstraint: sel.playConstraint,
+      cardId: c.id, family: c.family, interactionType: c.interactionType, region: regionOf(c, sel.variant), variantId: sel.variant ? sel.variant.id : null, side: sel.side, parts, playConstraint: sel.playConstraint,
       seconds: sel.seconds, timerMode: c.timerMode, phrase: sel.text, note: sel.note, copyId: sel.copyId, choices: c.choices, undress, transition: !!sel.transition,
       actor, receiver, actorName: names[actor] || `Jugador ${actor + 1}`, receiverName: names[receiver] || `Jugador ${receiver + 1}`, mutual: ['MUTUAL', 'BODY_TO_BODY'].includes(c.interactionType) && c.interactionType !== 'UNDRESS',
       purpose: sel.purpose || 'MAINTAIN', fromFavorite: !!opts.fromFavorite, inspired: !!opts.inspired,
