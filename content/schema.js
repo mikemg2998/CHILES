@@ -8,7 +8,8 @@
      family              InteractionFamily (ver FAMILIES): para no repetir la misma idea en cartas seguidas
      intraLevelIntensity 'LOW' | 'MID' | 'HIGH' (opcional; nunca cambia el nivel, solo ordena dentro de él)
      status              'APPROVED' | 'UNREVIEWED' | 'REJECTED' (solo APPROVED entra en producción)
-     source              'DESIGNER_PROVIDED' | 'MIGRATED_APPROVED'
+     source              'DESIGNER_PROVIDED' | 'DESIGNER_APPROVED' (seleccionada por el diseñador de una propuesta) | 'MIGRATED_APPROVED'
+     similarityGroup     grupo de similitud (ver SIMILARITY_GROUPS): dos cartas del mismo grupo se parecen aunque su familia difiera
      interactionType     'STANDARD' | 'MUTUAL' | 'GUIDED' | 'CHOOSE' | 'PATH' | 'BODY_TO_BODY' | 'UNDRESS' | 'POSITIONAL' | 'SPECIAL'
      actorRequirements   [{ part: id de ACTOR_TOOLS }]      — con qué actúa quien actúa (la anatomía la aporta la parte)
      receiverRequirements[{ part: id de BODY_PARTS }]       — qué recibe quien recibe
@@ -27,7 +28,7 @@
    } */
 export const LEVELS = { 1: 'CONNECTION', 2: 'DESIRE', 3: 'INTIMACY' };
 export const STATUSES = ['APPROVED', 'UNREVIEWED', 'REJECTED'];
-export const SOURCES = ['DESIGNER_PROVIDED', 'MIGRATED_APPROVED'];
+export const SOURCES = ['DESIGNER_PROVIDED', 'DESIGNER_APPROVED', 'MIGRATED_APPROVED'];
 export const INTERACTION_TYPES = ['STANDARD', 'MUTUAL', 'GUIDED', 'CHOOSE', 'PATH', 'BODY_TO_BODY', 'UNDRESS', 'POSITIONAL', 'SPECIAL'];
 export const INTENSITIES = ['LOW', 'MID', 'HIGH'];
 export const SIDES = ['LEFT', 'RIGHT', 'BOTH'];
@@ -66,13 +67,19 @@ export const FAMILIES = {
   MASSAGE: 'Masaje', CARESS: 'Caricia', KISS: 'Besos', HUG: 'Abrazo', CLOSENESS: 'Cercanía', HAIR: 'Cabello', HANDS: 'Manos',
   MUSIC: 'Música', EARS: 'Orejas', NECK: 'Cuello', FEET: 'Pies', BUTTOCKS: 'Nalgas', BREASTS: 'Senos', ABDOMEN: 'Abdomen',
   BITE: 'Mordisco', ORAL: 'Boca', MANUAL: 'Manos sobre anatomía íntima', BREATH: 'Aliento', UNDRESS: 'Ropa', BODY: 'Cuerpo con cuerpo', TRANSITION: 'Transición',
+  PLAY: 'Juego', WORDS: 'Palabras', BREATHING: 'Respiración', REST: 'Descanso',
 };
+/* Grupos de similitud (Conexión V2): la idea que la pareja percibe como «otra vez lo mismo» aunque la familia cambie.
+   El selector baja temporalmente el peso del grupo reciente; nunca lo bloquea. VERBAL agrupa APPRECIATION y MEMORY. */
+export const SIMILARITY_GROUPS = ['EMBRACE', 'MASSAGE', 'HAND_CONTACT', 'FACE_CONTACT', 'LIGHT_KISSING', 'HAIR_TOUCH', 'BODY_REST', 'BREATHING', 'PLAYFUL', 'CHOICE', 'GUIDED', 'APPRECIATION', 'MEMORY', 'MUSIC', 'DANCE', 'SENSORY_TOUCH',
+  'BITE', 'ORAL', 'INTIMATE_TOUCH', 'BREATH', 'UNDRESS', 'BODY_CONTACT', 'CLOTHED_TEASE'];
+export const VERBAL_GROUPS = ['APPRECIATION', 'MEMORY'];
 
 const DEFAULTS = {
   intraLevelIntensity: null, status: 'UNREVIEWED', source: 'DESIGNER_PROVIDED', interactionType: 'STANDARD',
   actorRequirements: [], receiverRequirements: [], clothing: { actor: ['ANY'], receiver: ['ANY'] }, allowedSides: null,
   copy: null, copyBySide: null, variants: null, playConstraints: null, durations: [30], timerMode: 'FIXED',
-  choices: null, path: null, undress: null, requiredOrientation: null, note: null, baseWeight: 1, tags: [], notes: null, transition: false,
+  choices: null, path: null, undress: null, requiredOrientation: null, note: null, baseWeight: 1, tags: [], notes: null, transition: false, similarityGroup: null,
 };
 /* constructor con valores por defecto; el id y el nivel son obligatorios */
 export function card(o) {

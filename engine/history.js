@@ -8,6 +8,7 @@ export class History {
   last() { return this.rounds[0] || null; }
   get recentInteractionIds() { return this.rounds.map(r => r.cardId); }
   get recentFamilies() { return this.rounds.map(r => r.family); }
+  get recentGroups() { return this.rounds.map(r => r.similarityGroup || null); }
   get recentVariants() { return this.rounds.map(r => r.variantId).filter(Boolean); }
   get recentSides() { return this.rounds.map(r => r.side).filter(Boolean); }
   get recentPlayConstraints() { return this.rounds.map(r => r.playConstraint).filter(Boolean); }

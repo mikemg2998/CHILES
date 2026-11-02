@@ -31,7 +31,7 @@ cambia solo la pareja desde el indicador, en cualquier dirección y sin confirma
   variants · playConstraints · durations · timerMode FIXED | WEIGHTED | NO_TIMER · choices · path · undress · requiredOrientation ·
   note · baseWeight · tags · notes), familias, PlayConstraints con su copia, requisitos de ropa.
 - `body.js` — partes que reciben y partes con las que se actúa, con anatomía requerida (vulva · pene · senos), lado, prendas que las tapan y **región corporal** (FACE · NECK · ARMS_HANDS · CHEST · ABDOMEN · BACK · HIPS_GLUTES · THIGHS_LEGS · FEET · INTIMATE · FULL_BODY) para la diversidad del selector. Prendas: camiseta · pantalón · calcetines · brasier · panties · calzoncillos, según anatomía, no género.
-- `connection.js` (C01–C17) · `desire.js` (D01–D14) · `intimacy.js` (I01–I20) · `undress.js` (U01–U08) · `transitions.js` (solo para mazo vacío).
+- `connection.js` (C01–C52: 50 activas con `similarityGroup`; C29 y C35 REJECTED) · `desire.js` (D01–D14) · `intimacy.js` (I01–I24: I21 THROUGH_BRA, I22 THROUGH_BOXERS, I23 THROUGH_PANTIES; I14 I16 I24 UNREVIEWED) · `undress.js` (U01–U08) · `transitions.js` (solo para mazo vacío).
 - `index.js` — junta los mazos, deriva etiquetas («hoy no») y valida la estructura (`validateContent`).
 
 Solo **APPROVED** entra en producción. Una carta UNREVIEWED puede estar sin copia a propósito: es una decisión pendiente del

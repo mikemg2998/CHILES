@@ -5,7 +5,7 @@
 import { BODY_PARTS, ACTOR_TOOLS, GARMENT_LAYERS } from '../content/body.js';
 import { AVOIDS } from './session.js';
 import { clothingFailure, partAccessible, undressPossible, removableGarments, coverage } from './clothing.js';
-import { throughGarmentOf } from '../content/schema.js';
+import { throughGarmentOf, VERBAL_GROUPS } from '../content/schema.js';
 import { copyOptions } from './realizer.js';
 import { regionOf, partsOf } from '../content/index.js';
 
@@ -81,10 +81,16 @@ export function weighDeck(deck, { history, session, director, purpose, favorFami
   const starving = new Set([...eligibleRegions].filter(r => history.sinceRegion(r) >= 8 && history.rounds.length >= 8)); // región con cartas elegibles que lleva mucho sin salir
   return deck.eligible.map(e => {
     const c = e.card, region = regionOf(c, null), parts = partsOf(c, null);
-    const f = { base: c.baseWeight, cardRecency: 1, family: 1, region: 1, starvation: 1, target: 1, type: 1, unlocked: 1, undressCooldown: 1, purpose: 1, favor: 1 };
+    const f = { base: c.baseWeight, cardRecency: 1, family: 1, similarity: 1, region: 1, starvation: 1, target: 1, type: 1, unlocked: 1, undressCooldown: 1, purpose: 1, favor: 1 };
     f.cardRecency = history.novelty('cardId', c.id, 14, 1.6);
     const since = history.sinceCard(c.id); if (since === 0) f.cardRecency = 0; else if (since <= 2) f.cardRecency *= 0.05; else if (since <= 4) f.cardRecency *= 0.4; // la anterior nunca vuelve seguida
     f.family = history.familyWeight(c.family);
+    if (c.similarityGroup) { // similarityDiversity: «otra vez lo mismo» aunque cambie la familia (abrazo·abrazo·abrazo, masaje×3, verbal×2). Peso, no veto.
+      const g = history.recentGroups, verbal = x => VERBAL_GROUPS.includes(x);
+      if (g[0] === c.similarityGroup) f.similarity *= 0.3; else if (g[1] === c.similarityGroup) f.similarity *= 0.6;
+      if (g.slice(0, 4).filter(x => x === c.similarityGroup).length >= 2) f.similarity *= 0.5;
+      if (verbal(c.similarityGroup) && verbal(g[0])) f.similarity *= 0.25; // dos verbales seguidas, casi nunca
+    }
     if (c.interactionType !== 'UNDRESS') { // diversidad corporal: la región de la última carta pesa poco; dos de las tres últimas, menos aún
       if (regions[0] === region) f.region *= 0.35; if (regions.slice(0, 3).filter(r => r === region).length >= 2) f.region *= 0.5;
       if (history.rounds.length >= 6 && !regions.slice(0, 6).includes(region)) f.region *= 1.25;

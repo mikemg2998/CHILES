@@ -163,7 +163,7 @@ export class GameEngine {
     const round = {
       id: `${Date.now().toString(36)}-${Math.floor(this.rng.next() * 1e6).toString(36)}`,
       n: ++this.state.round, level, levelName: LEVELS[level].name,
-      cardId: c.id, family: c.family, interactionType: c.interactionType, region: regionOf(c, sel.variant), variantId: sel.variant ? sel.variant.id : null, side: sel.side, parts, playConstraint: sel.playConstraint,
+      cardId: c.id, family: c.family, similarityGroup: c.similarityGroup || null, interactionType: c.interactionType, region: regionOf(c, sel.variant), variantId: sel.variant ? sel.variant.id : null, side: sel.side, parts, playConstraint: sel.playConstraint,
       seconds: sel.seconds, timerMode: c.timerMode, phrase: sel.text, note: sel.note, copyId: sel.copyId, choices: c.choices, undress, transition: !!sel.transition,
       actor, receiver, actorName: names[actor] || `Jugador ${actor + 1}`, receiverName: names[receiver] || `Jugador ${receiver + 1}`, mutual: ['MUTUAL', 'BODY_TO_BODY'].includes(c.interactionType) && c.interactionType !== 'UNDRESS',
       purpose: sel.purpose || 'MAINTAIN', fromFavorite: !!opts.fromFavorite, inspired: !!opts.inspired,

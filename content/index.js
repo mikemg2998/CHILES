@@ -6,7 +6,7 @@ import { INTIMACY } from './intimacy.js';
 import { UNDRESS } from './undress.js';
 import { TRANSITIONS } from './transitions.js';
 import { BODY_PARTS, ACTOR_TOOLS, MOUTH_TOOLS, GARMENTS, ANATOMY_IDS, BODY_REGIONS } from './body.js';
-import { STATUSES, SOURCES, INTERACTION_TYPES, INTENSITIES, SIDES, TIMER_MODES, ORIENTATIONS, DURATIONS, PLAY_CONSTRAINTS, CLOTHING_REQUIREMENTS, FAMILIES } from './schema.js';
+import { STATUSES, SOURCES, INTERACTION_TYPES, INTENSITIES, SIDES, TIMER_MODES, ORIENTATIONS, DURATIONS, PLAY_CONSTRAINTS, CLOTHING_REQUIREMENTS, FAMILIES, SIMILARITY_GROUPS } from './schema.js';
 
 export const CARDS = [...CONNECTION, ...DESIRE, ...INTIMACY, ...UNDRESS, ...TRANSITIONS];
 export const CARD = Object.fromEntries(CARDS.map(c => [c.id, c]));
@@ -40,6 +40,8 @@ export function validateContent(cards = CARDS) {
     if (!FAMILIES[c.family]) e(`familia desconocida ${c.family}`);
     if (!STATUSES.includes(c.status)) e(`status inválido ${c.status}`);
     if (!SOURCES.includes(c.source)) e(`source inválido ${c.source}`);
+    if (c.similarityGroup && !SIMILARITY_GROUPS.includes(c.similarityGroup)) e(`similarityGroup inválido ${c.similarityGroup}`);
+    if (c.level === 1 && c.status === 'APPROVED' && !c.transition && !c.similarityGroup) e('Conexión: falta similarityGroup');
     if (!INTERACTION_TYPES.includes(c.interactionType)) e(`tipo inválido ${c.interactionType}`);
     if (c.intraLevelIntensity && !INTENSITIES.includes(c.intraLevelIntensity)) e('intraLevelIntensity inválida');
     if (!TIMER_MODES.includes(c.timerMode)) e('timerMode inválido');

@@ -1,6 +1,6 @@
 /* V4 · capas de ropa: exterior → interior → piel. Pantalón para ambos; panties / calzoncillos solo se quitan con el pantalón fuera;
    THROUGH_GARMENT; coverage por prenda; cooldown de la siguiente capa; cada capa cambia la baraja.
-   No hay cartas THROUGH_PANTIES / THROUGH_BOXERS aprobadas (CONTENT_GAP): el mecanismo se prueba con dos cartas FICTICIAS que
+   Las cartas reales son I22 (THROUGH_BOXERS) e I23 (THROUGH_PANTIES); el mecanismo se prueba además con dos cartas FICTICIAS que
    solo existen en este archivo y nunca entran en la app. */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -15,7 +15,7 @@ import { mk, play, NAKED, DRESSED } from './helpers.js';
 const FIX_PANTIES = card({ id: 'FIX_TP', level: 3, status: 'APPROVED', family: 'MANUAL', actorRequirements: [{ part: 'fingertips' }], receiverRequirements: [{ part: 'vulva' }], clothing: { receiver: [THROUGH_GARMENT('panties')] }, durations: [30], copy: ['(ficticia de test) {R} panties'] });
 const FIX_BOXERS = card({ id: 'FIX_TB', level: 3, status: 'APPROVED', family: 'MANUAL', actorRequirements: [{ part: 'fingertips' }], receiverRequirements: [{ part: 'penis' }], clothing: { receiver: [THROUGH_GARMENT('boxers')] }, durations: [30], copy: ['(ficticia de test) {R} calzoncillos'] });
 const WITH_FIX = [...CARDS, FIX_PANTIES, FIX_BOXERS];
-const DIRECT_LOWER = APPROVED.filter(c => c.level === 3 && c.receiverRequirements.some(r => ['vulva', 'penis', 'buttocks'].includes(r.part))).map(c => c.id);
+const DIRECT_LOWER = APPROVED.filter(c => c.level === 3 && c.receiverRequirements.some(r => ['vulva', 'penis', 'buttocks'].includes(r.part)) && !c.clothing.receiver.some(q => throughGarmentOf(q))).map(c => c.id);
 const st = o => ({ top: 'OFF', bottoms: 'ON', socks: 'OFF', bra: 'OFF', panties: 'ON', boxers: 'ON', ...o });
 const ids = (recv, actor, cards = WITH_FIX) => { const e = mk({ level: 3, seed: 1, clothing: actor === 1 ? [recv, NAKED()] : [NAKED(), recv] }); return new Set(buildDeck(cards, e.context(actor)).eligible.map(x => x.card.id)); };
 const undressFor = (recv, actor) => { const e = mk({ level: 3, seed: 1, clothing: actor === 1 ? [recv, NAKED()] : [NAKED(), recv] }); return new Set(buildDeck(CARDS, e.context(actor)).eligible.filter(x => x.card.interactionType === 'UNDRESS').map(x => x.card.id)); };
@@ -50,11 +50,11 @@ test('A · PANTALÓN ON + PANTIES ON: remove trousers eligible, remove panties n
 test('B · PANTALÓN OFF + PANTIES ON: THROUGH_PANTIES eligible, remove panties possible, direct access blocked', () => {
   const s = st({ bottoms: 'OFF', panties: 'ON', boxers: 'NONE' });
   assert.ok(removableGarments(s).includes('panties'));
-  const e = ids(s, 1); assert.ok(e.has('FIX_TP')); for (const id of DIRECT_LOWER) assert.ok(!e.has(id), id);
+  const e = ids(s, 1); assert.ok(e.has('FIX_TP')); assert.ok(e.has('I23'), 'I23 real'); for (const id of DIRECT_LOWER) assert.ok(!e.has(id), id);
 });
 test('C · PANTALÓN OFF + PANTIES OFF: THROUGH_PANTIES gone, direct access appears', () => {
   const s = st({ bottoms: 'OFF', panties: 'OFF', boxers: 'NONE' });
-  const e = ids(s, 1); assert.ok(!e.has('FIX_TP')); for (const id of ['I11', 'I13', 'I15', 'I18', 'I06', 'I19']) assert.ok(e.has(id), id);
+  const e = ids(s, 1); assert.ok(!e.has('FIX_TP') && !e.has('I23')); for (const id of ['I11', 'I13', 'I15', 'I18', 'I06', 'I19']) assert.ok(e.has(id), id);
 });
 test('D · PANTALÓN ON + CALZONCILLOS ON: remove trousers eligible, remove boxers blocked', () => {
   const s = st({ bottoms: 'ON', boxers: 'ON', panties: 'NONE' });
@@ -63,11 +63,11 @@ test('D · PANTALÓN ON + CALZONCILLOS ON: remove trousers eligible, remove boxe
 });
 test('E · PANTALÓN OFF + CALZONCILLOS ON: THROUGH_BOXERS eligible, direct access blocked', () => {
   const s = st({ bottoms: 'OFF', boxers: 'ON', panties: 'NONE' });
-  const e = ids(s, 0); assert.ok(e.has('FIX_TB')); for (const id of ['I11', 'I12', 'I13', 'I15', 'I06', 'I19']) assert.ok(!e.has(id), id);
+  const e = ids(s, 0); assert.ok(e.has('FIX_TB')); assert.ok(e.has('I22'), 'I22 real'); for (const id of ['I11', 'I12', 'I13', 'I15', 'I06', 'I19']) assert.ok(!e.has(id), id);
 });
 test('F · PANTALÓN OFF + CALZONCILLOS OFF: THROUGH_BOXERS gone, direct access appears', () => {
   const s = st({ bottoms: 'OFF', boxers: 'OFF', panties: 'NONE' });
-  const e = ids(s, 0); assert.ok(!e.has('FIX_TB')); for (const id of ['I11', 'I12', 'I13', 'I15', 'I06', 'I19']) assert.ok(e.has(id), id);
+  const e = ids(s, 0); assert.ok(!e.has('FIX_TB') && !e.has('I22')); for (const id of ['I11', 'I12', 'I13', 'I15', 'I06', 'I19']) assert.ok(e.has(id), id);
 });
 test('G · H · I · torso: top ON + bra ON → nothing; top OFF + bra ON → THROUGH_BRA only; top OFF + bra OFF → direct only', () => {
   const chest = ['I03', 'I08', 'I09', 'I10', 'I17'];

@@ -37,6 +37,16 @@ export const INTIMACY = [
       RIGHT: ['Con las yemas de los dedos, acaricia muy suave el pezón derecho de {R} por encima del brasier.', 'Por encima del brasier, recorre con las yemas el pezón derecho de {R}, apenas rozando.'],
       BOTH: ['Con las yemas de los dedos, acaricia muy suave los dos pezones de {R} por encima del brasier.'],
     }, notes: 'THROUGH_BRA: solo con camiseta fuera y brasier puesto (nunca se transforma en acceso directo)' }),
+  /* THROUGH_PANTIES · THROUGH_BOXERS · relaciones del diseñador (actualización consolidada 2026-11-02): contacto suave con los dedos
+     SOBRE la prenda interior, con el pantalón fuera. Cartas sobre la prenda; nunca versiones de las de acceso directo. */
+  I({ id: 'I22', family: 'MANUAL', similarityGroup: 'CLOTHED_TEASE', intraLevelIntensity: 'MID', actorRequirements: [{ part: 'fingertips' }], receiverRequirements: [{ part: 'penis' }], clothing: { receiver: ['THROUGH_BOXERS'] }, durations: [30, 40], tags: ['intimo'],
+    copy: ['Con las yemas de los dedos, acaricia suavemente el pene de {R} por encima de los calzoncillos.', 'Por encima de los calzoncillos, recorre despacio con los dedos la forma del pene de {R}, sin apretar.'],
+    notes: 'THROUGH_BOXERS (diseñador): contacto suave con los dedos sobre los calzoncillos. Solo con pantalón fuera y calzoncillos puestos.' }),
+  I({ id: 'I23', family: 'MANUAL', similarityGroup: 'CLOTHED_TEASE', intraLevelIntensity: 'MID', actorRequirements: [{ part: 'fingertips' }], receiverRequirements: [{ part: 'vulva' }], clothing: { receiver: ['THROUGH_PANTIES'] }, durations: [30, 40], tags: ['intimo'],
+    copy: ['Con las yemas de los dedos, acaricia suavemente la vulva de {R} por encima de las panties.', 'Por encima de las panties, pasa los dedos despacio sobre la vulva de {R}, apenas presionando.'],
+    notes: 'THROUGH_PANTIES (diseñador): contacto suave con los dedos sobre las panties. Solo con pantalón fuera y panties puestas.' }),
+  I({ id: 'I24', family: 'ORAL', similarityGroup: 'CLOTHED_TEASE', intraLevelIntensity: 'MID', status: 'UNREVIEWED', actorRequirements: [{ part: 'lips' }], receiverRequirements: [], clothing: { receiver: ['THROUGH_PANTIES'] }, durations: [30], tags: ['intimo', 'boca'], copy: [],
+    notes: '«Pequeños besos/picos sobre las panties en las zonas indicadas por el diseñador»: las zonas no llegaron. Sin zona no hay parte receptora ni copia. Pendiente.' }),
   /* §44 · ACCESO DIRECTO · relaciones del diseñador, exactamente como se entregaron */
   I({ id: 'I11', family: 'MANUAL', intraLevelIntensity: 'HIGH', actorRequirements: [{ part: 'oneHand' }], receiverRequirements: [{ part: 'vulva' }], clothing: { receiver: ['SKIN_ACCESS', 'UNDERWEAR_OFF'] }, durations: [45, 60, 75], tags: ['intimo'],
     variants: [
