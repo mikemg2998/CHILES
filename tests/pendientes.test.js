@@ -2,7 +2,7 @@
    nunca inventado); U08 aprobada solo para calcetines. */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CARDS, CARD, APPROVED } from '../content/index.js';
+import { CARDS, CARD, APPROVED, partsOf } from '../content/index.js';
 import { buildDeck } from '../engine/deck.js';
 import { clothingFailure, undressPossible } from '../engine/clothing.js';
 import { mk, NAKED, DRESSED } from './helpers.js';
@@ -11,7 +11,7 @@ const ids = (e, actor) => new Set(buildDeck(CARDS, e.context(actor)).eligible.ma
 
 test('I14 REJECTED: no sale, no se reemplaza', () => {
   assert.equal(CARD.I14.status, 'REJECTED'); assert.ok(!APPROVED.some(c => c.id === 'I14'));
-  assert.equal(APPROVED.filter(c => c.level === 3 && c.family === 'BITE').map(c => c.id).sort().join(), 'I04,I10,I19');
+  assert.equal(APPROVED.filter(c => c.level === 3 && c.family === 'BITE' && !partsOf(c, null).includes('glans')).map(c => c.id).sort().join(), 'I04,I10,I19');
 });
 test('I16: requisitos cerrados (pene a piel; senos a piel: top ≠ ON y bra ≠ ON), POSITIONAL tumbados, sin variantes; solo falta la escena', () => {
   const c = CARD.I16; assert.equal(c.interactionType, 'POSITIONAL'); assert.equal(c.requiredOrientation, 'LYING'); assert.equal(c.source, 'DESIGNER_PROVIDED'); assert.ok(!c.variants);

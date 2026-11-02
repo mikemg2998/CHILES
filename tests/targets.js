@@ -7,7 +7,7 @@ import { buildDeck } from '../engine/deck.js';
 import { GameEngine } from '../engine/engine.js';
 import { writeFileSync } from 'node:fs';
 const out = (process.argv.find(a => a.startsWith('--out=')) || '').slice(6);
-const TARGETS = { vulva: 'VULVA', clitoris: 'CLITORIS', vagina: 'VAGINA', penis: 'PENE' };
+const TARGETS = { vulva: 'VULVA', clitoris: 'CLITORIS', vagina: 'VAGINA', penis: 'PENE', glans: 'GLANDE', testicles: 'TESTICULOS' };
 const NAKED = { top: 'OFF', bottoms: 'OFF', socks: 'OFF', bra: 'OFF', panties: 'OFF', boxers: 'OFF' };
 const units = c => (c.variants ? c.variants.filter(v => v.status === 'APPROVED').map(v => ({ card: c, v })) : [{ card: c, v: null }]);
 const parts = u => partsOf(u.card, u.v);
@@ -30,7 +30,7 @@ L.push('', '## 2 · Filtro de candidatos y alcanzabilidad', '');
 const states = [['todo puesto', { ...NAKED, top: 'ON', bottoms: 'ON', panties: 'ON', boxers: 'ON', bra: 'ON', socks: 'ON' }], ['pantalón fuera + ropa interior puesta', { ...NAKED, panties: 'ON', boxers: 'ON' }], ['a piel', NAKED]];
 const unreachable = [];
 for (const t in TARGETS) for (const u of cat[t]) {
-  const actor = t === 'penis' ? 0 : 1, rows = [];
+  const actor = ['penis', 'glans', 'testicles'].includes(t) ? 0 : 1, rows = [];
   for (const [name, recv] of states) { const e = mkE(1, actor === 1 ? [recv, NAKED] : [NAKED, recv]); e.session.intimacyCardCount = 40; const d = buildDeck([u.card], e.context(actor)); const ok = d.eligible.length && (!u.v || d.eligible[0].variants.some(v => v.id === u.v.id)); rows.push(`${name}: ${ok ? 'SÍ' : 'no'}`); }
   const e0 = mkE(1, actor === 1 ? [NAKED, NAKED] : [NAKED, NAKED]); const d0 = buildDeck([u.card], e0.context(actor)); const atStart = d0.eligible.length ? 'sí' : 'no (' + d0.rejected[0].reason + ')';
   if (!rows.some(r => r.endsWith('SÍ'))) unreachable.push(u.card.id);
@@ -45,8 +45,8 @@ function simulate(N, R, start, label) {
     const e = mkE(seed, start); const fe = {}, fs = {};
     for (let i = 0; i < R; i++) {
       if (e.pauseDue()) e.continueGuided();
-      for (const t in TARGETS) { const actor = t === 'penis' ? 0 : 1; if (!(t in fe) && buildDeck(CARDS, e.context(actor)).eligible.some(x => x.variants ? x.variants.some(v => partsOf(x.card, v).includes(t)) : partsOf(x.card, null).includes(t))) fe[t] = e.session.intimacyCardCount + 1; }
-      const direct = { vulva: e.clothing[0].bottoms !== 'ON' && e.clothing[0].panties !== 'ON', penis: e.clothing[1].bottoms !== 'ON' && e.clothing[1].boxers !== 'ON' }; direct.clitoris = direct.vulva; direct.vagina = direct.vulva;
+      for (const t in TARGETS) { const actor = ['penis', 'glans', 'testicles'].includes(t) ? 0 : 1; if (!(t in fe) && buildDeck(CARDS, e.context(actor)).eligible.some(x => x.variants ? x.variants.some(v => partsOf(x.card, v).includes(t)) : partsOf(x.card, null).includes(t))) fe[t] = e.session.intimacyCardCount + 1; }
+      const direct = { vulva: e.clothing[0].bottoms !== 'ON' && e.clothing[0].panties !== 'ON', penis: e.clothing[1].bottoms !== 'ON' && e.clothing[1].boxers !== 'ON' }; direct.clitoris = direct.vulva; direct.vagina = direct.vulva; direct.glans = direct.penis; direct.testicles = direct.penis;
       const r = e.roll(); if (!r) break; total++;
       for (const t in TARGETS) if (direct[t]) directRounds[t]++;
       for (const p of r.parts) if (p in TARGETS) { const k = r.cardId + (r.variantId ? '·' + r.variantId : ''); count[k] = (count[k] || 0) + 1; if (direct[p]) directHits[p]++; if (!(p in fs)) { fs[p] = r.n; perSession[p]++; } }
@@ -68,4 +68,8 @@ L.push('', `Cartas prácticamente invisibles (< 0,1 % en 16 000 cartas de sesion
 // LATE_SESSION: posición de aparición
 let before = 0, sessionsLate = 0, positions = []; for (let seed = 1; seed <= 200; seed++) { const e = mkE(seed, [NAKED, NAKED]); let hit = false; for (let i = 0; i < 50; i++) { if (e.pauseDue()) e.continueGuided(); const r = e.roll(); if (['I32', 'I33'].includes(r.cardId)) { if (e.session.intimacyCardCount < 35) before++; if (!hit) { hit = true; sessionsLate++; positions.push(r.n); } } } }
 L.push('', '## 5 · LATE_SESSION (I32 · I33) en las sesiones largas', '', `- Apariciones antes de la carta 35: ${before}.`, `- Sesiones (de 200) en las que sale al menos una: ${sessionsLate}; primera aparición media en la carta ${positions.length ? (positions.reduce((a, b) => a + b, 0) / positions.length).toFixed(1) : '—'} (mín ${Math.min(...positions)}, máx ${Math.max(...positions)}).`, `- Peso base 0,5 sin empujón; la sesión puede acabar antes sin que salgan.`);
+// cadenas íntimas: ¿PENE → GLANDE → TESTÍCULOS seguidas solo porque hay acceso directo?
+{ let chains3 = 0, chains2 = 0, sessions = 200, leoIntimate = 0, leoCards = 0; const LEO = ['penis', 'glans', 'testicles'];
+  for (let seed = 1; seed <= sessions; seed++) { const e = mkE(seed, [NAKED, NAKED]); let run = 0; for (let i = 0; i < 50; i++) { if (e.pauseDue()) e.continueGuided(); const r = e.roll(); if (r.actor === 0) { leoCards++; const hit = r.parts.some(p => LEO.includes(p)); if (hit) { leoIntimate++; run++; if (run === 2) chains2++; if (run >= 3) chains3++; } else run = 0; } else run = 0; } }
+  L.push('', '## 6 · Cadenas íntimas en el lado de Leo (sesiones largas, desnudos)', '', `- Cartas en las que Ana actúa sobre Leo: ${leoCards}; de ellas con target pene / glande / testículos: ${leoIntimate} (${(100 * leoIntimate / leoCards).toFixed(1)} %).`, `- Dos cartas íntimas de Leo seguidas (sin otra carta en medio): ${chains2} veces en ${sessions} sesiones; tres o más seguidas: ${chains3}.`); }
 const text = L.join('\n'); console.log(text); if (out) writeFileSync(out, text + '\n');

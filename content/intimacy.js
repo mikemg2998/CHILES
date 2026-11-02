@@ -129,4 +129,19 @@ export const INTIMACY = [
   I({ id: 'I33', family: 'BODY', interactionType: 'POSITIONAL', similarityGroup: 'BODY_CONTACT', intraLevelIntensity: 'HIGH', minIntimacyCards: 35, baseWeight: 0.5, actorRequirements: [{ part: 'penis' }], receiverRequirements: [{ part: 'vagina' }], requiredOrientation: 'LYING',
     clothing: { actor: ['FULL_BODY_ACCESS'], receiver: ['SKIN_ACCESS', 'UNDERWEAR_OFF'] }, durations: [45, 60], tags: ['intimo'],
     copy: ['Deja el pene en la entrada de la vagina de {R} y frótalo ahí, sin entrar.'], notes: 'LATE_SESSION (≥ 35 cartas de Intimidad): dejar el pene en la entrada de la vagina y frotarlo (diseñador)' }),
+  /* ======== GLANDE · relaciones del diseñador (2026-11-02). Target `glans` como RECEPTOR (hasta ahora solo era herramienta en I17 / I29).
+     DIRECT_SKIN_ACCESS: pantalón y calzoncillos / panties fuera. Sin variantes añadidas. ======== */
+  I({ id: 'I34', family: 'MANUAL', similarityGroup: 'INTIMATE_TOUCH', intraLevelIntensity: 'HIGH', actorRequirements: [{ part: 'fingers' }], receiverRequirements: [{ part: 'glans' }], clothing: { receiver: ['SKIN_ACCESS', 'UNDERWEAR_OFF'] }, durations: [30, 45], tags: ['intimo'],
+    copy: ['Desliza suavemente los dedos sobre el glande de {R}.', 'Con los dedos, recorre el glande de {R} muy suave, sin apretar.'], notes: 'deslizar suavemente los dedos sobre el glande (diseñador): dedos → glande, DIRECT' }),
+  I({ id: 'I35', family: 'ORAL', similarityGroup: 'ORAL', intraLevelIntensity: 'HIGH', actorRequirements: [{ part: 'tongue' }], receiverRequirements: [{ part: 'glans' }], clothing: { receiver: ['SKIN_ACCESS', 'UNDERWEAR_OFF'] }, durations: [30, 45], tags: ['intimo', 'boca'],
+    copy: ['Haz círculos con la lengua sobre el glande de {R}, despacio.'], notes: 'círculos con la lengua sobre el glande (diseñador): lengua → glande, DIRECT' }),
+  I({ id: 'I36', family: 'BITE', similarityGroup: 'BITE', intraLevelIntensity: 'HIGH', actorRequirements: [{ part: 'teeth' }], receiverRequirements: [{ part: 'glans' }], clothing: { receiver: ['SKIN_ACCESS', 'UNDERWEAR_OFF'] }, durations: [20], tags: ['intimo', 'presion'],
+    copy: ['Muerde muy, muy suavemente el glande de {R}: apenas los dientes, sin apretar nada.'], notes: 'morder muy, muy suavemente el glande (diseñador): dientes → glande, DIRECT, 20 s' }),
+  /* ======== TESTÍCULOS · relaciones del diseñador (2026-11-02). Target `testicles` (nunca se convierte en pene). DIRECT. ======== */
+  I({ id: 'I37', family: 'ORAL', similarityGroup: 'ORAL', intraLevelIntensity: 'HIGH', actorRequirements: [{ part: 'mouth' }], receiverRequirements: [{ part: 'testicles' }], clothing: { receiver: ['SKIN_ACCESS', 'UNDERWEAR_OFF'] }, durations: [30, 45], tags: ['intimo', 'boca'],
+    copy: ['Chupa los testículos de {R}, despacio y con cuidado.'], notes: 'chupar los testículos (diseñador): boca → testículos, DIRECT' }),
+  I({ id: 'I38', family: 'CARESS', similarityGroup: 'INTIMATE_TOUCH', intraLevelIntensity: 'MID', actorRequirements: [{ part: 'fingertips' }], receiverRequirements: [{ part: 'testicles' }], clothing: { receiver: ['SKIN_ACCESS', 'UNDERWEAR_OFF'] }, durations: [30, 45], tags: ['intimo'],
+    copy: ['Acaricia los testículos de {R} con las yemas de los dedos, muy suave.'], notes: 'acariciar los testículos (diseñador): yemas → testículos, DIRECT' }),
+  I({ id: 'I39', family: 'MANUAL', similarityGroup: 'PLAYFUL', intraLevelIntensity: 'MID', actorRequirements: [{ part: 'fingers' }], receiverRequirements: [{ part: 'testicles' }], clothing: { receiver: ['SKIN_ACCESS', 'UNDERWEAR_OFF'] }, durations: [30, 45], tags: ['intimo'],
+    copy: ['Juega suavemente con los testículos de {R} entre los dedos, sin prisa y sin apretar.'], notes: 'jugar suavemente con los testículos (diseñador): dedos → testículos, DIRECT' }),
 ];

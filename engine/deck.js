@@ -83,7 +83,7 @@ export function weighDeck(deck, { history, session, director, purpose, favorFami
   const starving = new Set([...eligibleRegions].filter(r => history.sinceRegion(r) >= 8 && history.rounds.length >= 8)); // región con cartas elegibles que lleva mucho sin salir
   return deck.eligible.map(e => {
     const c = e.card, region = regionOf(c, null), parts = partsOf(c, null);
-    const f = { base: c.baseWeight, cardRecency: 1, family: 1, similarity: 1, region: 1, starvation: 1, target: 1, type: 1, unlocked: 1, undressCooldown: 1, purpose: 1, favor: 1 };
+    const f = { base: c.baseWeight, cardRecency: 1, family: 1, similarity: 1, region: 1, share: 1, starvation: 1, target: 1, type: 1, unlocked: 1, undressCooldown: 1, purpose: 1, favor: 1 };
     f.cardRecency = history.novelty('cardId', c.id, 14, 1.6);
     const since = history.sinceCard(c.id); if (since === 0) f.cardRecency = 0; else if (since <= 2) f.cardRecency *= 0.05; else if (since <= 4) f.cardRecency *= 0.4; // la anterior nunca vuelve seguida
     f.family = history.familyWeight(c.family);
@@ -96,6 +96,8 @@ export function weighDeck(deck, { history, session, director, purpose, favorFami
     if (c.interactionType !== 'UNDRESS') { // diversidad corporal: la región de la última carta pesa poco; dos de las tres últimas, menos aún
       if (regions[0] === region) f.region *= 0.35; if (regions.slice(0, 3).filter(r => r === region).length >= 2) f.region *= 0.5;
       if (history.rounds.length >= 6 && !regions.slice(0, 6).includes(region)) f.region *= 1.25;
+      // regionShare: una región que ya ocupa una parte grande de las últimas 10 cartas pesa menos, sea cual sea (con acceso completo el catálogo íntimo es grande y no debe dominar)
+      const share = regions.slice(0, 10).filter(r => r === region).length; if (share >= 4) f.share = 0.35; else if (share >= 3) f.share = 0.6;
       if (starving.has(region)) f.starvation = 1.5;
       if (parts.some(pt => targets[0] && targets[0].includes(pt))) f.target *= 0.5; if (parts.some(pt => (targets[1] || []).includes(pt))) f.target *= 0.75;
     }
