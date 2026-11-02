@@ -19,6 +19,8 @@ export const UNDRESS = [
   U({ id: 'U05', undress: { who: 'ACTOR', garment: 'ANY', chooser: 'RECEIVER' }, copy: ['{R} decide qué prenda te quitas. Tú te la quitas.'] }),
   U({ id: 'U06', undress: { who: 'RECEIVER', garment: 'ANY', chooser: 'RECEIVER', helper: true }, copy: ['{R} elige una prenda y tú se la quitas.'] }),
   U({ id: 'U07', undress: { who: 'RECEIVER', garment: 'ANY', chooser: 'ACTOR', helper: true, limitation: 'ONE_HAND' }, copy: ['Quítale una prenda a {R} usando solo una mano. Tú eliges cuál.'] }),
-  U({ id: 'U08', status: 'UNREVIEWED', undress: { who: 'RECEIVER', garment: 'ANY', chooser: 'ACTOR', helper: true, limitation: 'NO_HANDS' }, copy: ['Quítale una prenda a {R} sin usar las manos.'],
-    notes: 'Limitación «sin manos»: el diseñador la propone; falta decidir con qué prendas es realizable (¿solo calcetines?). Sin decisión no sale.' }),
+  /* U08 · aprobada por el diseñador (2026-11-02) SOLO para calcetines: sin manos no se extrapola a ninguna otra prenda. Sale únicamente si
+     quien recibe lleva los calcetines puestos; al completarla socks = OFF y la baraja se recalcula al momento (como toda UNDRESS). */
+  U({ id: 'U08', undress: { who: 'RECEIVER', garment: 'socks', chooser: null, helper: true, limitation: 'NO_HANDS' }, baseWeight: 0.4, copy: ['Quítale los calcetines a {R} sin usar las manos.'],
+    notes: 'Aprobada limitada a calcetines (diseñador, 2026-11-02). Nunca camiseta, pantalón, brasier, panties ni calzoncillos.' }),
 ];
