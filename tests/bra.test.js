@@ -14,7 +14,7 @@ const eligible = (recv) => { const e = mk({ level: 3, seed: 1, clothing: [recv, 
 test('catalog: direct-access chest cards and THROUGH_BRA cards exist and are distinct', () => {
   assert.deepEqual(CHEST_DIRECT.sort(), ['I03', 'I08', 'I09', 'I10', 'I17']); assert.deepEqual(THROUGH_BRA, ['I21']);
   assert.equal(CARD.I21.status, 'APPROVED'); assert.deepEqual(CARD.I21.allowedSides, ['LEFT', 'RIGHT', 'BOTH']);
-  for (const c of APPROVED.filter(c => c.receiverRequirements.some(r => ['breasts', 'nipples'].includes(r.part)))) assert.ok(c.clothing.receiver.includes('SKIN_ACCESS') || c.clothing.receiver.includes('THROUGH_BRA') || c.clothing.receiver.includes('THROUGH_CLOTHING') || c.clothing.receiver.includes('CLOTHED') || c.clothing.receiver.includes('ANY'), c.id);
+  for (const c of APPROVED.filter(c => c.receiverRequirements.some(r => ['breasts', 'nipples'].includes(r.part)))) assert.ok(c.clothing.receiver.includes('SKIN_ACCESS') || c.clothing.receiver.includes('THROUGH_BRA') || c.clothing.receiver.includes('THROUGH_TOP') || c.clothing.receiver.includes('THROUGH_CLOTHING') || c.clothing.receiver.includes('CLOTHED') || c.clothing.receiver.includes('ANY'), c.id);
 });
 test('A · top ON + bra ON: no direct chest access, no THROUGH_BRA', () => {
   assert.equal(chestAccess(st('ON', 'ON')), 'COVERED_BY_TOP'); const ids = eligible(st('ON', 'ON'));

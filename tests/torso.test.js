@@ -1,7 +1,7 @@
 /* V4 · camiseta y brasier como capas dinámicas REALES. La baraja responde a la ropa que la persona lleva ahora: camiseta → piel
    (bra NOT_WORN) o camiseta → brasier → piel son recorridos válidos; el motor los descubre desde el ClothingState real.
-   Estados: ON · OFF (se la quitó) · NOT_WORN (entró sin ella) · NONE (no aplica). THROUGH_TOP se prueba con una carta FICTICIA
-   (FIX_TT) porque en el catálogo real I25 sigue UNREVIEWED sin copia: nunca se inventa contenido para cubrir un estado. */
+   Estados: ON · OFF (se la quitó) · NOT_WORN (entró sin ella) · NONE (no aplica). THROUGH_TOP real: I25 (aprobada por el diseñador,
+   Opción A: yemas sobre el pecho por encima de la camiseta, 30 s, con lado). */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { CARDS, CARD, APPROVED } from '../content/index.js';
@@ -13,14 +13,13 @@ import { PreferenceManager } from '../engine/prefs.js';
 import { GameEngine } from '../engine/engine.js';
 import { mk, NAKED, DRESSED } from './helpers.js';
 
-const FIX_TOP = card({ id: 'FIX_TT', level: 3, status: 'APPROVED', family: 'BREASTS', similarityGroup: 'CLOTHED_TEASE', actorRequirements: [{ part: 'fingertips' }], receiverRequirements: [{ part: 'breasts' }], clothing: { receiver: [THROUGH_GARMENT('top')] }, durations: [30], copy: ['[ficticia THROUGH_TOP, solo tests] {A} sobre la camiseta de {R}.'] });
-const WITH_FIX = [...CARDS, FIX_TOP];
+const WITH_FIX = CARDS; // I25 es la carta THROUGH_TOP real
 const CHEST_DIRECT = ['I03', 'I08', 'I09', 'I10']; // I17 además exige a quien actúa desnudo
 const chest = o => ({ ...NAKED(), ...o });
 const idsFor = (e, actor = 1, cards = WITH_FIX) => new Set(buildDeck(cards, e.context(actor)).eligible.map(x => x.card.id));
 const eng = (recv, o = {}) => mk({ level: 3, seed: o.seed ?? 1, clothing: [recv, NAKED()], prefs: { bodyParts: [o.anatomy || ['vulva', 'senos'], ['pene']] } });
 const expectChest = (ids, { throughTop, throughBra, direct }, label) => {
-  assert.equal(ids.has('FIX_TT'), throughTop, `${label}: THROUGH_TOP`);
+  assert.equal(ids.has('I25'), throughTop, `${label}: THROUGH_TOP`);
   assert.equal(ids.has('I21'), throughBra, `${label}: THROUGH_BRA`);
   for (const id of CHEST_DIRECT) assert.equal(ids.has(id), direct, `${label}: ${id} acceso directo`);
 };
@@ -97,8 +96,8 @@ test('TEST 7 · BRA NOT_WORN: ninguna carta UNDRESS ofrece el brasier en toda la
 test('TEST 8 · sin senos declarados: la ropa se representa igual, pero ninguna carta dirigida a senos/pezones sale en ningún estado', () => {
   for (const st of [chest({ top: 'ON', bra: 'ON' }), chest({ top: 'ON', bra: 'NOT_WORN' }), chest({ top: 'OFF', bra: 'ON' }), chest({ top: 'OFF', bra: 'NOT_WORN' }), chest({ top: 'OFF', bra: 'OFF' })]) {
     const e = eng(st, { anatomy: ['vulva'] }); assert.equal(e.clothing[0].bra, st.bra, 'el brasier sigue en el estado (lo decide la ropa interior configurada, no la anatomía)');
-    const ids = idsFor(e); for (const id of ['FIX_TT', 'I21', ...CHEST_DIRECT]) assert.ok(!ids.has(id), `${id} con bra=${st.bra} top=${st.top}`);
-    const rej = Object.fromEntries(buildDeck(WITH_FIX, e.context(1)).rejected.map(r => [r.id, r.reason])); assert.equal(rej.I21, 'RECEIVER_ANATOMY'); assert.equal(rej.FIX_TT, 'RECEIVER_ANATOMY');
+    const ids = idsFor(e); for (const id of ['I25', 'I21', ...CHEST_DIRECT]) assert.ok(!ids.has(id), `${id} con bra=${st.bra} top=${st.top}`);
+    const rej = Object.fromEntries(buildDeck(WITH_FIX, e.context(1)).rejected.map(r => [r.id, r.reason])); assert.equal(rej.I21, 'RECEIVER_ANATOMY'); assert.equal(rej.I25, 'RECEIVER_ANATOMY');
   }
 });
 
@@ -144,12 +143,27 @@ test('la lógica inferior no cambia: pantalón → panties/calzoncillos → acce
   assert.ok(l(lower({ bottoms: 'OFF', boxers: 'ON', panties: 'NONE' }), 0, A).has('I22') && !l(lower({ bottoms: 'OFF', boxers: 'OFF', panties: 'NONE' }), 0, A).has('I22'));
   assert.ok(l(lower({ bottoms: 'OFF', panties: 'NOT_WORN' }), 1, A).has('I11'), 'panties NOT_WORN + pantalón fuera = acceso directo');
 });
-test('catálogo real: THROUGH_TOP sin cartas aprobadas (I25 UNREVIEWED, sin copia); nada se convirtió; Conexión sigue en 50', () => {
-  const tt = APPROVED.filter(c => c.clothing.receiver.includes('THROUGH_TOP')); assert.equal(tt.length, 0, 'CONTENT_GAP, no se rellena');
-  assert.equal(CARD.I25.status, 'UNREVIEWED'); assert.deepEqual(CARD.I25.copy, []);
-  for (const id of CHEST_DIRECT) assert.deepEqual(CARD[id].clothing.receiver, ['SKIN_ACCESS']);
+test('catálogo real: I25 es la única THROUGH_TOP aprobada (Opción A); nada se convirtió; Conexión sigue en 50', () => {
+  const tt = APPROVED.filter(c => c.clothing.receiver.includes('THROUGH_TOP')); assert.deepEqual(tt.map(c => c.id), ['I25']);
+  assert.equal(CARD.I25.status, 'APPROVED'); assert.equal(CARD.I25.source, 'DESIGNER_APPROVED'); assert.deepEqual(CARD.I25.durations, [30]); assert.deepEqual(CARD.I25.allowedSides, ['LEFT', 'RIGHT', 'BOTH']);
+  assert.deepEqual(CARD.I25.actorRequirements, [{ part: 'fingertips' }]); assert.deepEqual(CARD.I25.receiverRequirements, [{ part: 'breasts' }]);
+  for (const s of ['LEFT', 'RIGHT', 'BOTH']) for (const t of CARD.I25.copyBySide[s]) assert.match(t, /por encima de la camiseta/i);
+  for (const id of CHEST_DIRECT) assert.deepEqual(CARD[id].clothing.receiver, ['SKIN_ACCESS']); assert.deepEqual(CARD.I21.clothing.receiver, ['THROUGH_BRA']);
   assert.equal(APPROVED.filter(c => c.level === 1 && !c.transition).length, 50); assert.equal(CARD.C29.status, 'REJECTED'); assert.equal(CARD.C35.status, 'REJECTED');
-  const e = eng(chest({ top: 'ON', bra: 'NOT_WORN' })); const ids = idsFor(e, 1, CARDS); for (const id of ['I21', ...CHEST_DIRECT]) assert.ok(!ids.has(id));
+});
+test('los dos recorridos con el catálogo real, recalculando tras cada prenda', () => {
+  const chestIds = e => [...idsFor(e)].filter(id => /^I(03|08|09|10|17|21|25)$/.test(id)).sort();
+  const a = eng(chest({ top: 'ON', bra: 'ON' })); assert.deepEqual(chestIds(a), ['I25']);
+  a.recordUndress(0, 'top'); assert.deepEqual(chestIds(a), ['I21']);
+  a.recordUndress(0, 'bra'); assert.deepEqual(chestIds(a), ['I03', 'I08', 'I09', 'I10', 'I17']);
+  const b = eng(chest({ top: 'ON', bra: 'NOT_WORN' })); assert.deepEqual(chestIds(b), ['I25']);
+  b.recordUndress(0, 'top'); assert.deepEqual(chestIds(b), ['I03', 'I08', 'I09', 'I10', 'I17']); assert.equal(b.clothing[0].bra, 'NOT_WORN');
+  const r = a.roll(); assert.ok(r && r.cardId !== 'I25' && r.cardId !== 'I21', 'la siguiente carta ya usa el nuevo estado');
+});
+test('I25 sale en la app con su frase real y respeta lado y anatomía', () => {
+  const e = eng(chest({ top: 'ON', bra: 'ON' }), { seed: 2 }); let seen = null;
+  for (let i = 0; i < 80 && !seen; i++) { const r = e.roll(); if (r.cardId === 'I25') seen = r; if (e.pauseDue()) e.continueGuided(); }
+  assert.ok(seen, 'I25 no salió en 80 cartas'); assert.ok(['LEFT', 'RIGHT', 'BOTH'].includes(seen.side)); assert.match(seen.phrase, /por encima de la camiseta/i); assert.equal(seen.seconds, 30); assert.equal(seen.receiver, 0);
 });
 test('la interfaz y el motor comparten los estados: «No la llevo» = NOT_WORN, y un guardado no cambia nada (la ropa no persiste)', () => {
   const prefs = new PreferenceManager({ names: ['Val', 'Mike'], bodyParts: [['vulva', 'senos'], ['pene']] });
