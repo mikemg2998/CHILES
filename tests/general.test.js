@@ -28,7 +28,7 @@ test('the director never changes the level; feedback never changes the level', (
 test('REJECTED and UNREVIEWED never appear; every round is an APPROVED card', () => {
   const ids = new Set(APPROVED.map(c => c.id));
   for (const L of LEVEL_IDS) { const e = mk({ level: L, seed: 11 + L, clothing: [NAKED(), NAKED()] }); for (const r of play(e, 150)) { assert.ok(ids.has(r.cardId) || r.transition, r.cardId); if (r.variantId) assert.equal(CARD[r.cardId].variants.find(v => v.id === r.variantId).status, 'APPROVED'); } }
-  assert.ok(CARDS.some(c => c.status === 'UNREVIEWED'));
+  assert.ok(CARDS.some(c => c.status !== 'APPROVED')); // hay rechazadas en el catálogo y ninguna sale
 });
 test('target belongs to receiver, actor tool belongs to actor, anatomies never mix', () => {
   const combos = [[['vulva', 'senos'], ['pene']], [['pene'], ['vulva', 'senos']], [['vulva'], ['vulva']], [['pene'], ['pene']], [[], []], [['vulva', 'pene', 'senos'], []]];
@@ -63,7 +63,7 @@ test('PlayConstraints only where approved; FREE keeps appearing; the recent cons
 });
 test('laterality works: sides only on lateral parts, all sides appear, consecutive same side is rare', () => {
   for (const c of CARDS) if (c.allowedSides) assert.ok(c.receiverRequirements.some(r => BODY_PARTS[r.part].lateral) || c.actorRequirements.some(r => ACTOR_TOOLS[r.part].lateral), c.id);
-  const e = mk({ level: 2, seed: 21 }); const rs = play(e, 500).filter(r => r.cardId === 'D05');
+  const e = mk({ level: 2, seed: 21 }); const rs = play(e, 500).filter(r => r.cardId === 'D02'); // D05 dejó de ser lateral (curación 2026-11-03)
   const seen = new Set(rs.map(r => r.side)); assert.deepEqual([...seen].sort(), ['BOTH', 'LEFT', 'RIGHT']);
   let rep = 0; for (let i = 1; i < rs.length; i++) if (rs[i].side === rs[i - 1].side) rep++;
   assert.ok(rep / rs.length < 0.25, `mismo lado seguido ${rep}/${rs.length}`);
@@ -77,7 +77,7 @@ test('history penalizes repetition: no card repeats back to back, and short wind
   }
 });
 test('CHOOSE keeps its designed options', () => { const c = CARD.C15; assert.equal(c.interactionType, 'CHOOSE'); assert.deepEqual(c.choices.map(x => x.id), ['back', 'shoulders', 'hands']); const rs = play(mk({ level: 1, seed: 12 }), 200).filter(r => r.cardId === 'C15'); assert.ok(rs.length); assert.ok(rs.every(r => /espalda, hombros o manos/.test(r.phrase))); });
-test('GUIDED keeps ownership: the actor acts, the receiver guides with their own hand', () => { const rs = play(mk({ level: 1, seed: 13 }), 200).filter(r => r.cardId === 'C16'); assert.ok(rs.length); for (const r of rs) { assert.ok(r.phrase.includes(`${r.receiverName} guía tu mano`)); assert.ok(!r.phrase.includes(r.actorName)); } });
+test('C16 y C31 ya no son guiadas (curación 2026-11-03): el actor acaricia, nadie guía', () => { for (const id of ['C16', 'C31']) { assert.equal(CARD[id].interactionType, 'STANDARD'); assert.ok(!CARD[id].tags.includes('guia')); } const rs = play(mk({ level: 1, seed: 13 }), 300).filter(r => ['C16', 'C31'].includes(r.cardId)); assert.ok(rs.length); for (const r of rs) { assert.ok(!/guía/.test(r.phrase)); assert.ok(!r.phrase.includes(r.actorName)); } });
 test('PATH keeps its path', () => { const c = CARD.D11; assert.equal(c.interactionType, 'PATH'); assert.deepEqual(c.path, { from: 'arriba', to: 'abajo' }); for (const r of play(mk({ level: 2, seed: 14 }), 200).filter(r => r.cardId === 'D11')) assert.ok(r.phrase.includes('de arriba abajo')); });
 test('BODY_TO_BODY keeps its structure as one unit', () => { for (const c of CARDS.filter(c => c.interactionType === 'BODY_TO_BODY')) { assert.ok(c.requiredOrientation); assert.ok(!c.variants); } const rs = play(mk({ level: 2, seed: 15 }), 200).filter(r => r.cardId === 'D14'); assert.ok(rs.length); assert.ok(rs.every(r => r.mutual && /abraza a .* y acaricia sus nalgas/.test(r.phrase))); });
 test('NO_TIMER works and durations are natural', () => {

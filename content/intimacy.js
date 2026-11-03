@@ -45,12 +45,12 @@ export const INTIMACY = [
   I({ id: 'I23', family: 'MANUAL', similarityGroup: 'CLOTHED_TEASE', intraLevelIntensity: 'MID', actorRequirements: [{ part: 'fingertips' }], receiverRequirements: [{ part: 'vulva' }], clothing: { receiver: ['THROUGH_PANTIES'] }, durations: [30, 40], tags: ['intimo'],
     copy: ['Con las yemas de los dedos, acaricia suavemente la vulva de {R} por encima de las panties.', 'Por encima de las panties, pasa los dedos despacio sobre la vulva de {R}, apenas presionando.'],
     notes: 'THROUGH_PANTIES (diseñador): contacto suave con los dedos sobre las panties. Solo con pantalón fuera y panties puestas.' }),
-  /* I24 · CONCEPTO APROBADO POR EL DISEÑADOR (2026-11-02): pequeños besos / picos por encima de las panties. Requisitos cerrados: labios;
-     pantalón fuera y panties puestas (THROUGH_PANTIES); con el pantalón puesto no sale; al quitar las panties deja de ser elegible al
-     momento; nunca se convierte en versión directa. PENDIENTE: las zonas («indicadas por el diseñador») no están en ningún mensaje ni
-     en el código, y sin zona no hay parte receptora ni frase. No se inventan. */
-  I({ id: 'I24', family: 'ORAL', similarityGroup: 'CLOTHED_TEASE', intraLevelIntensity: 'MID', status: 'UNREVIEWED', actorRequirements: [{ part: 'lips' }], receiverRequirements: [], clothing: { receiver: ['THROUGH_PANTIES'] }, durations: [30], tags: ['intimo', 'boca'], copy: [],
-    notes: 'Concepto aprobado (2026-11-02): picos sobre las panties, pantalón fuera + panties puestas. PENDIENTE SOLO: zona(s) exactas y frase por zona; nunca llegaron.' }),
+  /* I24 · REACTIVADA Y REESCRITA POR EL DISEÑADOR (2026-11-03): pene entre los senos de {R}, movimiento lento. Solo si quien actúa
+     tiene pene a piel (pantalón y ropa interior fuera) y quien recibe tiene senos a piel (camiseta y brasier no puestos). Sin acciones extra.
+     El concepto anterior (picos sobre las panties, sin zonas ni texto) queda descartado. */
+  I({ id: 'I24', family: 'BODY', interactionType: 'POSITIONAL', intraLevelIntensity: 'HIGH', actorRequirements: [{ part: 'penis' }], receiverRequirements: [{ part: 'breasts' }], requiredOrientation: 'LYING',
+    clothing: { actor: ['BOTTOM_ACCESS', 'UNDERWEAR_OFF'], receiver: ['SKIN_ACCESS'] }, durations: [30], tags: ['intimo'],
+    copy: ['Coloca el pene entre los senos de {R} y muévelo despacio.'], notes: 'Diseñador (2026-11-03): pene entre senos, movimiento lento.' }),
   /* THROUGH_TOP · aprobada por el diseñador (Opción A, 2026-11-02): con la camiseta puesta (haya brasier debajo o no) esa es la capa
      exterior accesible; yemas de los dedos sobre el pecho por encima de la camiseta, 30 s, con lado. Al quitar la camiseta deja de
      existir y entran I21 (si bra ON) o las de acceso directo (si bra OFF / NOT_WORN). Nunca se transforma en otra carta. */
@@ -83,13 +83,9 @@ export const INTIMACY = [
       { id: 'vulva', status: 'APPROVED', anatomy: 'vulva', receiverRequirements: [{ part: 'vulva' }], copy: ['Respira muy cerca de la vulva de {R}, sin tocar: que note solo el aire y el calor.'] },
       { id: 'pene', status: 'APPROVED', anatomy: 'pene', receiverRequirements: [{ part: 'penis' }], copy: ['Respira muy cerca del pene de {R}, sin tocar: que note solo el aire y el calor.'] },
     ], notes: 'sensación de aire / calor sobre anatomía íntima (STANDARD)' }),
-  /* I16 · APROBADA POR EL DISEÑADOR (2026-11-02) como POSITIONAL, DESIGNER_PROVIDED: configuración corporal entre pene y senos, tumbados.
-     Requisitos fijados: pene con acceso directo; senos a piel (camiseta y brasier no puestos: OFF o NOT_WORN); se recalcula al quitar
-     cualquiera de las dos. Sin variantes, sin combinación procedural. Lo ÚNICO que falta es la escena (la frase): el diseñador nunca la
-     escribió (ni en la propuesta del 2026-11-01 ni después), y sin copia una carta no puede salir. En cuanto llegue, status APPROVED. */
-  I({ id: 'I16', family: 'BODY', interactionType: 'POSITIONAL', intraLevelIntensity: 'HIGH', status: 'UNREVIEWED', actorRequirements: [{ part: 'penis' }], receiverRequirements: [{ part: 'breasts' }], requiredOrientation: 'LYING',
-    clothing: { actor: ['FULL_BODY_ACCESS'], receiver: ['SKIN_ACCESS'] }, durations: [30, 45, 60], tags: ['intimo'], copy: [],
-    notes: 'Aprobada por el diseñador (2026-11-02): pene entre senos, tumbados. Requisitos cerrados (senos a piel: top ≠ ON y bra ≠ ON; pene a piel). PENDIENTE SOLO LA ESCENA: falta la frase; sin ella no sale.' }),
+  /* I16 · ELIMINADA POR EL DISEÑADOR (2026-11-03), sin sustituta. Id reservado. */
+  I({ id: 'I16', family: 'BODY', interactionType: 'POSITIONAL', intraLevelIntensity: 'HIGH', status: 'REJECTED', actorRequirements: [{ part: 'penis' }], receiverRequirements: [{ part: 'breasts' }], requiredOrientation: 'LYING', tags: ['intimo'], copy: [],
+    notes: 'Eliminada por el diseñador (2026-11-03). Nunca tuvo texto.' }),
   I({ id: 'I17', family: 'BODY', interactionType: 'POSITIONAL', intraLevelIntensity: 'HIGH', actorRequirements: [{ part: 'glans' }], receiverRequirements: [{ part: 'nipples', anatomy: 'senos' }], allowedSides: ['LEFT', 'RIGHT'], requiredOrientation: 'FACE',
     clothing: { actor: ['FULL_BODY_ACCESS'], receiver: ['SKIN_ACCESS'] }, durations: [25], tags: ['intimo'],
     copyBySide: { LEFT: ['Roza el pezón izquierdo de {R} con el glande, despacio.'], RIGHT: ['Roza el pezón derecho de {R} con el glande, despacio.'] }, notes: 'glande y pezones con lateralidad (POSITIONAL)' }),

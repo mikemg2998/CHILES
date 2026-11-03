@@ -1,5 +1,5 @@
-/* Decisiones del diseñador del 2026-11-02 sobre los pendientes: I14 rechazada; I16 y I24 con requisitos cerrados (solo falta su texto,
-   nunca inventado); U08 aprobada solo para calcetines. */
+/* Decisiones del diseñador sobre los pendientes: I14 rechazada; U08 aprobada solo para calcetines (2026-11-02);
+   I16 eliminada e I24 reactivada como «pene entre los senos» (2026-11-03). */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { CARDS, CARD, APPROVED, partsOf } from '../content/index.js';
@@ -13,26 +13,24 @@ test('I14 REJECTED: no sale, no se reemplaza', () => {
   assert.equal(CARD.I14.status, 'REJECTED'); assert.ok(!APPROVED.some(c => c.id === 'I14'));
   assert.equal(APPROVED.filter(c => c.level === 3 && c.family === 'BITE' && !partsOf(c, null).includes('glans')).map(c => c.id).sort().join(), 'I04,I10,I19,I42,I48,I49'); // I42 tetillas · I48 pie · I49 cadera (diseñador 2026-11-03)
 });
-test('I16: requisitos cerrados (pene a piel; senos a piel: top ≠ ON y bra ≠ ON), POSITIONAL tumbados, sin variantes; solo falta la escena', () => {
-  const c = CARD.I16; assert.equal(c.interactionType, 'POSITIONAL'); assert.equal(c.requiredOrientation, 'LYING'); assert.equal(c.source, 'DESIGNER_PROVIDED'); assert.ok(!c.variants);
-  assert.deepEqual(c.clothing, { actor: ['FULL_BODY_ACCESS'], receiver: ['SKIN_ACCESS'] });
+test('I16 eliminada por el diseñador (2026-11-03): REJECTED, sin copia, no se reemplaza', () => {
+  const c = CARD.I16; assert.equal(c.status, 'REJECTED'); assert.deepEqual(c.copy, []); assert.ok(!APPROVED.some(x => x.id === 'I16'));
+  const e = mk({ level: 3, seed: 1, clothing: [NAKED(), NAKED()] }); assert.equal(buildDeck([c], e.context(1)).rejected[0].reason, 'STATUS:REJECTED');
+});
+test('I24 reactivada (2026-11-03): pene entre los senos, solo si es físicamente posible', () => {
+  const c = CARD.I24; assert.equal(c.status, 'APPROVED'); assert.equal(c.interactionType, 'POSITIONAL'); assert.deepEqual(c.actorRequirements, [{ part: 'penis' }]); assert.deepEqual(c.receiverRequirements, [{ part: 'breasts' }]);
+  assert.deepEqual(c.copy, ['Coloca el pene entre los senos de {R} y muévelo despacio.']); assert.ok(!c.variants);
   const parts = ['breasts'];
   assert.equal(clothingFailure(c.clothing.receiver, { ...NAKED(), top: 'ON', bra: 'ON' }, parts), 'SKIN_ACCESS', 'camiseta puesta: no');
-  assert.equal(clothingFailure(c.clothing.receiver, { ...NAKED(), top: 'ON', bra: 'NOT_WORN' }, parts), 'SKIN_ACCESS', 'camiseta puesta sin brasier: no');
   assert.equal(clothingFailure(c.clothing.receiver, { ...NAKED(), top: 'OFF', bra: 'ON' }, parts), 'SKIN_ACCESS', 'brasier puesto: no');
-  assert.equal(clothingFailure(c.clothing.receiver, { ...NAKED(), top: 'OFF', bra: 'NOT_WORN' }, parts), null, 'sin brasier y camiseta fuera: sí');
-  assert.equal(clothingFailure(c.clothing.receiver, { ...NAKED(), top: 'OFF', bra: 'OFF' }, parts), null);
-  assert.equal(clothingFailure(c.clothing.actor, { ...NAKED(), boxers: 'ON' }, ['penis'], { role: 'actor' }), 'FULL_BODY_ACCESS');
-  // sigue sin copia → UNREVIEWED → rechazada por STATUS, nunca por otra razón
-  assert.equal(c.status, 'UNREVIEWED'); assert.deepEqual(c.copy, []);
-  const e = mk({ level: 3, seed: 1, clothing: [NAKED(), NAKED()] }); assert.equal(buildDeck([c], e.context(1)).rejected[0].reason, 'STATUS:UNREVIEWED');
-});
-test('I24: concepto THROUGH_PANTIES con requisitos cerrados; faltan zonas y texto, no se inventan', () => {
-  const c = CARD.I24; assert.deepEqual(c.clothing.receiver, ['THROUGH_PANTIES']); assert.deepEqual(c.actorRequirements, [{ part: 'lips' }]); assert.deepEqual(c.receiverRequirements, []); assert.deepEqual(c.copy, []); assert.equal(c.status, 'UNREVIEWED');
-  const parts = ['vulva']; // cualquier zona bajo las panties se evaluaría así
-  assert.equal(clothingFailure(c.clothing.receiver, { ...NAKED(), bottoms: 'ON', panties: 'ON' }, parts), 'THROUGH_PANTIES', 'pantalón puesto: no');
-  assert.equal(clothingFailure(c.clothing.receiver, { ...NAKED(), bottoms: 'OFF', panties: 'ON' }, parts), null, 'pantalón fuera + panties: sí');
-  assert.equal(clothingFailure(c.clothing.receiver, { ...NAKED(), bottoms: 'OFF', panties: 'OFF' }, parts), 'THROUGH_PANTIES', 'panties fuera: deja de ser elegible');
+  assert.equal(clothingFailure(c.clothing.receiver, { ...NAKED(), top: 'OFF', bra: 'NOT_WORN' }, parts), null);
+  const at = (prefs, clothing, actor) => { const e = mk({ level: 3, seed: 1, prefs: { bodyParts: prefs }, clothing }); return buildDeck([c], e.context(actor)); };
+  // Leo (pene) actúa, Ana (vulva · senos) recibe
+  assert.equal(at([['pene'], ['vulva', 'senos']], [NAKED(), NAKED()], 0).eligible.length, 1, 'pene a piel + senos a piel: sí');
+  assert.match(at([['pene'], ['vulva', 'senos']], [{ ...NAKED(), boxers: 'ON' }, NAKED()], 0).rejected[0].reason, /actor|BODY_NOT_AVAILABLE/, 'calzoncillos puestos: no');
+  assert.equal(at([['pene'], ['vulva', 'senos']], [NAKED(), { ...NAKED(), bra: 'ON' }], 0).rejected[0].reason, 'CLOTHING:receiver:SKIN_ACCESS');
+  assert.equal(at([['vulva', 'senos'], ['pene']], [NAKED(), NAKED()], 0).rejected[0].reason, 'ACTOR_ANATOMY', 'sin pene no actúa');
+  assert.equal(at([['pene'], ['pene']], [NAKED(), NAKED()], 0).rejected[0].reason, 'RECEIVER_ANATOMY', 'sin senos no recibe');
 });
 test('U08 APPROVED solo calcetines: sale únicamente con socks ON de quien recibe, nunca otra prenda; al aplicarla socks OFF y baraja recalculada', () => {
   const c = CARD.U08; assert.equal(c.status, 'APPROVED'); assert.equal(c.undress.garment, 'socks'); assert.equal(c.undress.who, 'RECEIVER'); assert.equal(c.undress.limitation, 'NO_HANDS'); assert.match(c.copy[0], /calcetines/);

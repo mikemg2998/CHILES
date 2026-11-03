@@ -7,13 +7,15 @@ import { PreferenceManager } from './prefs.js';
 import { anatomyOf } from './anatomy.js';
 import { DEFAULT_CLOTHING, normalizeClothing, applyRemoval, removableGarments, applicableGarments, band } from './clothing.js';
 import { SessionState, SessionDirector, MOODS, AVOIDS } from './session.js';
+import { applyIntimacyDiversity } from './diversity.js';
 import { buildDeck, weighDeck, pickVariant, pickSide, pickConstraint } from './deck.js';
 import { realize } from './realizer.js';
 import { pickDuration } from './duration.js';
 import { LEVELS, LEVEL_BY_KEY } from './levels.js';
 
 export class GameEngine {
-  constructor({ prefs, seed, level, debug = false } = {}) {
+  constructor({ prefs, seed, level, debug = false, intimacyDiversity = true } = {}) {
+    this.intimacyDiversity = intimacyDiversity; // false solo para comparar con el selector anterior en simulación
     this.rng = new Rng(seed);
     this.prefs = prefs instanceof PreferenceManager ? prefs : new PreferenceManager(prefs);
     this.history = new History();
@@ -23,7 +25,7 @@ export class GameEngine {
     this.applicable = [this.garments(0), this.garments(1)];
     this.unlocked = new Map(); // cartas recién desbloqueadas por un cambio de ropa → ronda en la que expira su empujón
     this.state = { round: 0, actor: 0, favorites: [] };
-    this.stats = { emptyDecks: [], rejectedReasons: {} };
+    this.stats = { emptyDecks: [], rejectedReasons: {}, cooldownRelaxed: [] }; this.seen = { 1: new Set(), 2: new Set(), 3: new Set() };
     this.debug = debug; this.lastDebug = null;
   }
 
@@ -35,7 +37,7 @@ export class GameEngine {
   setMood(player, mood) { this.setIntents(player, mood ? [mood] : []); }
   moodProfile() { return this.session.moodProfile(); }
   setPrefs(player, map) { const out = {}; for (const k in map) if (AVOIDS[k] && (map[k] === 'quiza' || map[k] === 'no')) out[k] = map[k]; this.session.pref[player] = out; }
-  newSession(level) { this.history.reset(); this.state.round = 0; this.state.actor = 0; this.session = new SessionState(level || this.session.level); this.clothing = [DEFAULT_CLOTHING(this.anatomy(0).declared, this.wear(0)), DEFAULT_CLOTHING(this.anatomy(1).declared, this.wear(1))]; this.unlocked = new Map(); this.stats = { emptyDecks: [], rejectedReasons: {} }; }
+  newSession(level) { this.history.reset(); this.state.round = 0; this.state.actor = 0; this.session = new SessionState(level || this.session.level); this.clothing = [DEFAULT_CLOTHING(this.anatomy(0).declared, this.wear(0)), DEFAULT_CLOTHING(this.anatomy(1).declared, this.wear(1))]; this.unlocked = new Map(); this.stats = { emptyDecks: [], rejectedReasons: {}, cooldownRelaxed: [] }; this.seen = { 1: new Set(), 2: new Set(), 3: new Set() }; }
   ended() { return this.session.ended; }
   feedback(kind) { this.director.feedback(this.session, this.history.last(), kind); }
   endSession(how) { return this.director.end(this.session, how); }
@@ -137,6 +139,11 @@ export class GameEngine {
     const deck = buildDeck(CARDS, ctx);
     for (const r of deck.rejected) { const k = r.reason.split(':')[0]; this.stats.rejectedReasons[k] = (this.stats.rejectedReasons[k] || 0) + 1; }
     let weighted = weighDeck(deck, { history: H, session: S, director: this.director, purpose, favorFamily, unlocked: this.unlocked, round: this.state.round, actor, clothing: this.clothing });
+    // diversidad real en Intimidad: cooldown por ID, no vistas primero, desbloqueadas por ropa; UNDRESS conserva su probabilidad
+    if (this.intimacyDiversity) {
+      const div = applyIntimacyDiversity(weighted, { level: S.level, history: H, seen: this.seen[S.level], unlocked: this.unlocked, round: this.state.round });
+      weighted = div.weighted; if (div.relaxed) this.stats.cooldownRelaxed.push({ round: this.state.round + 1, ...div.relaxed });
+    }
     if (!weighted.some(w => w.weight > 0) && weighted.length) weighted = weighted.map(w => ({ ...w, weight: 1 })); // todo pesa cero: azar plano entre lo elegible
     const dbg = { purpose, reason: P.reason, actor, level: S.level, band: S.level === 3 ? this.clothingBand() : null, candidates: weighted.map(w => ({ id: w.card.id, weight: Math.round(w.weight * 1000) / 1000, factors: Object.fromEntries(Object.entries(w.factors).map(([k, v]) => [k, Math.round(v * 100) / 100])) })), rejected: deck.rejected, winner: null, variant: null, side: null, playConstraint: null, seconds: null, fallback: false };
     let sel = null;
@@ -180,6 +187,7 @@ export class GameEngine {
       purpose: sel.purpose || 'MAINTAIN', fromFavorite: !!opts.fromFavorite, inspired: !!opts.inspired,
     };
     this.history.push(round);
+    if (!round.transition && this.seen[level]) this.seen[level].add(c.id);
     this.director.afterRound(this.session, round);
     return round;
   }

@@ -53,10 +53,10 @@ test('6 · sin brasier, al retirar la camiseta pasan a ser elegibles (TOP → DI
   assert.ok(e.recordUndress(1, 'bra')); for (const id of NEW) assert.ok(eligibleFor(e, 1).has(id));
 });
 test('7 · las cartas BREASTS y las de pezones de senos siguen exactamente igual', () => {
-  assert.deepEqual(BREAST_CARDS.sort(), ['I08', 'I25', 'D08'].sort());
+  assert.deepEqual(BREAST_CARDS.sort(), ['I08', 'I24', 'I25', 'D08'].sort()); // I24 reactivada (2026-11-03)
   for (const id of SENOS_NIPPLES) assert.deepEqual(CARD[id].receiverRequirements, [{ part: 'nipples', anatomy: 'senos' }]);
   for (const id of [...BREAST_CARDS, ...SENOS_NIPPLES]) assert.equal(CARD[id].status, 'APPROVED');
-  assert.equal(CARD.I16.status, 'UNREVIEWED'); // pendiente de texto, sin cambios
+  assert.equal(CARD.I16.status, 'REJECTED'); // eliminada por el diseñador (2026-11-03)
   const e = pair({ clothing: [NAKED(), NAKED()] }); const v = eligibleFor(e, 1), m = eligibleFor(e, 0);
   for (const id of ['I03', 'I08', 'I09', 'I10']) { assert.ok(v.has(id), `${id} para Val`); assert.ok(!m.has(id), `${id} nunca para Mike`); assert.equal(rejectedFor(e, 0, id).reason, 'RECEIVER_ANATOMY'); }
   const rs = play(e, 400, { undress: false }); assert.ok(rs.some(r => r.receiver === 1 && r.cardId === 'I03')); assert.ok(!rs.some(r => r.receiver === 0 && [...BREAST_CARDS, ...SENOS_NIPPLES].includes(r.cardId)));

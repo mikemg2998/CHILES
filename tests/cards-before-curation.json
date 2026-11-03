@@ -1,0 +1,7585 @@
+{
+ "C01": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "bothHands"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "back"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Masajea despacio la espalda de {R}, con las manos abiertas y sin apretar demasiado.",
+   "Un masaje suave en la espalda de {R}: movimientos largos, sin prisa."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   45
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "MASSAGE",
+  "levels": [
+   1,
+   3
+  ],
+  "level": 1,
+  "id": "C01",
+  "family": "MASSAGE",
+  "region": "BACK"
+ },
+ "C02": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "BODY_TO_BODY",
+  "actorRequirements": [
+   {
+    "part": "arms"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "back"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Sentados, abraza a {R} y quedaos así sin hablar hasta que acabe el tiempo.",
+   "Abrazaos sentados, sin decir nada, durante medio minuto."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": "SEATED",
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "EMBRACE",
+  "levels": null,
+  "level": 1,
+  "id": "C02",
+  "family": "HUG",
+  "region": "BACK"
+ },
+ "C03": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "lips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "face"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Da picos por toda la cara de {R}: frente, mejillas, nariz, barbilla.",
+   "Picos por el rostro de {R}, uno aquí y otro allá, sin orden."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   25
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "boca"
+  ],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "LIGHT_KISSING",
+  "levels": null,
+  "level": 1,
+  "id": "C03",
+  "family": "KISS",
+  "region": "FACE"
+ },
+ "C04": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "oneHand"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "upperArms"
+   },
+   {
+    "part": "forearms"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": [
+   "LEFT",
+   "RIGHT",
+   "BOTH"
+  ],
+  "copy": null,
+  "copyBySide": {
+   "LEFT": [
+    "{R} cierra los ojos. Acaricia su brazo izquierdo de arriba abajo, del hombro a la mano."
+   ],
+   "RIGHT": [
+    "{R} cierra los ojos. Acaricia su brazo derecho de arriba abajo, del hombro a la mano."
+   ],
+   "BOTH": [
+    "{R} cierra los ojos. Acaricia sus dos brazos de arriba abajo, del hombro a las manos."
+   ]
+  },
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   40
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "SENSORY_TOUCH",
+  "levels": null,
+  "level": 1,
+  "id": "C04",
+  "family": "CARESS",
+  "region": "ARMS_HANDS"
+ },
+ "C05": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "BODY_TO_BODY",
+  "actorRequirements": [
+   {
+    "part": "forehead"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "forehead"
+   },
+   {
+    "part": "hands"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Frente con frente con {R}, tomados de las manos, hasta que acabe el tiempo.",
+   "Apoya tu frente en la de {R} y tomaos de las manos. Quedaos así."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   40
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": "FACE",
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "FACE_CONTACT",
+  "levels": null,
+  "level": 1,
+  "id": "C05",
+  "family": "CLOSENESS",
+  "region": "FACE"
+ },
+ "C06": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "bothHands"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "shoulders"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "{R} cierra los ojos. Masajea sus hombros con las dos manos.",
+   "Un masaje de hombros para {R}, con los ojos cerrados."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   45
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "MASSAGE",
+  "levels": [
+   1,
+   3
+  ],
+  "level": 1,
+  "id": "C06",
+  "family": "MASSAGE",
+  "region": "BACK"
+ },
+ "C07": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "lips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "lips"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Picos en los labios de {R}, uno detrás de otro, durante medio minuto.",
+   "Besa a {R} en los labios con picos cortos, sin parar hasta que acabe el tiempo."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "boca"
+  ],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "LIGHT_KISSING",
+  "levels": null,
+  "level": 1,
+  "id": "C07",
+  "family": "KISS",
+  "region": "FACE"
+ },
+ "C08": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "bothHands"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "calves"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": [
+   "LEFT",
+   "RIGHT",
+   "BOTH"
+  ],
+  "copy": null,
+  "copyBySide": {
+   "LEFT": [
+    "Masajea la pantorrilla izquierda de {R} con las dos manos."
+   ],
+   "RIGHT": [
+    "Masajea la pantorrilla derecha de {R} con las dos manos."
+   ],
+   "BOTH": [
+    "Masajea las pantorrillas de {R}, primero una y luego la otra."
+   ]
+  },
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   40
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "MASSAGE",
+  "levels": [
+   1,
+   3
+  ],
+  "level": 1,
+  "id": "C08",
+  "family": "MASSAGE",
+  "region": "THIGHS_LEGS"
+ },
+ "C09": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "MUTUAL",
+  "actorRequirements": [
+   {
+    "part": "bothHands"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "hands"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Tomaos de las manos y miraos a los ojos sin hablar. Reír, sonreír o hacer ruidos vale."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   40
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": "No se habla. Reír cuenta.",
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "HAND_CONTACT",
+  "levels": null,
+  "level": 1,
+  "id": "C09",
+  "family": "CLOSENESS",
+  "region": "ARMS_HANDS"
+ },
+ "C10": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "MUTUAL",
+  "actorRequirements": [
+   {
+    "part": "body"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "wholeBody"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Poned una canción lenta y bailadla juntos, de principio a fin."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [],
+  "timerMode": "NO_TIMER",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": "Dura lo que dure la canción.",
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "DANCE",
+  "levels": null,
+  "level": 1,
+  "id": "C10",
+  "family": "MUSIC",
+  "region": "FULL_BODY"
+ },
+ "C11": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "bothHands"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "hands"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": [
+   "LEFT",
+   "RIGHT",
+   "BOTH"
+  ],
+  "copy": null,
+  "copyBySide": {
+   "LEFT": [
+    "Masajea la mano izquierda de {R}: la palma, cada dedo, la muñeca."
+   ],
+   "RIGHT": [
+    "Masajea la mano derecha de {R}: la palma, cada dedo, la muñeca."
+   ],
+   "BOTH": [
+    "Masajea las manos de {R}, primero una y luego la otra: palma, dedos, muñeca."
+   ]
+  },
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   45
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": "Podéis usar aceite si os apetece.",
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "MASSAGE",
+  "levels": null,
+  "level": 1,
+  "id": "C11",
+  "family": "HANDS",
+  "region": "ARMS_HANDS"
+ },
+ "C12": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "fingertips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "face"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "{R} cierra los ojos. Recorre su rostro con las yemas de los dedos.",
+   "Con los ojos de {R} cerrados, pasa las yemas de los dedos por su frente, sus mejillas, sus labios."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "FACE_CONTACT",
+  "levels": null,
+  "level": 1,
+  "id": "C12",
+  "family": "CARESS",
+  "region": "FACE"
+ },
+ "C13": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "fingers"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "hair"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "{R} descansa con los ojos cerrados. Juega con su cabello.",
+   "Pasa los dedos por el cabello de {R} mientras descansa con los ojos cerrados."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30,
+   45
+  ],
+  "timerMode": "WEIGHTED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "HAIR_TOUCH",
+  "levels": null,
+  "level": 1,
+  "id": "C13",
+  "family": "HAIR",
+  "region": "FACE"
+ },
+ "C14": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "BODY_TO_BODY",
+  "actorRequirements": [
+   {
+    "part": "body"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "wholeBody"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Tumbados de lado, abrazaos sin hablar hasta que acabe el tiempo."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   40,
+   60
+  ],
+  "timerMode": "WEIGHTED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": "LYING",
+  "note": "Buscad una postura cómoda antes de empezar.",
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "EMBRACE",
+  "levels": null,
+  "level": 1,
+  "id": "C14",
+  "family": "HUG",
+  "region": "FULL_BODY"
+ },
+ "C15": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "CHOOSE",
+  "actorRequirements": [
+   {
+    "part": "bothHands"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "back"
+   },
+   {
+    "part": "shoulders"
+   },
+   {
+    "part": "hands"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "{R} elige su masaje: espalda, hombros o manos. Tú se lo das."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   45
+  ],
+  "timerMode": "FIXED",
+  "choices": [
+   {
+    "id": "back",
+    "label": "espalda"
+   },
+   {
+    "id": "shoulders",
+    "label": "hombros"
+   },
+   {
+    "id": "hands",
+    "label": "manos"
+   }
+  ],
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": "Solo esas tres opciones.",
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "CHOICE",
+  "levels": [
+   1,
+   3
+  ],
+  "level": 1,
+  "id": "C15",
+  "family": "MASSAGE",
+  "region": "BACK"
+ },
+ "C16": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "GUIDED",
+  "actorRequirements": [
+   {
+    "part": "oneHand"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "hair"
+   },
+   {
+    "part": "face"
+   },
+   {
+    "part": "hands"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Acaricia el cabello o el rostro de {R}. {R} guía tu mano con la suya: dónde, a qué ritmo, con cuánta presión."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   40
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "guia"
+  ],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "GUIDED",
+  "levels": null,
+  "level": 1,
+  "id": "C16",
+  "family": "CARESS",
+  "region": "FACE"
+ },
+ "C17": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "MUTUAL",
+  "actorRequirements": [
+   {
+    "part": "arms"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "wholeBody"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Elegid una canción entre los dos y abrazaos mientras suena."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [],
+  "timerMode": "NO_TIMER",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": "Dura lo que dure la canción.",
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "MUSIC",
+  "levels": null,
+  "level": 1,
+  "id": "C17",
+  "family": "MUSIC",
+  "region": "FULL_BODY"
+ },
+ "C18": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "BODY_TO_BODY",
+  "actorRequirements": [
+   {
+    "part": "head"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "chest"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Acomódate y apoya la cabeza en el pecho de {R}. Quedaos así, tranquilos, hasta que acabe el tiempo.",
+   "Apoya la cabeza sobre el pecho de {R} y quédate ahí, sin hacer nada más."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   45
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": "LYING",
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "BODY_REST",
+  "levels": null,
+  "level": 1,
+  "id": "C18",
+  "family": "REST",
+  "region": "CHEST"
+ },
+ "C19": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "BODY_TO_BODY",
+  "actorRequirements": [
+   {
+    "part": "head"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "shoulders"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Sentados juntos, apoya la cabeza en el hombro de {R} y quédate ahí.",
+   "Sentaos juntos. Deja caer la cabeza sobre el hombro de {R} y quedaos así."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   40
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": "SEATED",
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "BODY_REST",
+  "levels": null,
+  "level": 1,
+  "id": "C19",
+  "family": "REST",
+  "region": "BACK"
+ },
+ "C20": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "BODY_TO_BODY",
+  "actorRequirements": [
+   {
+    "part": "arms"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "wholeBody"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "De pie, abraza a {R} y no os separéis enseguida. Podéis hablar si queréis.",
+   "Un abrazo largo de pie con {R}, sin soltaros hasta que acabe el tiempo."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": "STANDING",
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "EMBRACE",
+  "levels": null,
+  "level": 1,
+  "id": "C20",
+  "family": "HUG",
+  "region": "FULL_BODY"
+ },
+ "C21": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "BODY_TO_BODY",
+  "actorRequirements": [
+   {
+    "part": "body"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "wholeBody"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Tumbaos de lado, cómodos, y abrazaos en cucharita hasta que acabe el tiempo.",
+   "En cucharita con {R}, tumbados de lado, un minuto entero."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   60
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": "LYING",
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "EMBRACE",
+  "levels": null,
+  "level": 1,
+  "id": "C21",
+  "family": "HUG",
+  "region": "FULL_BODY"
+ },
+ "C22": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "oneHand"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "chest"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Pon la mano, suave, sobre el pecho de {R} y quedaos juntos así.",
+   "Apoya una mano en el pecho de {R}, sin moverla, mientras seguís juntos."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": "carta afectiva, no sexual",
+  "transition": false,
+  "similarityGroup": "HAND_CONTACT",
+  "levels": null,
+  "level": 1,
+  "id": "C22",
+  "family": "CLOSENESS",
+  "region": "CHEST"
+ },
+ "C23": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "oneHand"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "back"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Mientras os abrazáis, acaricia despacio la espalda de {R}.",
+   "Abraza a {R} y, sin soltarle, recorre su espalda con la mano, lentamente."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   40
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "EMBRACE",
+  "levels": null,
+  "level": 1,
+  "id": "C23",
+  "family": "CARESS",
+  "region": "BACK"
+ },
+ "C24": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "oneFinger"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "back"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Con un dedo, dibuja despacio formas sencillas en la espalda de {R}. {R} intenta adivinar qué dibujas.",
+   "Dibuja en la espalda de {R} con un dedo, una forma sencilla cada vez. {R} adivina."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   45
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "PLAYFUL",
+  "levels": null,
+  "level": 1,
+  "id": "C24",
+  "family": "PLAY",
+  "region": "BACK"
+ },
+ "C25": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "fingertips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "palms"
+   },
+   {
+    "part": "fingers"
+   },
+   {
+    "part": "hands"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": [
+   "LEFT",
+   "RIGHT"
+  ],
+  "copy": null,
+  "copyBySide": {
+   "LEFT": [
+    "Toma la mano izquierda de {R} y recórrela despacio: la palma, los dedos, el dorso.",
+    "Con la mano izquierda de {R} entre las tuyas, acaricia la palma, después cada dedo, después el dorso."
+   ],
+   "RIGHT": [
+    "Toma la mano derecha de {R} y recórrela despacio: la palma, los dedos, el dorso.",
+    "Con la mano derecha de {R} entre las tuyas, acaricia la palma, después cada dedo, después el dorso."
+   ]
+  },
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   35
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "HAND_CONTACT",
+  "levels": null,
+  "level": 1,
+  "id": "C25",
+  "family": "HANDS",
+  "region": "ARMS_HANDS"
+ },
+ "C26": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "fingertips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "upperArms"
+   },
+   {
+    "part": "shoulders"
+   },
+   {
+    "part": "hands"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "{R} cierra los ojos. Con las puntas de los dedos recorre, muy suave, sus brazos, sus hombros y sus manos.",
+   "Con los ojos de {R} cerrados, pasa las puntas de los dedos por sus brazos, luego por sus hombros, luego por sus manos."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   40
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": "secuencia completa curada; no es una combinación",
+  "transition": false,
+  "similarityGroup": "SENSORY_TOUCH",
+  "levels": null,
+  "level": 1,
+  "id": "C26",
+  "family": "CARESS",
+  "region": "ARMS_HANDS"
+ },
+ "C27": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "oneHand"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "upperArms"
+   },
+   {
+    "part": "forearms"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": [
+   "LEFT",
+   "RIGHT"
+  ],
+  "copy": null,
+  "copyBySide": {
+   "LEFT": [
+    "Acaricia despacio el brazo izquierdo de {R}: primero con toda la palma, después solo con las puntas de los dedos."
+   ],
+   "RIGHT": [
+    "Acaricia despacio el brazo derecho de {R}: primero con toda la palma, después solo con las puntas de los dedos."
+   ]
+  },
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   40
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "SENSORY_TOUCH",
+  "levels": null,
+  "level": 1,
+  "id": "C27",
+  "family": "CARESS",
+  "region": "ARMS_HANDS"
+ },
+ "C28": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "bothHands"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "upperArms"
+   },
+   {
+    "part": "forearms"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Acaricia suavemente los brazos de {R}. A mitad del tiempo, hazlo todavía más despacio.",
+   "Caricias suaves en los brazos de {R}; cuando vayas por la mitad, baja aún más el ritmo."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   40
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "SENSORY_TOUCH",
+  "levels": null,
+  "level": 1,
+  "id": "C28",
+  "family": "CARESS",
+  "region": "ARMS_HANDS"
+ },
+ "C29": {
+  "intraLevelIntensity": null,
+  "status": "REJECTED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [],
+  "receiverRequirements": [],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": "«Adivina dónde»: rechazada por el diseñador (2026-11-02). Id reservado.",
+  "transition": false,
+  "similarityGroup": "PLAYFUL",
+  "levels": null,
+  "level": 1,
+  "id": "C29",
+  "family": "PLAY",
+  "region": "FULL_BODY"
+ },
+ "C30": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "CHOOSE",
+  "actorRequirements": [
+   {
+    "part": "oneHand"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "upperArms"
+   },
+   {
+    "part": "forearms"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Acaricia un brazo de {R}, primero con toda la mano y luego con las puntas de los dedos. {R} elige cuál prefiere y sigues así."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   45
+  ],
+  "timerMode": "FIXED",
+  "choices": [
+   {
+    "id": "palm",
+    "label": "toda la mano"
+   },
+   {
+    "id": "fingertips",
+    "label": "las puntas de los dedos"
+   }
+  ],
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": "Primero toda la mano, luego las puntas. Después elige quien recibe.",
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "CHOICE",
+  "levels": null,
+  "level": 1,
+  "id": "C30",
+  "family": "CARESS",
+  "region": "ARMS_HANDS"
+ },
+ "C31": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "GUIDED",
+  "actorRequirements": [
+   {
+    "part": "oneHand"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "hands"
+   },
+   {
+    "part": "upperArms"
+   },
+   {
+    "part": "face"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Empieza acariciando despacio las manos, los brazos o el rostro de {R}. {R} guía tu mano con la suya dentro de esas zonas."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   45
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "guia"
+  ],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "GUIDED",
+  "levels": null,
+  "level": 1,
+  "id": "C31",
+  "family": "CARESS",
+  "region": "ARMS_HANDS"
+ },
+ "C32": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "MUTUAL",
+  "actorRequirements": [
+   {
+    "part": "arms"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "wholeBody"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Abrazaos cómodos y notad la respiración del otro durante un rato. No hace falta acompasarla.",
+   "Abraza a {R} y fíjate en cómo respira. Sin intentar respirar igual; solo notarlo."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   40
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "BREATHING",
+  "levels": null,
+  "level": 1,
+  "id": "C32",
+  "family": "BREATHING",
+  "region": "FULL_BODY"
+ },
+ "C33": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "BODY_TO_BODY",
+  "actorRequirements": [
+   {
+    "part": "forehead"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "forehead"
+   },
+   {
+    "part": "hands"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Frente con frente con {R}, ojos cerrados, tomados de las manos. Respirad tranquilos.",
+   "Apoya tu frente en la de {R}, cerrad los ojos, tomaos de las manos y respirad despacio."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   40
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": "FACE",
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "FACE_CONTACT",
+  "levels": null,
+  "level": 1,
+  "id": "C33",
+  "family": "BREATHING",
+  "region": "FACE"
+ },
+ "C34": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "MUTUAL",
+  "actorRequirements": [
+   {
+    "part": "bothHands"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "fingers"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Entrelazad los dedos y cerrad los ojos. Quedaos así.",
+   "Dedos entrelazados con {R}, los dos con los ojos cerrados, hasta que acabe el tiempo."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "HAND_CONTACT",
+  "levels": null,
+  "level": 1,
+  "id": "C34",
+  "family": "HANDS",
+  "region": "ARMS_HANDS"
+ },
+ "C35": {
+  "intraLevelIntensity": null,
+  "status": "REJECTED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [],
+  "receiverRequirements": [],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": "«Espejo de manos»: rechazada por el diseñador (2026-11-02). Id reservado.",
+  "transition": false,
+  "similarityGroup": "PLAYFUL",
+  "levels": null,
+  "level": 1,
+  "id": "C35",
+  "family": "PLAY",
+  "region": "FULL_BODY"
+ },
+ "C36": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "head"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "face"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Miraos. Haz expresiones suaves o divertidas y {R} intenta imitarlas. Reírse vale.",
+   "Pon caras, suaves o graciosas, y {R} las copia. Si os reís, mejor."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   40
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "PLAYFUL",
+  "levels": null,
+  "level": 1,
+  "id": "C36",
+  "family": "PLAY",
+  "region": "FACE"
+ },
+ "C37": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "BODY_TO_BODY",
+  "actorRequirements": [
+   {
+    "part": "arms"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "wholeBody"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Abrazados de pie, balancearos despacio de un lado a otro.",
+   "De pie, abraza a {R} y meceos lentamente de lado a lado hasta que acabe el tiempo."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   40
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": "STANDING",
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "DANCE",
+  "levels": null,
+  "level": 1,
+  "id": "C37",
+  "family": "HUG",
+  "region": "FULL_BODY"
+ },
+ "C38": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "MUTUAL",
+  "actorRequirements": [
+   {
+    "part": "lips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "cheeks"
+   },
+   {
+    "part": "forehead"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Guerra de picos: intentad sorprenderos con picos pequeños en las mejillas, la frente y la nariz.",
+   "Picos sorpresa en las mejillas, la frente o la nariz del otro. Gana quien pille más desprevenido."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "boca"
+  ],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "LIGHT_KISSING",
+  "levels": null,
+  "level": 1,
+  "id": "C38",
+  "family": "PLAY",
+  "region": "FACE"
+ },
+ "C39": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "MUTUAL",
+  "actorRequirements": [
+   {
+    "part": "oneHand"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "hands"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Sentados frente a frente: intenta tocar suavemente la mano de {R} mientras {R} la aparta. A mitad del tiempo, cambiad.",
+   "Atrápame la mano: tú intentas rozar la mano de {R}, {R} la mueve. Luego al revés."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "PLAYFUL",
+  "levels": null,
+  "level": 1,
+  "id": "C39",
+  "family": "PLAY",
+  "region": "ARMS_HANDS"
+ },
+ "C40": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "MUTUAL",
+  "actorRequirements": [
+   {
+    "part": "fingers"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "wholeBody"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Cosquillas muy suaves, unos segundos, en una zona no íntima donde {R} esté a gusto. Después cambiad.",
+   "Hazle cosquillas muy suaves a {R} donde le resulte cómodo, unos veinte segundos. Luego te toca a ti recibir."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   40
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": "20 segundos cada uno. Pasar siempre vale.",
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "PLAYFUL",
+  "levels": null,
+  "level": 1,
+  "id": "C40",
+  "family": "PLAY",
+  "region": "FULL_BODY"
+ },
+ "C41": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "MUTUAL",
+  "actorRequirements": [
+   {
+    "part": "nose"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "face"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Rozad suavemente vuestras narices. Podéis reíros, moveros o quedaros quietos.",
+   "Nariz con nariz con {R}, suave, unos segundos. Vale reírse."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   20
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "FACE_CONTACT",
+  "levels": null,
+  "level": 1,
+  "id": "C41",
+  "family": "CLOSENESS",
+  "region": "FACE"
+ },
+ "C42": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "BODY_TO_BODY",
+  "actorRequirements": [
+   {
+    "part": "head"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "neck"
+   },
+   {
+    "part": "shoulders"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Abraza a {R} y esconde la cara, cómodo, entre su cuello y su hombro.",
+   "Abraza a {R} y apoya la cara en el hueco de su cuello. Quédate ahí."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   35
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": "FACE",
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "EMBRACE",
+  "levels": null,
+  "level": 1,
+  "id": "C42",
+  "family": "HUG",
+  "region": "NECK"
+ },
+ "C43": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "MUTUAL",
+  "actorRequirements": [
+   {
+    "part": "body"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "wholeBody"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Cerca o abrazados: cada uno dice una cosa sencilla que le gusta del otro. Sin discursos.",
+   "Una cosa que te gusta de {R}, dicha en una frase. Después {R} te dice una a ti."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [],
+  "timerMode": "NO_TIMER",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "APPRECIATION",
+  "levels": null,
+  "level": 1,
+  "id": "C43",
+  "family": "WORDS",
+  "region": "FULL_BODY"
+ },
+ "C44": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "MUTUAL",
+  "actorRequirements": [
+   {
+    "part": "body"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "wholeBody"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Cada uno dice una pequeña cosa cotidiana que el otro hizo hace poco y que agradeció.",
+   "Gracias por…: una cosa pequeña y reciente de {R} que agradeciste. Luego {R} te dice la suya."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [],
+  "timerMode": "NO_TIMER",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "APPRECIATION",
+  "levels": null,
+  "level": 1,
+  "id": "C44",
+  "family": "WORDS",
+  "region": "FULL_BODY"
+ },
+ "C45": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "body"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "wholeBody"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Cuéntale a {R} un momento juntos que recuerdas con cariño. {R} puede añadir lo que recuerde.",
+   "Un recuerdo bonito de los dos, contado en un minuto. {R} completa si quiere."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   60
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": "Orientativo. No es terapia.",
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "MEMORY",
+  "levels": null,
+  "level": 1,
+  "id": "C45",
+  "family": "WORDS",
+  "region": "FULL_BODY"
+ },
+ "C46": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "CHOOSE",
+  "actorRequirements": [
+   {
+    "part": "body"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "wholeBody"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "{R} elige cómo quiere estar: abrazo, tomarse de las manos, cabeza en el hombro o cabeza en el pecho. Quedaos así."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   45
+  ],
+  "timerMode": "FIXED",
+  "choices": [
+   {
+    "id": "hug",
+    "label": "abrazo"
+   },
+   {
+    "id": "hands",
+    "label": "tomarse de las manos"
+   },
+   {
+    "id": "shoulder",
+    "label": "cabeza en el hombro"
+   },
+   {
+    "id": "chest",
+    "label": "cabeza en el pecho"
+   }
+  ],
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "CHOICE",
+  "levels": null,
+  "level": 1,
+  "id": "C46",
+  "family": "CLOSENESS",
+  "region": "FULL_BODY"
+ },
+ "C47": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "CHOOSE",
+  "actorRequirements": [
+   {
+    "part": "oneHand"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "hands"
+   },
+   {
+    "part": "upperArms"
+   },
+   {
+    "part": "hair"
+   },
+   {
+    "part": "face"
+   },
+   {
+    "part": "back"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "{R} elige dónde quiere una caricia: manos, brazos, cabello, rostro o espalda. Acaríciale ahí, suave."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   40
+  ],
+  "timerMode": "FIXED",
+  "choices": [
+   {
+    "id": "hands",
+    "label": "manos"
+   },
+   {
+    "id": "arms",
+    "label": "brazos"
+   },
+   {
+    "id": "hair",
+    "label": "cabello"
+   },
+   {
+    "id": "face",
+    "label": "rostro"
+   },
+   {
+    "id": "back",
+    "label": "espalda"
+   }
+  ],
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "CHOICE",
+  "levels": null,
+  "level": 1,
+  "id": "C47",
+  "family": "CARESS",
+  "region": "ARMS_HANDS"
+ },
+ "C48": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "BODY_TO_BODY",
+  "actorRequirements": [
+   {
+    "part": "body"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "wholeBody"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Sentaos uno al lado del otro, apoyaos cómodos y quedaos juntos.",
+   "Siéntate junto a {R}, apóyate en {R} y quedaos así hasta que acabe el tiempo."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   45
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": "SEATED",
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "BODY_REST",
+  "levels": null,
+  "level": 1,
+  "id": "C48",
+  "family": "REST",
+  "region": "FULL_BODY"
+ },
+ "C49": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "MUTUAL",
+  "actorRequirements": [
+   {
+    "part": "arms"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "wholeBody"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Abrazaos con los ojos cerrados, los dos. Solo notar el abrazo.",
+   "Un abrazo con los ojos cerrados, sin más, hasta que acabe el tiempo."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "EMBRACE",
+  "levels": null,
+  "level": 1,
+  "id": "C49",
+  "family": "HUG",
+  "region": "FULL_BODY"
+ },
+ "C50": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "fingertips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "hair"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Masajea suavemente el cuero cabelludo de {R} con las yemas de los dedos.",
+   "Un masaje suave en la cabeza de {R}: las yemas de los dedos moviéndose despacio por el cuero cabelludo."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   40
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "HAIR_TOUCH",
+  "levels": null,
+  "level": 1,
+  "id": "C50",
+  "family": "HAIR",
+  "region": "FACE"
+ },
+ "C51": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "bothHands"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "forearms"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": [
+   "LEFT",
+   "RIGHT",
+   "BOTH"
+  ],
+  "copy": null,
+  "copyBySide": {
+   "LEFT": [
+    "Masajea despacio el antebrazo izquierdo de {R}, de la muñeca al codo."
+   ],
+   "RIGHT": [
+    "Masajea despacio el antebrazo derecho de {R}, de la muñeca al codo."
+   ],
+   "BOTH": [
+    "Masajea despacio los antebrazos de {R}, primero uno y luego el otro."
+   ]
+  },
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   40
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "MASSAGE",
+  "levels": [
+   1,
+   3
+  ],
+  "level": 1,
+  "id": "C51",
+  "family": "MASSAGE",
+  "region": "ARMS_HANDS"
+ },
+ "C52": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "CHOOSE",
+  "actorRequirements": [
+   {
+    "part": "bothHands"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "wholeBody"
+   },
+   {
+    "part": "hands"
+   },
+   {
+    "part": "shoulders"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "{R} elige el contacto: un abrazo, caricias, masaje de manos o masaje de hombros. Tú se lo das."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   45
+  ],
+  "timerMode": "FIXED",
+  "choices": [
+   {
+    "id": "hug",
+    "label": "abrazo"
+   },
+   {
+    "id": "caress",
+    "label": "caricias"
+   },
+   {
+    "id": "handMassage",
+    "label": "masaje de manos"
+   },
+   {
+    "id": "shoulderMassage",
+    "label": "masaje de hombros"
+   }
+  ],
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": "CHOICE",
+  "levels": null,
+  "level": 1,
+  "id": "C52",
+  "family": "CLOSENESS",
+  "region": "FULL_BODY"
+ },
+ "D01": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "MUTUAL",
+  "actorRequirements": [
+   {
+    "part": "lips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "lips"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "CLOTHED"
+   ],
+   "receiver": [
+    "CLOTHED"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Besaos sin lengua durante un minuto",
+   "Un minuto de besos sin lengua con {R}"
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": [
+   "FREE",
+   "NO_HANDS",
+   "ONE_HAND_EACH",
+   "ACTOR_NO_HANDS",
+   "RECEIVER_NO_HANDS",
+   "ONE_HAND_TOTAL"
+  ],
+  "durations": [
+   60
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "boca"
+  ],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 2,
+  "id": "D01",
+  "family": "KISS",
+  "region": "FACE"
+ },
+ "D02": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "bothHands"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "outerThighs"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "CLOTHED"
+   ],
+   "receiver": [
+    "CLOTHED"
+   ]
+  },
+  "allowedSides": [
+   "LEFT",
+   "RIGHT",
+   "BOTH"
+  ],
+  "copy": null,
+  "copyBySide": {
+   "LEFT": [
+    "Masajea el muslo izquierdo de {R} con las dos manos."
+   ],
+   "RIGHT": [
+    "Masajea el muslo derecho de {R} con las dos manos."
+   ],
+   "BOTH": [
+    "Masajea los muslos de {R}, primero uno y luego el otro."
+   ]
+  },
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   40
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 2,
+  "id": "D02",
+  "family": "MASSAGE",
+  "region": "THIGHS_LEGS"
+ },
+ "D03": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "oneHand"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "buttocks"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "CLOTHED"
+   ],
+   "receiver": [
+    "CLOTHED"
+   ]
+  },
+  "allowedSides": [
+   "LEFT",
+   "RIGHT",
+   "BOTH"
+  ],
+  "copy": null,
+  "copyBySide": {
+   "LEFT": [
+    "Aprieta y acaricia la nalga izquierda de {R}, alternando una cosa y otra."
+   ],
+   "RIGHT": [
+    "Aprieta y acaricia la nalga derecha de {R}, alternando una cosa y otra."
+   ],
+   "BOTH": [
+    "Aprieta y acaricia las nalgas de {R}, alternando una cosa y otra."
+   ]
+  },
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 2,
+  "id": "D03",
+  "family": "BUTTOCKS",
+  "region": "HIPS_GLUTES"
+ },
+ "D04": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "fingers"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "toes"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "CLOTHED"
+   ],
+   "receiver": [
+    "CLOTHED"
+   ]
+  },
+  "allowedSides": [
+   "LEFT",
+   "RIGHT",
+   "BOTH"
+  ],
+  "copy": null,
+  "copyBySide": {
+   "LEFT": [
+    "Aprieta y juega con los dedos del pie izquierdo de {R}, uno a uno."
+   ],
+   "RIGHT": [
+    "Aprieta y juega con los dedos del pie derecho de {R}, uno a uno."
+   ],
+   "BOTH": [
+    "Aprieta y juega con los dedos de los pies de {R}, uno a uno."
+   ]
+  },
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   25
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 2,
+  "id": "D04",
+  "family": "FEET",
+  "region": "FEET"
+ },
+ "D05": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "lips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "neck"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "CLOTHED"
+   ],
+   "receiver": [
+    "CLOTHED"
+   ]
+  },
+  "allowedSides": [
+   "LEFT",
+   "RIGHT",
+   "BOTH"
+  ],
+  "copy": null,
+  "copyBySide": {
+   "LEFT": [
+    "Besa el lado izquierdo del cuello de {R}, de la oreja al hombro."
+   ],
+   "RIGHT": [
+    "Besa el lado derecho del cuello de {R}, de la oreja al hombro."
+   ],
+   "BOTH": [
+    "Besa el cuello de {R}: un lado y luego el otro."
+   ]
+  },
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   45
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "boca"
+  ],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 2,
+  "id": "D05",
+  "family": "NECK",
+  "region": "NECK"
+ },
+ "D06": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "lips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "lowerAbdomen"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "CLOTHED"
+   ],
+   "receiver": [
+    "CLOTHED"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Da picos en el bajo vientre de {R}, por encima de la ropa.",
+   "Picos cortos en el bajo vientre de {R}, sin apartar la ropa."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "boca"
+  ],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 2,
+  "id": "D06",
+  "family": "ABDOMEN",
+  "region": "ABDOMEN"
+ },
+ "D07": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "fingertips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "fingers"
+   },
+   {
+    "part": "hands"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "CLOTHED"
+   ],
+   "receiver": [
+    "CLOTHED"
+   ]
+  },
+  "allowedSides": [
+   "LEFT",
+   "RIGHT"
+  ],
+  "copy": null,
+  "copyBySide": {
+   "LEFT": [
+    "{R} cierra los ojos y te da su mano izquierda. Recorre despacio cada uno de sus dedos con las yemas de los tuyos.",
+    "{R} cierra los ojos. Toma su mano izquierda y pasa las yemas de tus dedos por los suyos, uno a uno, muy despacio."
+   ],
+   "RIGHT": [
+    "{R} cierra los ojos y te da su mano derecha. Recorre despacio cada uno de sus dedos con las yemas de los tuyos.",
+    "{R} cierra los ojos. Toma su mano derecha y pasa las yemas de tus dedos por los suyos, uno a uno, muy despacio."
+   ]
+  },
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   40
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": "Experiencia sensorial con los dedos (diseñador): dedos de la mano, ritmo lento, receptor con ojos cerrados, 40 s, lateralidad de mano.",
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 2,
+  "id": "D07",
+  "family": "HANDS",
+  "region": "ARMS_HANDS"
+ },
+ "D08": {
+  "intraLevelIntensity": "HIGH",
+  "status": "APPROVED",
+  "source": "MIGRATED_APPROVED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "oneHand"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "breasts"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "CLOTHED"
+   ],
+   "receiver": [
+    "CLOTHED"
+   ]
+  },
+  "allowedSides": [
+   "LEFT",
+   "RIGHT",
+   "BOTH"
+  ],
+  "copy": null,
+  "copyBySide": {
+   "LEFT": [
+    "Acaricia el seno izquierdo de {R} con la mano, por encima de la ropa."
+   ],
+   "RIGHT": [
+    "Acaricia el seno derecho de {R} con la mano, por encima de la ropa."
+   ],
+   "BOTH": [
+    "Acaricia los senos de {R} con las manos, por encima de la ropa."
+   ]
+  },
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": "Migrada de CARESS|oneHand|breasts (EXCELLENT en el repertorio estricto). Solo si quien recibe declaró senos.",
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 2,
+  "id": "D08",
+  "family": "BREASTS",
+  "region": "CHEST"
+ },
+ "D09": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "MIGRATED_APPROVED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "lips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "ears"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "CLOTHED"
+   ],
+   "receiver": [
+    "CLOTHED"
+   ]
+  },
+  "allowedSides": [
+   "LEFT",
+   "RIGHT",
+   "BOTH"
+  ],
+  "copy": null,
+  "copyBySide": null,
+  "variants": [
+   {
+    "id": "kiss",
+    "status": "APPROVED",
+    "copyBySide": {
+     "LEFT": [
+      "Besa a {R} justo detrás de la oreja izquierda."
+     ],
+     "RIGHT": [
+      "Besa a {R} justo detrás de la oreja derecha."
+     ],
+     "BOTH": [
+      "Besa a {R} detrás de una oreja y luego de la otra."
+     ]
+    },
+    "weight": 1,
+    "actorRequirements": null,
+    "receiverRequirements": null
+   },
+   {
+    "id": "bite",
+    "status": "APPROVED",
+    "copyBySide": {
+     "LEFT": [
+      "Mordisquea el lóbulo de la oreja izquierda de {R}, apenas apretando."
+     ],
+     "RIGHT": [
+      "Mordisquea el lóbulo de la oreja derecha de {R}, apenas apretando."
+     ],
+     "BOTH": [
+      "Mordisquea los lóbulos de {R}, una oreja y luego la otra, apenas apretando."
+     ]
+    },
+    "tags": [
+     "presion"
+    ],
+    "weight": 1,
+    "actorRequirements": null,
+    "receiverRequirements": null
+   },
+   {
+    "id": "breath",
+    "status": "APPROVED",
+    "copyBySide": {
+     "LEFT": [
+      "Respira muy cerca de la oreja izquierda de {R}, sin tocar."
+     ],
+     "RIGHT": [
+      "Respira muy cerca de la oreja derecha de {R}, sin tocar."
+     ],
+     "BOTH": [
+      "Respira muy cerca de una oreja de {R} y luego de la otra, sin tocar."
+     ]
+    },
+    "weight": 1,
+    "actorRequirements": null,
+    "receiverRequirements": null
+   }
+  ],
+  "playConstraints": null,
+  "durations": [
+   30
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "boca"
+  ],
+  "notes": "Variantes migradas del repertorio estricto de orejas: KISS|lips, BITE|teeth y HOVER|breath (EXCELLENT). Nada inventado.",
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 2,
+  "id": "D09",
+  "family": "EARS",
+  "region": "FACE"
+ },
+ "D10": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "BODY_TO_BODY",
+  "actorRequirements": [
+   {
+    "part": "body"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "wholeBody"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "CLOTHED"
+   ],
+   "receiver": [
+    "CLOTHED"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "De pie, abraza a {R} cuerpo con cuerpo y respirad despacio hasta que acabe el tiempo."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   50
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": "STANDING",
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": null,
+  "levels": [
+   2,
+   3
+  ],
+  "level": 2,
+  "id": "D10",
+  "family": "HUG",
+  "region": "FULL_BODY"
+ },
+ "D11": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "PATH",
+  "actorRequirements": [
+   {
+    "part": "fingertips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "abdomen"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "CLOTHED"
+   ],
+   "receiver": [
+    "CLOTHED"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Recorre despacio el abdomen de {R} con la punta de los dedos, de arriba abajo, sin salirte del abdomen."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30,
+   40
+  ],
+  "timerMode": "WEIGHTED",
+  "choices": null,
+  "path": {
+   "from": "arriba",
+   "to": "abajo"
+  },
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": "Trayecto en producción: de arriba abajo (mismo patrón que C04). Si el diseñador tiene otro trayecto aprobado, se cambia aquí.",
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 2,
+  "id": "D11",
+  "family": "ABDOMEN",
+  "region": "ABDOMEN"
+ },
+ "D12": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "MIGRATED_APPROVED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "lips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "back"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "CLOTHED"
+   ],
+   "receiver": [
+    "CLOTHED"
+   ]
+  },
+  "allowedSides": null,
+  "copy": null,
+  "copyBySide": null,
+  "variants": [
+   {
+    "id": "down",
+    "status": "APPROVED",
+    "copy": [
+     "Da picos por la espalda de {R}, de la nuca hacia abajo."
+    ],
+    "weight": 1,
+    "actorRequirements": null,
+    "receiverRequirements": null
+   },
+   {
+    "id": "across",
+    "status": "APPROVED",
+    "copy": [
+     "Da picos por la espalda de {R}, de un hombro al otro."
+    ],
+    "weight": 1,
+    "actorRequirements": null,
+    "receiverRequirements": null
+   }
+  ],
+  "playConstraints": null,
+  "durations": [
+   30
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "boca"
+  ],
+  "notes": "Con ropa. Migrada de KISS|lips|back (EXCELLENT); la variación es el trayecto.",
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 2,
+  "id": "D12",
+  "family": "KISS",
+  "region": "BACK"
+ },
+ "D13": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "fingertips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "face"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "CLOTHED"
+   ],
+   "receiver": [
+    "CLOTHED"
+   ]
+  },
+  "allowedSides": null,
+  "copy": null,
+  "copyBySide": null,
+  "variants": [
+   {
+    "id": "one",
+    "status": "APPROVED",
+    "copy": [
+     "Acaricia el rostro de {R} con las yemas de una mano."
+    ],
+    "weight": 1,
+    "actorRequirements": null,
+    "receiverRequirements": null
+   },
+   {
+    "id": "both",
+    "status": "APPROVED",
+    "copy": [
+     "Acaricia el rostro de {R} con las yemas de las dos manos a la vez."
+    ],
+    "weight": 1,
+    "actorRequirements": null,
+    "receiverRequirements": null
+   }
+  ],
+  "playConstraints": null,
+  "durations": [
+   30
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 2,
+  "id": "D13",
+  "family": "CARESS",
+  "region": "FACE"
+ },
+ "D14": {
+  "intraLevelIntensity": "HIGH",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "BODY_TO_BODY",
+  "actorRequirements": [
+   {
+    "part": "body"
+   },
+   {
+    "part": "oneHand"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "wholeBody"
+   },
+   {
+    "part": "buttocks"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "CLOTHED"
+   ],
+   "receiver": [
+    "CLOTHED"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "De pie, abraza a {R} y acaricia sus nalgas mientras tanto."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30,
+   45
+  ],
+  "timerMode": "WEIGHTED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": "STANDING",
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 2,
+  "id": "D14",
+  "family": "BUTTOCKS",
+  "region": "FULL_BODY"
+ },
+ "I01": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "MUTUAL",
+  "actorRequirements": [
+   {
+    "part": "lips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "lips"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Besa a {R} en la boca, despacio y profundo, hasta que acabe el tiempo.",
+   "Un beso largo con {R}, más lento y más hondo que antes."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   40
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "boca"
+  ],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "id": "I01",
+  "family": "KISS",
+  "region": "FACE"
+ },
+ "I02": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "lips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "neck"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Besa el cuello de {R} por los dos lados: primero uno, luego el otro."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   35
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "boca"
+  ],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "id": "I02",
+  "family": "NECK",
+  "region": "NECK"
+ },
+ "I03": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "MIGRATED_APPROVED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "mouth"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "nipples",
+    "anatomy": "senos"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS"
+   ]
+  },
+  "allowedSides": [
+   "LEFT"
+  ],
+  "copy": null,
+  "copyBySide": {
+   "LEFT": [
+    "Lame despacio el pezón izquierdo de {R}.",
+    "Con la boca, muy despacio, sobre el pezón izquierdo de {R}."
+   ]
+  },
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   25
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "boca"
+  ],
+  "notes": "pezón izquierdo + interacción oral lenta + 25 s",
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "id": "I03",
+  "family": "BREASTS",
+  "region": "CHEST"
+ },
+ "I04": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "MIGRATED_APPROVED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "teeth"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "innerThighs"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Mordisquea la parte interna de los muslos de {R}, apenas apretando."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "presion",
+   "boca"
+  ],
+  "notes": "muslos internos + mordida + 30 s",
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "id": "I04",
+  "family": "BITE",
+  "region": "THIGHS_LEGS"
+ },
+ "I05": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "MIGRATED_APPROVED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "lips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "abdomen"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Besa el abdomen de {R}, un beso detrás de otro, sin dejar hueco."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   40
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "boca"
+  ],
+  "notes": "abdomen + besos + 40 s",
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "id": "I05",
+  "family": "ABDOMEN",
+  "region": "ABDOMEN"
+ },
+ "I06": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "MIGRATED_APPROVED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "bothHands"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "buttocks"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Masajea las nalgas de {R} con las dos manos, con firmeza."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   50
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": "nalgas + masaje + 50 s",
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "id": "I06",
+  "family": "BUTTOCKS",
+  "region": "HIPS_GLUTES"
+ },
+ "I07": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "MIGRATED_APPROVED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "bothHands"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "backOfLegs"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Masajea la parte de atrás de las piernas de {R}, de los muslos a las pantorrillas."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   40
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": "parte posterior de las piernas + masaje + 40 s",
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "id": "I07",
+  "family": "MASSAGE",
+  "region": "THIGHS_LEGS"
+ },
+ "I08": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "MIGRATED_APPROVED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "oneHand"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "breasts"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS"
+   ]
+  },
+  "allowedSides": [
+   "RIGHT"
+  ],
+  "copy": null,
+  "copyBySide": {
+   "RIGHT": [
+    "Masajea despacio el seno derecho de {R}."
+   ]
+  },
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": "seno derecho + masaje + 30 s",
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "id": "I08",
+  "family": "BREASTS",
+  "region": "CHEST"
+ },
+ "I09": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "MIGRATED_APPROVED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "fingers"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "nipples",
+    "anatomy": "senos"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS"
+   ]
+  },
+  "allowedSides": [
+   "LEFT"
+  ],
+  "copy": null,
+  "copyBySide": {
+   "LEFT": [
+    "Presiona suavemente el pezón izquierdo de {R} entre dos dedos."
+   ]
+  },
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   20
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": "pezón izquierdo + presión suave + 20 s",
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "id": "I09",
+  "family": "BREASTS",
+  "region": "CHEST"
+ },
+ "I10": {
+  "intraLevelIntensity": "HIGH",
+  "status": "APPROVED",
+  "source": "MIGRATED_APPROVED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "teeth"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "nipples",
+    "anatomy": "senos"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS"
+   ]
+  },
+  "allowedSides": [
+   "RIGHT"
+  ],
+  "copy": null,
+  "copyBySide": {
+   "RIGHT": [
+    "Mordisquea el pezón derecho de {R} a ratos, sin apretar: muerde, suelta, vuelve."
+   ]
+  },
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   20
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "presion",
+   "boca"
+  ],
+  "notes": "pezón derecho + mordida intermitente + 20 s",
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "id": "I10",
+  "family": "BITE",
+  "region": "CHEST"
+ },
+ "I21": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "fingertips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "nipples",
+    "anatomy": "senos"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "THROUGH_BRA"
+   ]
+  },
+  "allowedSides": [
+   "LEFT",
+   "RIGHT",
+   "BOTH"
+  ],
+  "copy": null,
+  "copyBySide": {
+   "LEFT": [
+    "Con las yemas de los dedos, acaricia muy suave el pezón izquierdo de {R} por encima del brasier.",
+    "Por encima del brasier, recorre con las yemas el pezón izquierdo de {R}, apenas rozando."
+   ],
+   "RIGHT": [
+    "Con las yemas de los dedos, acaricia muy suave el pezón derecho de {R} por encima del brasier.",
+    "Por encima del brasier, recorre con las yemas el pezón derecho de {R}, apenas rozando."
+   ],
+   "BOTH": [
+    "Con las yemas de los dedos, acaricia muy suave los dos pezones de {R} por encima del brasier."
+   ]
+  },
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   25,
+   30
+  ],
+  "timerMode": "WEIGHTED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": "THROUGH_BRA: solo con camiseta fuera y brasier puesto (nunca se transforma en acceso directo)",
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "id": "I21",
+  "family": "BREASTS",
+  "region": "CHEST"
+ },
+ "I22": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "fingertips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "penis"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "THROUGH_BOXERS"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Con las yemas de los dedos, acaricia suavemente el pene de {R} por encima de los calzoncillos.",
+   "Por encima de los calzoncillos, recorre despacio con los dedos la forma del pene de {R}, sin apretar."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30,
+   40
+  ],
+  "timerMode": "WEIGHTED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "intimo"
+  ],
+  "notes": "THROUGH_BOXERS (diseñador): contacto suave con los dedos sobre los calzoncillos. Solo con pantalón fuera y calzoncillos puestos.",
+  "transition": false,
+  "similarityGroup": "CLOTHED_TEASE",
+  "levels": null,
+  "level": 3,
+  "id": "I22",
+  "family": "MANUAL",
+  "region": "INTIMATE"
+ },
+ "I23": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "fingertips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "vulva"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "THROUGH_PANTIES"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Con las yemas de los dedos, acaricia suavemente la vulva de {R} por encima de las panties.",
+   "Por encima de las panties, pasa los dedos despacio sobre la vulva de {R}, apenas presionando."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30,
+   40
+  ],
+  "timerMode": "WEIGHTED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "intimo"
+  ],
+  "notes": "THROUGH_PANTIES (diseñador): contacto suave con los dedos sobre las panties. Solo con pantalón fuera y panties puestas.",
+  "transition": false,
+  "similarityGroup": "CLOTHED_TEASE",
+  "levels": null,
+  "level": 3,
+  "id": "I23",
+  "family": "MANUAL",
+  "region": "INTIMATE"
+ },
+ "I24": {
+  "intraLevelIntensity": "MID",
+  "status": "UNREVIEWED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "lips"
+   }
+  ],
+  "receiverRequirements": [],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "THROUGH_PANTIES"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "intimo",
+   "boca"
+  ],
+  "notes": "Concepto aprobado (2026-11-02): picos sobre las panties, pantalón fuera + panties puestas. PENDIENTE SOLO: zona(s) exactas y frase por zona; nunca llegaron.",
+  "transition": false,
+  "similarityGroup": "CLOTHED_TEASE",
+  "levels": null,
+  "level": 3,
+  "id": "I24",
+  "family": "ORAL",
+  "region": "FULL_BODY"
+ },
+ "I25": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_APPROVED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "fingertips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "breasts"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "THROUGH_TOP"
+   ]
+  },
+  "allowedSides": [
+   "LEFT",
+   "RIGHT",
+   "BOTH"
+  ],
+  "copy": null,
+  "copyBySide": {
+   "LEFT": [
+    "Con las yemas de los dedos, acaricia muy suave el seno izquierdo de {R} por encima de la camiseta.",
+    "Por encima de la camiseta, recorre con las yemas el seno izquierdo de {R}, apenas rozando."
+   ],
+   "RIGHT": [
+    "Con las yemas de los dedos, acaricia muy suave el seno derecho de {R} por encima de la camiseta.",
+    "Por encima de la camiseta, recorre con las yemas el seno derecho de {R}, apenas rozando."
+   ],
+   "BOTH": [
+    "Con las yemas de los dedos, acaricia muy suave los dos senos de {R} por encima de la camiseta."
+   ]
+  },
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": "THROUGH_TOP (diseñador, Opción A): solo con la camiseta puesta como capa exterior sobre el pecho; senos declarados. 30 s.",
+  "transition": false,
+  "similarityGroup": "CLOTHED_TEASE",
+  "levels": null,
+  "level": 3,
+  "id": "I25",
+  "family": "BREASTS",
+  "region": "CHEST"
+ },
+ "I11": {
+  "intraLevelIntensity": "HIGH",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "oneHand"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "vulva"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS",
+    "UNDERWEAR_OFF"
+   ]
+  },
+  "allowedSides": null,
+  "copy": null,
+  "copyBySide": null,
+  "variants": [
+   {
+    "id": "vulva",
+    "status": "APPROVED",
+    "anatomy": "vulva",
+    "receiverRequirements": [
+     {
+      "part": "vulva"
+     }
+    ],
+    "copy": [
+     "Acaricia la vulva de {R} con los dedos, despacio, sin apartarlos.",
+     "Con la mano sobre la vulva de {R}, muévela despacio; que la mano de {R} te corrija si quiere."
+    ],
+    "weight": 1,
+    "actorRequirements": null
+   },
+   {
+    "id": "pene",
+    "status": "APPROVED",
+    "anatomy": "pene",
+    "receiverRequirements": [
+     {
+      "part": "penis"
+     }
+    ],
+    "copy": [
+     "Rodea el pene de {R} con la mano y muévela despacio.",
+     "Con la mano alrededor del pene de {R}, un ritmo lento y constante."
+    ],
+    "weight": 1,
+    "actorRequirements": null
+   }
+  ],
+  "playConstraints": null,
+  "durations": [
+   45,
+   60,
+   75
+  ],
+  "timerMode": "WEIGHTED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "intimo"
+  ],
+  "notes": "estimulación manual de anatomía íntima (STANDARD)",
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "id": "I11",
+  "family": "MANUAL",
+  "region": "INTIMATE"
+ },
+ "I12": {
+  "intraLevelIntensity": "HIGH",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "feet"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "penis"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS",
+    "UNDERWEAR_OFF"
+   ]
+  },
+  "allowedSides": null,
+  "copy": null,
+  "copyBySide": null,
+  "variants": [
+   {
+    "id": "pene",
+    "status": "APPROVED",
+    "anatomy": "pene",
+    "receiverRequirements": [
+     {
+      "part": "penis"
+     }
+    ],
+    "copy": [
+     "Con los pies, acaricia el pene de {R} despacio.",
+     "Sujeta el pene de {R} entre los pies y muévelos despacio."
+    ],
+    "weight": 1,
+    "actorRequirements": null
+   },
+   {
+    "id": "vulva",
+    "status": "UNREVIEWED",
+    "anatomy": "vulva",
+    "receiverRequirements": [
+     {
+      "part": "vulva"
+     }
+    ],
+    "copy": [],
+    "notes": "El diseñador no concretó si «estimulación mediante pies» incluye vulva. Sin decisión no sale.",
+    "weight": 1,
+    "actorRequirements": null
+   }
+  ],
+  "playConstraints": null,
+  "durations": [
+   45,
+   60
+  ],
+  "timerMode": "WEIGHTED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "intimo"
+  ],
+  "notes": "estimulación mediante pies (STANDARD). Los pies de quien actúa tienen que estar descalzos.",
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "id": "I12",
+  "family": "FEET",
+  "region": "INTIMATE"
+ },
+ "I13": {
+  "intraLevelIntensity": "HIGH",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "mouth"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "vulva"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS",
+    "UNDERWEAR_OFF"
+   ]
+  },
+  "allowedSides": null,
+  "copy": null,
+  "copyBySide": null,
+  "variants": [
+   {
+    "id": "vulva",
+    "status": "APPROVED",
+    "anatomy": "vulva",
+    "receiverRequirements": [
+     {
+      "part": "vulva"
+     }
+    ],
+    "copy": [
+     "Lame despacio la vulva de {R}, sin prisa por llegar a nada.",
+     "Con la boca sobre la vulva de {R}: lengua lenta, sin cambiar de ritmo."
+    ],
+    "weight": 1,
+    "actorRequirements": null
+   },
+   {
+    "id": "pene",
+    "status": "APPROVED",
+    "anatomy": "pene",
+    "receiverRequirements": [
+     {
+      "part": "penis"
+     }
+    ],
+    "copy": [
+     "Métete el pene de {R} en la boca y muévete despacio.",
+     "Con la boca sobre el pene de {R}: lento, sin prisa por llegar a nada."
+    ],
+    "weight": 1,
+    "actorRequirements": null
+   }
+  ],
+  "playConstraints": null,
+  "durations": [
+   45,
+   60,
+   75
+  ],
+  "timerMode": "WEIGHTED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "intimo",
+   "boca"
+  ],
+  "notes": "estimulación oral de anatomía íntima (STANDARD)",
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "id": "I13",
+  "family": "ORAL",
+  "region": "INTIMATE"
+ },
+ "I14": {
+  "intraLevelIntensity": "MID",
+  "status": "REJECTED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "teeth"
+   }
+  ],
+  "receiverRequirements": [],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   20
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "presion",
+   "boca"
+  ],
+  "notes": "RECHAZADA por el diseñador (2026-11-02): «mordida suave en anatomía específica» no aporta contenido nuevo; muslos (I04), nalgas (I19) y pezón (I10) ya tienen mordisco. No se reemplaza ni se inventa otra zona.",
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "id": "I14",
+  "family": "BITE",
+  "region": "FULL_BODY"
+ },
+ "I15": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "breath"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "vulva"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS",
+    "UNDERWEAR_OFF"
+   ]
+  },
+  "allowedSides": null,
+  "copy": null,
+  "copyBySide": null,
+  "variants": [
+   {
+    "id": "vulva",
+    "status": "APPROVED",
+    "anatomy": "vulva",
+    "receiverRequirements": [
+     {
+      "part": "vulva"
+     }
+    ],
+    "copy": [
+     "Respira muy cerca de la vulva de {R}, sin tocar: que note solo el aire y el calor."
+    ],
+    "weight": 1,
+    "actorRequirements": null
+   },
+   {
+    "id": "pene",
+    "status": "APPROVED",
+    "anatomy": "pene",
+    "receiverRequirements": [
+     {
+      "part": "penis"
+     }
+    ],
+    "copy": [
+     "Respira muy cerca del pene de {R}, sin tocar: que note solo el aire y el calor."
+    ],
+    "weight": 1,
+    "actorRequirements": null
+   }
+  ],
+  "playConstraints": null,
+  "durations": [
+   20
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "intimo",
+   "boca"
+  ],
+  "notes": "sensación de aire / calor sobre anatomía íntima (STANDARD)",
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "id": "I15",
+  "family": "BREATH",
+  "region": "INTIMATE"
+ },
+ "I16": {
+  "intraLevelIntensity": "HIGH",
+  "status": "UNREVIEWED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "POSITIONAL",
+  "actorRequirements": [
+   {
+    "part": "penis"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "breasts"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "FULL_BODY_ACCESS"
+   ],
+   "receiver": [
+    "SKIN_ACCESS"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30,
+   45,
+   60
+  ],
+  "timerMode": "WEIGHTED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": "LYING",
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "intimo"
+  ],
+  "notes": "Aprobada por el diseñador (2026-11-02): pene entre senos, tumbados. Requisitos cerrados (senos a piel: top ≠ ON y bra ≠ ON; pene a piel). PENDIENTE SOLO LA ESCENA: falta la frase; sin ella no sale.",
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "id": "I16",
+  "family": "BODY",
+  "region": "CHEST"
+ },
+ "I17": {
+  "intraLevelIntensity": "HIGH",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "POSITIONAL",
+  "actorRequirements": [
+   {
+    "part": "glans"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "nipples",
+    "anatomy": "senos"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "FULL_BODY_ACCESS"
+   ],
+   "receiver": [
+    "SKIN_ACCESS"
+   ]
+  },
+  "allowedSides": [
+   "LEFT",
+   "RIGHT"
+  ],
+  "copy": null,
+  "copyBySide": {
+   "LEFT": [
+    "Roza el pezón izquierdo de {R} con el glande, despacio."
+   ],
+   "RIGHT": [
+    "Roza el pezón derecho de {R} con el glande, despacio."
+   ]
+  },
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   25
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": "FACE",
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "intimo"
+  ],
+  "notes": "glande y pezones con lateralidad (POSITIONAL)",
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "id": "I17",
+  "family": "BODY",
+  "region": "CHEST"
+ },
+ "I18": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "lips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "vulva"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS",
+    "UNDERWEAR_OFF"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Besa la vulva de {R}, despacio, como besarías su boca."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "intimo",
+   "boca"
+  ],
+  "notes": "beso sobre vulva (STANDARD)",
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "id": "I18",
+  "family": "ORAL",
+  "region": "INTIMATE"
+ },
+ "I19": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "teeth"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "buttocks"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS"
+   ]
+  },
+  "allowedSides": [
+   "LEFT",
+   "RIGHT",
+   "BOTH"
+  ],
+  "copy": null,
+  "copyBySide": {
+   "LEFT": [
+    "Mordisquea la nalga izquierda de {R}, sin apretar."
+   ],
+   "RIGHT": [
+    "Mordisquea la nalga derecha de {R}, sin apretar."
+   ],
+   "BOTH": [
+    "Mordisquea las nalgas de {R}, una y luego la otra, sin apretar."
+   ]
+  },
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   20
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "presion",
+   "boca"
+  ],
+  "notes": "mordida suave sobre nalgas (STANDARD)",
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "id": "I19",
+  "family": "BITE",
+  "region": "HIPS_GLUTES"
+ },
+ "I20": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "BODY_TO_BODY",
+  "actorRequirements": [
+   {
+    "part": "body"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "wholeBody"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "FULL_BODY_ACCESS"
+   ],
+   "receiver": [
+    "FULL_BODY_ACCESS"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "De pie y completamente desnudos, abrazaos y moveos muy despacio, piel con piel."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   60
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": "STANDING",
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": "abrazo de pie completamente desnudos con contacto corporal lento (BODY_TO_BODY)",
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "id": "I20",
+  "family": "BODY",
+  "region": "FULL_BODY"
+ },
+ "I26": {
+  "intraLevelIntensity": "HIGH",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "fingers"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "clitoris"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS",
+    "UNDERWEAR_OFF"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Frota el clítoris de {R} con los dedos, despacio.",
+   "Con los dedos sobre el clítoris de {R}, frótalo con un ritmo lento y constante."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30,
+   45
+  ],
+  "timerMode": "WEIGHTED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "intimo"
+  ],
+  "notes": "frotar el clítoris (diseñador): dedos → clítoris, DIRECT",
+  "transition": false,
+  "similarityGroup": "INTIMATE_TOUCH",
+  "levels": null,
+  "level": 3,
+  "id": "I26",
+  "family": "MANUAL",
+  "region": "INTIMATE"
+ },
+ "I27": {
+  "intraLevelIntensity": "HIGH",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "tongue"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "clitoris"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS",
+    "UNDERWEAR_OFF"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Lame el clítoris de {R}, despacio y sin cambiar de ritmo.",
+   "Con la lengua sobre el clítoris de {R}: lento, sin prisa."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30,
+   45,
+   60
+  ],
+  "timerMode": "WEIGHTED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "intimo",
+   "boca"
+  ],
+  "notes": "lamer el clítoris (diseñador): lengua → clítoris, DIRECT",
+  "transition": false,
+  "similarityGroup": "ORAL",
+  "levels": null,
+  "level": 3,
+  "id": "I27",
+  "family": "ORAL",
+  "region": "INTIMATE"
+ },
+ "I28": {
+  "intraLevelIntensity": "HIGH",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "feet"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "clitoris"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS",
+    "UNDERWEAR_OFF"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Con el pie, roza y estimula el clítoris de {R}, muy despacio."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30,
+   45
+  ],
+  "timerMode": "WEIGHTED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "intimo"
+  ],
+  "notes": "tocar / estimular el clítoris con los pies (diseñador): pies → clítoris, DIRECT. Como en I12, el requisito «descalzo» está pendiente de decisión (actor ANY).",
+  "transition": false,
+  "similarityGroup": "INTIMATE_TOUCH",
+  "levels": null,
+  "level": 3,
+  "id": "I28",
+  "family": "FEET",
+  "region": "INTIMATE"
+ },
+ "I29": {
+  "intraLevelIntensity": "HIGH",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "POSITIONAL",
+  "actorRequirements": [
+   {
+    "part": "glans"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "clitoris"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "FULL_BODY_ACCESS"
+   ],
+   "receiver": [
+    "SKIN_ACCESS",
+    "UNDERWEAR_OFF"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Frota el clítoris de {R} con el glande, despacio, sin entrar."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30,
+   45
+  ],
+  "timerMode": "WEIGHTED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": "FACE",
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "intimo"
+  ],
+  "notes": "frotar el clítoris con el glande (diseñador): POSITIONAL de frente; exige pene en quien actúa y vulva en quien recibe; ambos a piel",
+  "transition": false,
+  "similarityGroup": "BODY_CONTACT",
+  "levels": null,
+  "level": 3,
+  "id": "I29",
+  "family": "BODY",
+  "region": "INTIMATE"
+ },
+ "I30": {
+  "intraLevelIntensity": "HIGH",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "oneFinger"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "vagina"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS",
+    "UNDERWEAR_OFF"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Introduce un dedo en la vagina de {R} y muévelo dentro, despacio."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   45,
+   60
+  ],
+  "timerMode": "WEIGHTED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "intimo"
+  ],
+  "notes": "introducir 1 dedo en la vagina y moverlo dentro (diseñador): DIRECT",
+  "transition": false,
+  "similarityGroup": "INTIMATE_TOUCH",
+  "levels": null,
+  "level": 3,
+  "id": "I30",
+  "family": "MANUAL",
+  "region": "INTIMATE"
+ },
+ "I31": {
+  "intraLevelIntensity": "HIGH",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "oneFinger"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "vagina"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS",
+    "UNDERWEAR_OFF"
+   ]
+  },
+  "allowedSides": null,
+  "copy": null,
+  "copyBySide": null,
+  "variants": [
+   {
+    "id": "un-dedo",
+    "status": "APPROVED",
+    "actorRequirements": [
+     {
+      "part": "oneFinger"
+     }
+    ],
+    "copy": [
+     "Introduce un dedo en la vagina de {R} y muévelo dentro y fuera, despacio."
+    ],
+    "weight": 1,
+    "receiverRequirements": null
+   },
+   {
+    "id": "dos-dedos",
+    "status": "APPROVED",
+    "weight": 0.7,
+    "actorRequirements": [
+     {
+      "part": "twoFingers"
+     }
+    ],
+    "copy": [
+     "Introduce dos dedos en la vagina de {R} y muévelos dentro y fuera, despacio."
+    ],
+    "receiverRequirements": null
+   },
+   {
+    "id": "tres-dedos",
+    "status": "APPROVED",
+    "weight": 0.5,
+    "actorRequirements": [
+     {
+      "part": "threeFingers"
+     }
+    ],
+    "copy": [
+     "Introduce tres dedos en la vagina de {R} y muévelos dentro y fuera, despacio."
+    ],
+    "receiverRequirements": null
+   }
+  ],
+  "playConstraints": null,
+  "durations": [
+   45,
+   60
+  ],
+  "timerMode": "WEIGHTED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "intimo"
+  ],
+  "notes": "introducir 1 dedo con movimiento de entrada / salida (diseñador), con las variantes de 2 y 3 dedos que el diseñador proporcionó. Ninguna otra.",
+  "transition": false,
+  "similarityGroup": "INTIMATE_TOUCH",
+  "levels": null,
+  "level": 3,
+  "id": "I31",
+  "family": "MANUAL",
+  "region": "INTIMATE"
+ },
+ "I32": {
+  "intraLevelIntensity": "HIGH",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "POSITIONAL",
+  "actorRequirements": [
+   {
+    "part": "penis"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "vagina"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "FULL_BODY_ACCESS"
+   ],
+   "receiver": [
+    "SKIN_ACCESS",
+    "UNDERWEAR_OFF"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Introduce el pene en la vagina de {R} muy lentamente."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   60,
+   90
+  ],
+  "timerMode": "WEIGHTED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": "LYING",
+  "note": null,
+  "baseWeight": 0.5,
+  "minIntimacyCards": 35,
+  "tags": [
+   "intimo"
+  ],
+  "notes": "LATE_SESSION (≥ 35 cartas de Intimidad): introducir el pene en la vagina muy lentamente (diseñador)",
+  "transition": false,
+  "similarityGroup": "BODY_CONTACT",
+  "levels": null,
+  "level": 3,
+  "id": "I32",
+  "family": "BODY",
+  "region": "INTIMATE"
+ },
+ "I33": {
+  "intraLevelIntensity": "HIGH",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "POSITIONAL",
+  "actorRequirements": [
+   {
+    "part": "penis"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "vagina"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "FULL_BODY_ACCESS"
+   ],
+   "receiver": [
+    "SKIN_ACCESS",
+    "UNDERWEAR_OFF"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Deja el pene en la entrada de la vagina de {R} y frótalo ahí, sin entrar."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   45,
+   60
+  ],
+  "timerMode": "WEIGHTED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": "LYING",
+  "note": null,
+  "baseWeight": 0.5,
+  "minIntimacyCards": 35,
+  "tags": [
+   "intimo"
+  ],
+  "notes": "LATE_SESSION (≥ 35 cartas de Intimidad): dejar el pene en la entrada de la vagina y frotarlo (diseñador)",
+  "transition": false,
+  "similarityGroup": "BODY_CONTACT",
+  "levels": null,
+  "level": 3,
+  "id": "I33",
+  "family": "BODY",
+  "region": "INTIMATE"
+ },
+ "I34": {
+  "intraLevelIntensity": "HIGH",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "fingers"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "glans"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS",
+    "UNDERWEAR_OFF"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Desliza suavemente los dedos sobre el glande de {R}.",
+   "Con los dedos, recorre el glande de {R} muy suave, sin apretar."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30,
+   45
+  ],
+  "timerMode": "WEIGHTED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "intimo"
+  ],
+  "notes": "deslizar suavemente los dedos sobre el glande (diseñador): dedos → glande, DIRECT",
+  "transition": false,
+  "similarityGroup": "INTIMATE_TOUCH",
+  "levels": null,
+  "level": 3,
+  "id": "I34",
+  "family": "MANUAL",
+  "region": "INTIMATE"
+ },
+ "I35": {
+  "intraLevelIntensity": "HIGH",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "tongue"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "glans"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS",
+    "UNDERWEAR_OFF"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Haz círculos con la lengua sobre el glande de {R}, despacio."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30,
+   45
+  ],
+  "timerMode": "WEIGHTED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "intimo",
+   "boca"
+  ],
+  "notes": "círculos con la lengua sobre el glande (diseñador): lengua → glande, DIRECT",
+  "transition": false,
+  "similarityGroup": "ORAL",
+  "levels": null,
+  "level": 3,
+  "id": "I35",
+  "family": "ORAL",
+  "region": "INTIMATE"
+ },
+ "I36": {
+  "intraLevelIntensity": "HIGH",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "teeth"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "glans"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS",
+    "UNDERWEAR_OFF"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Muerde muy, muy suavemente el glande de {R}: apenas los dientes, sin apretar nada."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   20
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "intimo",
+   "presion",
+   "boca"
+  ],
+  "notes": "morder muy, muy suavemente el glande (diseñador): dientes → glande, DIRECT, 20 s",
+  "transition": false,
+  "similarityGroup": "BITE",
+  "levels": null,
+  "level": 3,
+  "id": "I36",
+  "family": "BITE",
+  "region": "INTIMATE"
+ },
+ "I37": {
+  "intraLevelIntensity": "HIGH",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "mouth"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "testicles"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS",
+    "UNDERWEAR_OFF"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Chupa los testículos de {R}, despacio y con cuidado."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30,
+   45
+  ],
+  "timerMode": "WEIGHTED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "intimo",
+   "boca"
+  ],
+  "notes": "chupar los testículos (diseñador): boca → testículos, DIRECT",
+  "transition": false,
+  "similarityGroup": "ORAL",
+  "levels": null,
+  "level": 3,
+  "id": "I37",
+  "family": "ORAL",
+  "region": "INTIMATE"
+ },
+ "I38": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "fingertips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "testicles"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS",
+    "UNDERWEAR_OFF"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Acaricia los testículos de {R} con las yemas de los dedos, muy suave."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30,
+   45
+  ],
+  "timerMode": "WEIGHTED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "intimo"
+  ],
+  "notes": "acariciar los testículos (diseñador): yemas → testículos, DIRECT",
+  "transition": false,
+  "similarityGroup": "INTIMATE_TOUCH",
+  "levels": null,
+  "level": 3,
+  "id": "I38",
+  "family": "CARESS",
+  "region": "INTIMATE"
+ },
+ "I39": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "fingers"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "testicles"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS",
+    "UNDERWEAR_OFF"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Juega suavemente con los testículos de {R} entre los dedos, sin prisa y sin apretar."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30,
+   45
+  ],
+  "timerMode": "WEIGHTED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "intimo"
+  ],
+  "notes": "jugar suavemente con los testículos (diseñador): dedos → testículos, DIRECT",
+  "transition": false,
+  "similarityGroup": "PLAYFUL",
+  "levels": null,
+  "level": 3,
+  "id": "I39",
+  "family": "MANUAL",
+  "region": "INTIMATE"
+ },
+ "I40": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "fingertips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "nipples"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Acaricia suavemente las tetillas de {R} con las yemas de los dedos."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   25,
+   30
+  ],
+  "timerMode": "WEIGHTED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": "NIPPLES 01 (diseñador): CARESS · FINGERTIPS → NIPPLES · CHEST · DIRECT",
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "id": "I40",
+  "family": "NIPPLES",
+  "region": "CHEST"
+ },
+ "I41": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "tongue"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "nipples"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Lame en círculos las tetillas de {R}."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   25
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "boca"
+  ],
+  "notes": "NIPPLES 02 (diseñador): LICK · TONGUE → NIPPLES · CHEST · DIRECT",
+  "transition": false,
+  "similarityGroup": "ORAL",
+  "levels": null,
+  "level": 3,
+  "id": "I41",
+  "family": "NIPPLES",
+  "region": "CHEST"
+ },
+ "I42": {
+  "intraLevelIntensity": "HIGH",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "mouth"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "nipples"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Muerde suavemente las tetillas de {R}."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   20
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "presion",
+   "boca"
+  ],
+  "notes": "NIPPLES 03 (diseñador): GENTLE_BITE · MOUTH → NIPPLES · CHEST · DIRECT",
+  "transition": false,
+  "similarityGroup": "BITE",
+  "levels": null,
+  "level": 3,
+  "id": "I42",
+  "family": "BITE",
+  "region": "CHEST"
+ },
+ "I43": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "fingertips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "nipples"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Aprieta suavemente las tetillas de {R} con las yemas de los dedos."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   20
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "presion"
+  ],
+  "notes": "NIPPLES 04 (diseñador): GENTLE_SQUEEZE · FINGERTIPS → NIPPLES · CHEST · DIRECT",
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "id": "I43",
+  "family": "NIPPLES",
+  "region": "CHEST"
+ },
+ "I44": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "mouth"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "fingers"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Chupa suavemente los dedos de la mano de {R}."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   20,
+   30
+  ],
+  "timerMode": "WEIGHTED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "boca"
+  ],
+  "notes": "diseñador: SUCK · MOUTH → FINGERS · ARMS_HANDS",
+  "transition": false,
+  "similarityGroup": "ORAL",
+  "levels": null,
+  "level": 3,
+  "id": "I44",
+  "family": "HANDS",
+  "region": "ARMS_HANDS"
+ },
+ "I45": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "lips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "hands"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Dale pequeños besos en la mano a {R}."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   20
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "boca"
+  ],
+  "notes": "diseñador: KISS · MOUTH → HANDS · ARMS_HANDS",
+  "transition": false,
+  "similarityGroup": "LIGHT_KISSING",
+  "levels": null,
+  "level": 3,
+  "id": "I45",
+  "family": "HANDS",
+  "region": "ARMS_HANDS"
+ },
+ "I46": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "mouth"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "toes"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Chupa suavemente los dedos de los pies de {R}."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   20,
+   30
+  ],
+  "timerMode": "WEIGHTED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "boca"
+  ],
+  "notes": "diseñador: SUCK · MOUTH → TOES · FEET · DIRECT",
+  "transition": false,
+  "similarityGroup": "ORAL",
+  "levels": null,
+  "level": 3,
+  "id": "I46",
+  "family": "FEET",
+  "region": "FEET"
+ },
+ "I47": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "lips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "feet"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Dale pequeños besos en los pies a {R}."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   20
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "boca"
+  ],
+  "notes": "diseñador: KISS · LIPS → FEET · FEET · DIRECT",
+  "transition": false,
+  "similarityGroup": "LIGHT_KISSING",
+  "levels": null,
+  "level": 3,
+  "id": "I47",
+  "family": "FEET",
+  "region": "FEET"
+ },
+ "I48": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "teeth"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "feet"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Mordisquea suavemente el pie de {R}, en una zona cómoda."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   20
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "presion",
+   "boca"
+  ],
+  "notes": "diseñador: GENTLE_BITE · TEETH → FEET · FEET · DIRECT (sin zonas inventadas)",
+  "transition": false,
+  "similarityGroup": "BITE",
+  "levels": null,
+  "level": 3,
+  "id": "I48",
+  "family": "BITE",
+  "region": "FEET"
+ },
+ "I49": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "STANDARD",
+  "actorRequirements": [
+   {
+    "part": "teeth"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "hips"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Mordisquea suavemente la parte de atrás de la cadera de {R}."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   20
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "presion",
+   "boca"
+  ],
+  "notes": "diseñador: GENTLE_BITE · TEETH → HIPS (parte posterior) · HIPS_GLUTES · DIRECT",
+  "transition": false,
+  "similarityGroup": "BITE",
+  "levels": null,
+  "level": 3,
+  "id": "I49",
+  "family": "BITE",
+  "region": "HIPS_GLUTES"
+ },
+ "I50": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "MUTUAL",
+  "actorRequirements": [
+   {
+    "part": "lips"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "hipCrease"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "BOTTOM_ACCESS",
+    "UNDERWEAR_OFF"
+   ],
+   "receiver": [
+    "SKIN_ACCESS"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Besaos en las ingles lentamente durante 30 segundos."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [
+   "boca"
+  ],
+  "notes": "diseñador (2026-11-03): «Bésense en las ingles lentamente durante 30 segundos.» adaptado a vosotros · KISS · LIPS → HIP_CREASE · HIPS_GLUTES · DIRECT · mutua",
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "id": "I50",
+  "family": "KISS",
+  "region": "HIPS_GLUTES"
+ },
+ "I51": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "CHOOSE",
+  "actorRequirements": [
+   {
+    "part": "bothHands"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "shoulders"
+   },
+   {
+    "part": "back"
+   },
+   {
+    "part": "lowerBack"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "SKIN_ACCESS"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "{R} elige una zona de la espalda: hombros, entre los omóplatos o la zona lumbar. Masajéala despacio, a piel."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   45,
+   60
+  ],
+  "timerMode": "WEIGHTED",
+  "choices": [
+   {
+    "id": "shoulders",
+    "label": "hombros"
+   },
+   {
+    "id": "back",
+    "label": "entre los omóplatos"
+   },
+   {
+    "id": "lowerBack",
+    "label": "zona lumbar"
+   }
+  ],
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": "Solo esas tres zonas.",
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": "diseñador: MASSAGE localizado · HANDS → BACK · BACK · DIRECT; sin producto cartesiano",
+  "transition": false,
+  "similarityGroup": "CHOICE",
+  "levels": null,
+  "level": 3,
+  "id": "I51",
+  "family": "MASSAGE",
+  "region": "BACK"
+ },
+ "I52": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "BODY_TO_BODY",
+  "actorRequirements": [
+   {
+    "part": "body"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "wholeBody"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "FULL_BODY_ACCESS"
+   ],
+   "receiver": [
+    "FULL_BODY_ACCESS"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "De pie, abrazados cuerpo con cuerpo, besaos despacio sin separaros."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   45
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": "STANDING",
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": "diseñador: BODY_TO_BODY + besos · FULL_BODY · STANDING · mutua",
+  "transition": false,
+  "similarityGroup": "BODY_CONTACT",
+  "levels": null,
+  "level": 3,
+  "id": "I52",
+  "family": "BODY",
+  "region": "FULL_BODY"
+ },
+ "I53": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "BODY_TO_BODY",
+  "actorRequirements": [
+   {
+    "part": "body"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "wholeBody"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "FULL_BODY_ACCESS"
+   ],
+   "receiver": [
+    "FULL_BODY_ACCESS"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "De pie y abrazados, acariciad despacio el cuerpo del otro con las manos, sin perder el contacto."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   60
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": "STANDING",
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": "diseñador: BODY_TO_BODY + exploración corporal · FULL_BODY · STANDING · mutua; copy sencillo, sin instrucciones anatómicas",
+  "transition": false,
+  "similarityGroup": "BODY_CONTACT",
+  "levels": null,
+  "level": 3,
+  "id": "I53",
+  "family": "CARESS",
+  "region": "FULL_BODY"
+ },
+ "I54": {
+  "intraLevelIntensity": "LOW",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "BODY_TO_BODY",
+  "actorRequirements": [
+   {
+    "part": "body"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "wholeBody"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Abrazaos de pie durante 30 segundos, pegando vuestros cuerpos y disfrutando del contacto sin hacer nada más."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [
+   30
+  ],
+  "timerMode": "FIXED",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": "STANDING",
+  "note": null,
+  "baseWeight": 1,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": "diseñador (2026-11-03): «Abrácense de pie durante 30 segundos, pegando sus cuerpos…» adaptado a vosotros · FULL_BODY · BODY_TO_BODY · STANDING",
+  "transition": false,
+  "similarityGroup": "EMBRACE",
+  "levels": null,
+  "level": 3,
+  "id": "I54",
+  "family": "HUG",
+  "region": "FULL_BODY"
+ },
+ "U01": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "UNDRESS",
+  "actorRequirements": [],
+  "receiverRequirements": [],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Quítate una prenda. Tú eliges cuál."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [],
+  "timerMode": "NO_TIMER",
+  "choices": null,
+  "path": null,
+  "undress": {
+   "who": "ACTOR",
+   "garment": "ANY",
+   "chooser": "ACTOR"
+  },
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 0.6,
+  "minIntimacyCards": null,
+  "tags": [
+   "ropa"
+  ],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "family": "UNDRESS",
+  "id": "U01",
+  "region": "FULL_BODY"
+ },
+ "U02": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "UNDRESS",
+  "actorRequirements": [],
+  "receiverRequirements": [],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "{R} se quita una prenda. {R} elige cuál."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [],
+  "timerMode": "NO_TIMER",
+  "choices": null,
+  "path": null,
+  "undress": {
+   "who": "RECEIVER",
+   "garment": "ANY",
+   "chooser": "RECEIVER"
+  },
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 0.6,
+  "minIntimacyCards": null,
+  "tags": [
+   "ropa"
+  ],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "family": "UNDRESS",
+  "id": "U02",
+  "region": "FULL_BODY"
+ },
+ "U03": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "UNDRESS",
+  "actorRequirements": [],
+  "receiverRequirements": [],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Los dos os quitáis la camiseta, a la vez."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [],
+  "timerMode": "NO_TIMER",
+  "choices": null,
+  "path": null,
+  "undress": {
+   "who": "BOTH",
+   "garment": "top",
+   "chooser": null
+  },
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 0.6,
+  "minIntimacyCards": null,
+  "tags": [
+   "ropa"
+  ],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "family": "UNDRESS",
+  "id": "U03",
+  "region": "FULL_BODY"
+ },
+ "U03b": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "UNDRESS",
+  "actorRequirements": [],
+  "receiverRequirements": [],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Los dos os quitáis el pantalón, a la vez."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [],
+  "timerMode": "NO_TIMER",
+  "choices": null,
+  "path": null,
+  "undress": {
+   "who": "BOTH",
+   "garment": "bottoms",
+   "chooser": null
+  },
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 0.6,
+  "minIntimacyCards": null,
+  "tags": [
+   "ropa"
+  ],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "family": "UNDRESS",
+  "id": "U03b",
+  "region": "FULL_BODY"
+ },
+ "U03c": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "UNDRESS",
+  "actorRequirements": [],
+  "receiverRequirements": [],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Los dos os quitáis los calcetines."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [],
+  "timerMode": "NO_TIMER",
+  "choices": null,
+  "path": null,
+  "undress": {
+   "who": "BOTH",
+   "garment": "socks",
+   "chooser": null
+  },
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 0.4,
+  "minIntimacyCards": null,
+  "tags": [
+   "ropa"
+  ],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "family": "UNDRESS",
+  "id": "U03c",
+  "region": "FULL_BODY"
+ },
+ "U04": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "UNDRESS",
+  "actorRequirements": [],
+  "receiverRequirements": [],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Decide qué prenda se quita {R}. {R} se la quita."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [],
+  "timerMode": "NO_TIMER",
+  "choices": null,
+  "path": null,
+  "undress": {
+   "who": "RECEIVER",
+   "garment": "ANY",
+   "chooser": "ACTOR"
+  },
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 0.6,
+  "minIntimacyCards": null,
+  "tags": [
+   "ropa"
+  ],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "family": "UNDRESS",
+  "id": "U04",
+  "region": "FULL_BODY"
+ },
+ "U05": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "UNDRESS",
+  "actorRequirements": [],
+  "receiverRequirements": [],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "{R} decide qué prenda te quitas. Tú te la quitas."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [],
+  "timerMode": "NO_TIMER",
+  "choices": null,
+  "path": null,
+  "undress": {
+   "who": "ACTOR",
+   "garment": "ANY",
+   "chooser": "RECEIVER"
+  },
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 0.6,
+  "minIntimacyCards": null,
+  "tags": [
+   "ropa"
+  ],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "family": "UNDRESS",
+  "id": "U05",
+  "region": "FULL_BODY"
+ },
+ "U06": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "UNDRESS",
+  "actorRequirements": [],
+  "receiverRequirements": [],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "{R} elige una prenda y tú se la quitas."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [],
+  "timerMode": "NO_TIMER",
+  "choices": null,
+  "path": null,
+  "undress": {
+   "who": "RECEIVER",
+   "garment": "ANY",
+   "chooser": "RECEIVER",
+   "helper": true
+  },
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 0.6,
+  "minIntimacyCards": null,
+  "tags": [
+   "ropa"
+  ],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "family": "UNDRESS",
+  "id": "U06",
+  "region": "FULL_BODY"
+ },
+ "U07": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "UNDRESS",
+  "actorRequirements": [],
+  "receiverRequirements": [],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Quítale una prenda a {R} usando solo una mano. Tú eliges cuál."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [],
+  "timerMode": "NO_TIMER",
+  "choices": null,
+  "path": null,
+  "undress": {
+   "who": "RECEIVER",
+   "garment": "ANY",
+   "chooser": "ACTOR",
+   "helper": true,
+   "limitation": "ONE_HAND"
+  },
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 0.6,
+  "minIntimacyCards": null,
+  "tags": [
+   "ropa"
+  ],
+  "notes": null,
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "family": "UNDRESS",
+  "id": "U07",
+  "region": "FULL_BODY"
+ },
+ "U08": {
+  "intraLevelIntensity": "MID",
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "UNDRESS",
+  "actorRequirements": [],
+  "receiverRequirements": [],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Quítale los calcetines a {R} sin usar las manos."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [],
+  "timerMode": "NO_TIMER",
+  "choices": null,
+  "path": null,
+  "undress": {
+   "who": "RECEIVER",
+   "garment": "socks",
+   "chooser": null,
+   "helper": true,
+   "limitation": "NO_HANDS"
+  },
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 0.4,
+  "minIntimacyCards": null,
+  "tags": [
+   "ropa"
+  ],
+  "notes": "Aprobada limitada a calcetines (diseñador, 2026-11-02). Nunca camiseta, pantalón, brasier, panties ni calzoncillos.",
+  "transition": false,
+  "similarityGroup": null,
+  "levels": null,
+  "level": 3,
+  "family": "UNDRESS",
+  "id": "U08",
+  "region": "FULL_BODY"
+ },
+ "T01": {
+  "intraLevelIntensity": null,
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "SPECIAL",
+  "actorRequirements": [
+   {
+    "part": "body"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "wholeBody"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Abrazaos un momento y decidid juntos qué os apetece ahora."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [],
+  "timerMode": "NO_TIMER",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 0,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": true,
+  "similarityGroup": null,
+  "levels": null,
+  "id": "T01",
+  "level": 1,
+  "family": "TRANSITION",
+  "region": "FULL_BODY"
+ },
+ "T02": {
+  "intraLevelIntensity": null,
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "SPECIAL",
+  "actorRequirements": [
+   {
+    "part": "body"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "wholeBody"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Abrazaos un momento y decidid juntos qué os apetece ahora."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [],
+  "timerMode": "NO_TIMER",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 0,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": true,
+  "similarityGroup": null,
+  "levels": null,
+  "id": "T02",
+  "level": 2,
+  "family": "TRANSITION",
+  "region": "FULL_BODY"
+ },
+ "T03": {
+  "intraLevelIntensity": null,
+  "status": "APPROVED",
+  "source": "DESIGNER_PROVIDED",
+  "interactionType": "SPECIAL",
+  "actorRequirements": [
+   {
+    "part": "body"
+   }
+  ],
+  "receiverRequirements": [
+   {
+    "part": "wholeBody"
+   }
+  ],
+  "clothing": {
+   "actor": [
+    "ANY"
+   ],
+   "receiver": [
+    "ANY"
+   ]
+  },
+  "allowedSides": null,
+  "copy": [
+   "Abrazaos un momento, tal como estáis, y decidid juntos qué os apetece ahora."
+  ],
+  "copyBySide": null,
+  "variants": null,
+  "playConstraints": null,
+  "durations": [],
+  "timerMode": "NO_TIMER",
+  "choices": null,
+  "path": null,
+  "undress": null,
+  "requiredOrientation": null,
+  "note": null,
+  "baseWeight": 0,
+  "minIntimacyCards": null,
+  "tags": [],
+  "notes": null,
+  "transition": true,
+  "similarityGroup": null,
+  "levels": null,
+  "id": "T03",
+  "level": 3,
+  "family": "TRANSITION",
+  "region": "FULL_BODY"
+ }
+}

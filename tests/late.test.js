@@ -61,7 +61,7 @@ test('diversidad corporal con el catálogo ampliado (100 sesiones reales): regio
   for (let seed = 1; seed <= 100; seed++) { const e = mk({ level: 3, seed, clothing: [DRESSED(), DRESSED()] }); const rs = play(e, 30); regions += new Set(rs.map(r => r.region)).size; total += rs.length; intimate += rs.filter(r => r.region === 'INTIMATE').length; for (let i = 2; i < rs.length; i++) if (rs[i].region === 'INTIMATE' && rs[i - 1].region === 'INTIMATE' && rs[i - 2].region === 'INTIMATE') streaks++; }
   assert.ok(regions / 100 >= 7, `regiones únicas ${regions / 100}`); assert.ok(intimate / total < 0.3, `cuota INTIMATE ${intimate / total}`); assert.ok(streaks / 100 < 1, `rachas íntimas de 3: ${streaks / 100} por sesión`);
 });
-test('I12, I16 e I24 siguen exactamente como estaban', () => {
+test('I12 sigue como estaba; I16 eliminada e I24 reactivada por el diseñador (2026-11-03)', () => {
   assert.equal(CARD.I12.variants.find(v => v.id === 'vulva').status, 'UNREVIEWED'); assert.deepEqual(CARD.I12.clothing.actor, ['ANY']);
-  assert.equal(CARD.I16.status, 'UNREVIEWED'); assert.equal(CARD.I24.status, 'UNREVIEWED'); assert.deepEqual(CARD.I24.receiverRequirements, []);
+  assert.equal(CARD.I16.status, 'REJECTED'); assert.equal(CARD.I24.status, 'APPROVED'); assert.deepEqual(CARD.I24.receiverRequirements, [{ part: 'breasts' }]);
 });

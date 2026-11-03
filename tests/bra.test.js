@@ -14,7 +14,7 @@ const st = (top, bra) => ({ top, bottoms: 'ON', socks: 'ON', bra, panties: 'ON',
 const eligible = (recv) => { const e = mk({ level: 3, seed: 1, clothing: [recv, NAKED()] }); return new Set(buildDeck(CARDS, e.context(1)).eligible.map(x => x.card.id)); }; // Leo actúa, Ana (vulva · senos) recibe
 
 test('catalog: direct-access chest cards and THROUGH_BRA cards exist and are distinct', () => {
-  assert.deepEqual(CHEST_DIRECT.sort(), ['I03', 'I08', 'I09', 'I10', 'I17', 'I40', 'I41', 'I42', 'I43']); assert.deepEqual(CHEST_SENOS.sort(), ['I03', 'I08', 'I09', 'I10', 'I17']); assert.deepEqual(THROUGH_BRA, ['I21']);
+  assert.deepEqual(CHEST_DIRECT.sort(), ['I03', 'I08', 'I09', 'I10', 'I17', 'I24', 'I40', 'I41', 'I42', 'I43']); assert.deepEqual(CHEST_SENOS.sort(), ['I03', 'I08', 'I09', 'I10', 'I17', 'I24']); // I24 reactivada (2026-11-03) assert.deepEqual(THROUGH_BRA, ['I21']);
   assert.equal(CARD.I21.status, 'APPROVED'); assert.deepEqual(CARD.I21.allowedSides, ['LEFT', 'RIGHT', 'BOTH']);
   for (const c of APPROVED.filter(c => c.receiverRequirements.some(r => ['breasts', 'nipples'].includes(r.part)))) assert.ok(c.clothing.receiver.includes('SKIN_ACCESS') || c.clothing.receiver.includes('THROUGH_BRA') || c.clothing.receiver.includes('THROUGH_TOP') || c.clothing.receiver.includes('THROUGH_CLOTHING') || c.clothing.receiver.includes('CLOTHED') || c.clothing.receiver.includes('ANY'), c.id);
 });

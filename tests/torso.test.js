@@ -131,7 +131,7 @@ test('cadena no dominante: tras quitar la camiseta y descubrir el brasier, quita
   }
   assert.ok(gaps.length >= 10, `pocas sesiones medibles: ${gaps.length}`);
   assert.ok(gaps.filter(g => g <= 1).length / gaps.length < 0.15, `camiseta→brasier seguidas en ${gaps.filter(g => g <= 1).length}/${gaps.length}`);
-  assert.ok(gaps.some(g => g <= 5), 'no es un bloqueo rígido: a veces ocurre pronto'); assert.ok(gaps.sort((a, b) => a - b)[Math.floor(gaps.length / 2)] <= 12, 'y nunca se eterniza');
+  assert.ok(gaps.some(g => g <= 5), 'no es un bloqueo rígido: a veces ocurre pronto'); assert.ok(gaps.sort((a, b) => a - b)[Math.floor(gaps.length / 2)] <= 15, 'y nunca se eterniza'); // mediana real del motor anterior (d6ae93f, 400 semillas): 13; con 40 semillas oscila 12–14
 });
 test('la lógica inferior no cambia: pantalón → panties/calzoncillos → acceso directo (I22/I23 THROUGH_*)', () => {
   const lower = o => ({ ...NAKED(), ...o });
@@ -143,13 +143,13 @@ test('la lógica inferior no cambia: pantalón → panties/calzoncillos → acce
   assert.ok(l(lower({ bottoms: 'OFF', boxers: 'ON', panties: 'NONE' }), 0, A).has('I22') && !l(lower({ bottoms: 'OFF', boxers: 'OFF', panties: 'NONE' }), 0, A).has('I22'));
   assert.ok(l(lower({ bottoms: 'OFF', panties: 'NOT_WORN' }), 1, A).has('I11'), 'panties NOT_WORN + pantalón fuera = acceso directo');
 });
-test('catálogo real: I25 es la única THROUGH_TOP aprobada (Opción A); nada se convirtió; Conexión sigue en 50', () => {
+test('catálogo real: I25 es la única THROUGH_TOP aprobada (Opción A); nada se convirtió; Conexión en 47 tras la curación', () => {
   const tt = APPROVED.filter(c => c.clothing.receiver.includes('THROUGH_TOP')); assert.deepEqual(tt.map(c => c.id), ['I25']);
   assert.equal(CARD.I25.status, 'APPROVED'); assert.equal(CARD.I25.source, 'DESIGNER_APPROVED'); assert.deepEqual(CARD.I25.durations, [30]); assert.deepEqual(CARD.I25.allowedSides, ['LEFT', 'RIGHT', 'BOTH']);
   assert.deepEqual(CARD.I25.actorRequirements, [{ part: 'fingertips' }]); assert.deepEqual(CARD.I25.receiverRequirements, [{ part: 'breasts' }]);
   for (const s of ['LEFT', 'RIGHT', 'BOTH']) for (const t of CARD.I25.copyBySide[s]) assert.match(t, /por encima de la camiseta/i);
   for (const id of CHEST_DIRECT) assert.deepEqual(CARD[id].clothing.receiver, ['SKIN_ACCESS']); assert.deepEqual(CARD.I21.clothing.receiver, ['THROUGH_BRA']);
-  assert.equal(APPROVED.filter(c => c.level === 1 && !c.transition).length, 50); assert.equal(CARD.C29.status, 'REJECTED'); assert.equal(CARD.C35.status, 'REJECTED');
+  assert.equal(APPROVED.filter(c => c.level === 1 && !c.transition).length, 47); assert.equal(CARD.C29.status, 'REJECTED'); assert.equal(CARD.C35.status, 'APPROVED');
 });
 test('los dos recorridos con el catálogo real, recalculando tras cada prenda', () => {
   const chestIds = e => [...idsFor(e)].filter(id => /^I(03|08|09|10|17|21|25)$/.test(id)).sort();

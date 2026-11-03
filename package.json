@@ -9,6 +9,7 @@
     "check": "node tests/validate.js && node --test 'tests/*.test.js' && node tests/simulate.js 100 > /dev/null && echo '✓ check'",
     "check:ui": "node tests/ui.browser.js",
     "audit:coverage": "node tests/coverage.js",
-    "audit:expansion": "node tests/expansion.js"
+    "audit:expansion": "node tests/expansion.js",
+    "audit:diversity": "node tests/intimacy-sim.js --sessions=2000"
   }
 }

@@ -85,7 +85,8 @@ test('A/B corto: los moods cambian la distribución de forma medible y no determ
   const opts = { sessions: 60, cards: 16, seedBase: 50 };
   const n1 = runCombo([null, null], 1, opts), cerca = runCombo(['cerca', 'cerca'], 1, opts), curio = runCombo(['curiosidad', 'curiosidad'], 1, opts);
   assert.ok(cerca.proximity / cerca.n > n1.proximity / n1.n * 1.12, `cerca ${cerca.proximity / cerca.n} vs ${n1.proximity / n1.n}`);
-  assert.ok((curio.type.CHOOSE + curio.type.GUIDED) / curio.n > (n1.type.CHOOSE + n1.type.GUIDED) / n1.n * 1.15, 'curiosidad: más CHOOSE/GUIDED');
+  const exp = s => ((s.type.CHOOSE || 0) + (s.type.GUIDED || 0)) / s.n; // sin cartas GUIDED desde la curación del 2026-11-03
+  assert.ok(exp(curio) > exp(n1) * 1.15, 'curiosidad: más CHOOSE/GUIDED');
   const n3 = runCombo([null, null], 3, opts), calm = runCombo(['tranquilo', 'tranquilo'], 3, opts), calmOpen = runCombo(['tranquilo', 'abierto'], 3, opts), open = runCombo(['abierto', 'abierto'], 3, opts);
   const high = s => (s.inten.HIGH || 0) / s.n;
   assert.ok(high(calm) < high(n3) * 0.6, `tranquilo HIGH ${high(calm)} vs ${high(n3)}`);

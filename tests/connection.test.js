@@ -1,4 +1,4 @@
-/* Conexión V2 · 50 cartas activas, C29/C35 rechazadas, grupos de similitud, anti-monotonía, nivel nunca cambia solo */
+/* Conexión V2 · 47 cartas activas (curación 2026-11-03: C21 C28 C30 C49 eliminadas, C35 reactivada), C29 rechazada, grupos de similitud, anti-monotonía, nivel nunca cambia solo */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { CARDS, CARD, APPROVED } from '../content/index.js';
@@ -7,22 +7,23 @@ import { buildDeck } from '../engine/deck.js';
 import { mk, play } from './helpers.js';
 
 const ACTIVE = APPROVED.filter(c => c.level === 1 && !c.transition);
-test('exactly 50 active Conexión cards, C01–C52, C29 and C35 REJECTED, no C53+', () => {
-  assert.equal(ACTIVE.length, 50);
+const GONE = ['C21', 'C28', 'C29', 'C30', 'C49'];
+test('exactly 47 active Conexión cards, C01–C52, C21 C28 C29 C30 C49 REJECTED, C35 active, no C53+', () => {
+  assert.equal(ACTIVE.length, 47);
   for (let i = 1; i <= 52; i++) assert.ok(CARD[`C${String(i).padStart(2, '0')}`], `C${i}`);
-  assert.equal(CARD.C29.status, 'REJECTED'); assert.equal(CARD.C35.status, 'REJECTED'); assert.ok(!CARD.C53);
+  for (const id of GONE) assert.equal(CARD[id].status, 'REJECTED', id); assert.equal(CARD.C35.status, 'APPROVED'); assert.ok(!CARD.C53);
   for (const c of CARDS.filter(c => c.level === 1 && c.status === 'REJECTED')) assert.deepEqual(c.copy, []);
   for (const c of ACTIVE) { assert.ok(SIMILARITY_GROUPS.includes(c.similarityGroup), c.id); assert.ok(['DESIGNER_PROVIDED', 'DESIGNER_APPROVED'].includes(c.source), c.id); }
   for (let i = 1; i <= 17; i++) assert.equal(CARD[`C${String(i).padStart(2, '0')}`].source, 'DESIGNER_PROVIDED');
-  for (let i = 18; i <= 52; i++) if (![29, 35].includes(i)) assert.equal(CARD[`C${i}`].source, 'DESIGNER_APPROVED', `C${i}`);
+  for (let i = 18; i <= 52; i++) if (![21, 28, 29, 30, 49].includes(i)) assert.equal(CARD[`C${i}`].source, 'DESIGNER_APPROVED', `C${i}`);
 });
-test('all 50 are eligible for both directions with clothes on and any anatomy; C29/C35 never play', () => {
+test('all 47 are eligible for both directions with clothes on and any anatomy; rejected ones never play', () => {
   for (const bp of [[['vulva', 'senos'], ['pene']], [['pene'], ['pene']], [[], []]]) {
     const e = mk({ level: 1, seed: 1, prefs: { bodyParts: bp } });
-    for (const a of [0, 1]) { const d = buildDeck(CARDS, e.context(a)); const ids = new Set(d.eligible.map(x => x.card.id)); for (const c of ACTIVE) assert.ok(ids.has(c.id), `${c.id} ${JSON.stringify(d.rejected.find(r => r.id === c.id))}`); assert.ok(!ids.has('C29') && !ids.has('C35')); }
+    for (const a of [0, 1]) { const d = buildDeck(CARDS, e.context(a)); const ids = new Set(d.eligible.map(x => x.card.id)); for (const c of ACTIVE) assert.ok(ids.has(c.id), `${c.id} ${JSON.stringify(d.rejected.find(r => r.id === c.id))}`); for (const id of GONE) assert.ok(!ids.has(id), id); }
   }
   const seen = new Set(); for (let s = 0; s < 40; s++) for (const r of play(mk({ level: 1, seed: 2000 + s }), 20)) seen.add(r.cardId);
-  for (const c of ACTIVE) assert.ok(seen.has(c.id), `${c.id} nunca sale en 800 cartas`); assert.ok(!seen.has('C29') && !seen.has('C35'));
+  for (const c of ACTIVE) assert.ok(seen.has(c.id), `${c.id} nunca sale en 800 cartas`); for (const id of GONE) assert.ok(!seen.has(id), id);
 });
 test('anti-monotony: no three of the same similarity group, no two verbal, no two CHOOSE in a row (100 × 20)', () => {
   let g3 = 0, v2 = 0, ch2 = 0, f3 = 0, n = 0;
