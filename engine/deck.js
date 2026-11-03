@@ -17,6 +17,8 @@ function unitFailure(card, variant, ctx) {
   const tools = ((variant && variant.actorRequirements) || card.actorRequirements).map(r => r.part);
   const parts = ((variant && variant.receiverRequirements) || card.receiverRequirements).map(r => r.part);
   if (variant && variant.anatomy && !ctx.receiver.has(variant.anatomy)) return 'RECEIVER_ANATOMY';
+  // un requisito puede exigir además una anatomía declarada (p. ej. pezones de senos): explícito en la carta, nunca inferido del target
+  for (const q of ((variant && variant.receiverRequirements) || card.receiverRequirements)) if (q.anatomy && !ctx.receiver.has(q.anatomy)) return 'RECEIVER_ANATOMY';
   for (const t of tools) if (!ACTOR_TOOLS[t]) return 'OWNERSHIP:tool'; else if (!ctx.actor.hasTool(t)) return 'ACTOR_ANATOMY';
   for (const p of parts) if (!BODY_PARTS[p]) return 'OWNERSHIP:part'; else if (!ctx.receiver.hasTarget(p)) return 'RECEIVER_ANATOMY';
   const fr = clothingFailure(card.clothing.receiver, ctx.receiverClothing, parts, { role: 'receiver' }); if (fr) return `CLOTHING:receiver:${fr}`;

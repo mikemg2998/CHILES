@@ -7,12 +7,14 @@ import { chestAccess, removableGarments, clothingFailure } from '../engine/cloth
 import { mk, play, DRESSED, NAKED } from './helpers.js';
 
 const CHEST_DIRECT = APPROVED.filter(c => c.level === 3 && c.receiverRequirements.some(r => ['breasts', 'nipples'].includes(r.part)) && c.clothing.receiver.includes('SKIN_ACCESS')).map(c => c.id);
+/* pezones de senos (requisito explícito anatomy: 'senos'); las cartas NIPPLES I40–I43 son de cualquier anatomía y las recibe también quien no declara senos */
+const CHEST_SENOS = APPROVED.filter(c => CHEST_DIRECT.includes(c.id) && c.receiverRequirements.every(r => r.part === 'breasts' || r.anatomy === 'senos')).map(c => c.id);
 const THROUGH_BRA = APPROVED.filter(c => c.clothing.receiver.includes('THROUGH_BRA')).map(c => c.id);
 const st = (top, bra) => ({ top, bottoms: 'ON', socks: 'ON', bra, panties: 'ON', boxers: 'ON' });
 const eligible = (recv) => { const e = mk({ level: 3, seed: 1, clothing: [recv, NAKED()] }); return new Set(buildDeck(CARDS, e.context(1)).eligible.map(x => x.card.id)); }; // Leo actúa, Ana (vulva · senos) recibe
 
 test('catalog: direct-access chest cards and THROUGH_BRA cards exist and are distinct', () => {
-  assert.deepEqual(CHEST_DIRECT.sort(), ['I03', 'I08', 'I09', 'I10', 'I17']); assert.deepEqual(THROUGH_BRA, ['I21']);
+  assert.deepEqual(CHEST_DIRECT.sort(), ['I03', 'I08', 'I09', 'I10', 'I17', 'I40', 'I41', 'I42', 'I43']); assert.deepEqual(CHEST_SENOS.sort(), ['I03', 'I08', 'I09', 'I10', 'I17']); assert.deepEqual(THROUGH_BRA, ['I21']);
   assert.equal(CARD.I21.status, 'APPROVED'); assert.deepEqual(CARD.I21.allowedSides, ['LEFT', 'RIGHT', 'BOTH']);
   for (const c of APPROVED.filter(c => c.receiverRequirements.some(r => ['breasts', 'nipples'].includes(r.part)))) assert.ok(c.clothing.receiver.includes('SKIN_ACCESS') || c.clothing.receiver.includes('THROUGH_BRA') || c.clothing.receiver.includes('THROUGH_TOP') || c.clothing.receiver.includes('THROUGH_CLOTHING') || c.clothing.receiver.includes('CLOTHED') || c.clothing.receiver.includes('ANY'), c.id);
 });
@@ -24,7 +26,7 @@ test('B · top OFF + bra ON: THROUGH_BRA appears, direct access does not', () =>
   assert.equal(chestAccess(st('OFF', 'ON')), 'COVERED_BY_BRA'); const ids = eligible(st('OFF', 'ON'));
   for (const id of THROUGH_BRA) assert.ok(ids.has(id), id); for (const id of CHEST_DIRECT) assert.ok(!ids.has(id), id);
   const e = mk({ level: 3, seed: 2, clothing: [st('OFF', 'ON'), NAKED()] }); const rs = play(e, 300, { undress: false });
-  assert.ok(rs.some(r => r.cardId === 'I21')); assert.ok(!rs.some(r => CHEST_DIRECT.includes(r.cardId)));
+  assert.ok(rs.some(r => r.cardId === 'I21')); assert.ok(!rs.some(r => r.receiver === 0 && CHEST_DIRECT.includes(r.cardId)), 'Ana con brasier: nada a piel en el pecho'); // Leo (desnudo) sí puede recibir I40–I43: tiene pezones
   for (const r of rs.filter(r => r.cardId === 'I21')) { assert.ok(/por encima del brasier/i.test(r.phrase)); assert.ok(['LEFT', 'RIGHT', 'BOTH'].includes(r.side)); }
   assert.deepEqual([...new Set(rs.filter(r => r.cardId === 'I21').map(r => r.side))].sort(), ['BOTH', 'LEFT', 'RIGHT']);
 });
@@ -46,9 +48,9 @@ test('E · bra OFF: UNDRESS never offers the bra again; bra is only removable on
 });
 test('transition BRA ON → OFF rebuilds the deck at once and boosts the unlocked chest cards without forcing them', () => {
   const e = mk({ level: 3, seed: 4, clothing: [st('OFF', 'ON'), NAKED()] });
-  const before = e.eligibleIds(); assert.ok(before.has('I21')); for (const id of CHEST_DIRECT) assert.ok(!before.has(id));
+  const before = e.eligibleIds(); assert.ok(before.has('I21')); for (const id of CHEST_SENOS) assert.ok(!before.has(id));
   e.recordUndress(0, 'bra'); const after = e.eligibleIds();
-  assert.ok(!after.has('I21')); for (const id of CHEST_DIRECT) { assert.ok(after.has(id), id); assert.equal(e.unlocked.get(id), e.state.round + 3); }
+  assert.ok(!after.has('I21')); for (const id of CHEST_DIRECT) { assert.ok(after.has(id), id); if (CHEST_SENOS.includes(id)) assert.equal(e.unlocked.get(id), e.state.round + 3); }
   let chestFirst = 0; for (let s = 0; s < 30; s++) { const f = mk({ level: 3, seed: 500 + s, clothing: [st('OFF', 'ON'), NAKED()] }); f.state.actor = 1; f.recordUndress(0, 'bra'); const r = f.roll(); if (CHEST_DIRECT.includes(r.cardId)) chestFirst++; }
   assert.ok(chestFirst > 0 && chestFirst < 30, `pecho primero ${chestFirst}/30`);
 });

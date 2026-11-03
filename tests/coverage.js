@@ -74,7 +74,7 @@ const MIKE_TARGETS = [
   ['Labios', 'lips'], ['Nariz', null, 'solo existe como herramienta del actor (nose), no como parte receptora'], ['Orejas', 'ears'], ['Cuello', 'neck'], ['Nuca', 'nape'], ['Frente', 'forehead'], ['Mejillas', 'cheeks'], ['Rostro', 'face'], ['Cabello', 'hair'],
   ['Lengua', null, 'solo herramienta del actor (tongue); no es parte receptora'], ['Hombros', 'shoulders'], ['Clavículas', 'collarbones'],
   ['Brazos', 'upperArms'], ['Antebrazos', 'forearms'], ['Manos', 'hands'], ['Dedos', 'fingers'], ['Palmas', 'palms'], ['Muñecas', 'wrists'], ['Axilas', null, 'no existe en BODY_PARTS'],
-  ['Pecho', 'chest'], ['Senos', 'breasts'], ['Pezones', 'nipples'], ['Tetillas', null, '`nipples` exige anatomía senos: una persona sin senos declarados no tiene target de pezón en el modelo'],
+  ['Pecho', 'chest'], ['Senos', 'breasts'], ['Pezones', 'nipples'], ['Tetillas', 'nipples', 'desde 2026-11-03 `nipples` es un target independiente de BREASTS, disponible en cualquier anatomía (I40–I43 para todo el mundo; I03 I09 I10 I17 I21 exigen senos de forma explícita)'],
   ['Abdomen', 'abdomen'], ['Bajo vientre', 'lowerAbdomen'], ['Cintura', 'waist'], ['Costados', 'flanks'], ['Espalda', 'back'], ['Zona lumbar', 'lowerBack'],
   ['Cadera', 'hips'], ['Nalgas', 'buttocks'], ['Ingle', 'hipCrease'], ['Entrepierna', 'groin'],
   ['Muslos exteriores', 'outerThighs'], ['Muslos internos', 'innerThighs'], ['Piernas', 'legs'], ['Parte de atrás de las piernas', 'backOfLegs'], ['Zona posterior de la rodilla', 'poplitealArea'], ['Gemelos / pantorrillas', 'calves'],

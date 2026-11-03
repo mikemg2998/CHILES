@@ -13,7 +13,7 @@ export const INTIMACY = [
   I({ id: 'I02', family: 'NECK', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'lips' }], receiverRequirements: [{ part: 'neck' }], durations: [35],
     copy: ['Besa el cuello de {R} por los dos lados: primero uno, luego el otro.'] }),
   /* §43 · GRUPO CORPORAL migrado tal cual (lado · duración · estilo · anatomía · acceso a piel) */
-  I({ id: 'I03', family: 'BREASTS', intraLevelIntensity: 'MID', source: 'MIGRATED_APPROVED', actorRequirements: [{ part: 'mouth' }], receiverRequirements: [{ part: 'nipples' }], allowedSides: ['LEFT'], clothing: SKIN, durations: [25],
+  I({ id: 'I03', family: 'BREASTS', intraLevelIntensity: 'MID', source: 'MIGRATED_APPROVED', actorRequirements: [{ part: 'mouth' }], receiverRequirements: [{ part: 'nipples', anatomy: 'senos' }], allowedSides: ['LEFT'], clothing: SKIN, durations: [25],
     copyBySide: { LEFT: ['Lame despacio el pezón izquierdo de {R}.', 'Con la boca, muy despacio, sobre el pezón izquierdo de {R}.'] }, notes: 'pezón izquierdo + interacción oral lenta + 25 s' }),
   I({ id: 'I04', family: 'BITE', intraLevelIntensity: 'MID', source: 'MIGRATED_APPROVED', actorRequirements: [{ part: 'teeth' }], receiverRequirements: [{ part: 'innerThighs' }], clothing: SKIN, durations: [30], tags: ['presion'],
     copy: ['Mordisquea la parte interna de los muslos de {R}, apenas apretando.'], notes: 'muslos internos + mordida + 30 s' }),
@@ -25,13 +25,13 @@ export const INTIMACY = [
     copy: ['Masajea la parte de atrás de las piernas de {R}, de los muslos a las pantorrillas.'], notes: 'parte posterior de las piernas + masaje + 40 s' }),
   I({ id: 'I08', family: 'BREASTS', intraLevelIntensity: 'MID', source: 'MIGRATED_APPROVED', actorRequirements: [{ part: 'oneHand' }], receiverRequirements: [{ part: 'breasts' }], allowedSides: ['RIGHT'], clothing: SKIN, durations: [30],
     copyBySide: { RIGHT: ['Masajea despacio el seno derecho de {R}.'] }, notes: 'seno derecho + masaje + 30 s' }),
-  I({ id: 'I09', family: 'BREASTS', intraLevelIntensity: 'MID', source: 'MIGRATED_APPROVED', actorRequirements: [{ part: 'fingers' }], receiverRequirements: [{ part: 'nipples' }], allowedSides: ['LEFT'], clothing: SKIN, durations: [20],
+  I({ id: 'I09', family: 'BREASTS', intraLevelIntensity: 'MID', source: 'MIGRATED_APPROVED', actorRequirements: [{ part: 'fingers' }], receiverRequirements: [{ part: 'nipples', anatomy: 'senos' }], allowedSides: ['LEFT'], clothing: SKIN, durations: [20],
     copyBySide: { LEFT: ['Presiona suavemente el pezón izquierdo de {R} entre dos dedos.'] }, notes: 'pezón izquierdo + presión suave + 20 s' }),
-  I({ id: 'I10', family: 'BITE', intraLevelIntensity: 'HIGH', source: 'MIGRATED_APPROVED', actorRequirements: [{ part: 'teeth' }], receiverRequirements: [{ part: 'nipples' }], allowedSides: ['RIGHT'], clothing: SKIN, durations: [20], tags: ['presion'],
+  I({ id: 'I10', family: 'BITE', intraLevelIntensity: 'HIGH', source: 'MIGRATED_APPROVED', actorRequirements: [{ part: 'teeth' }], receiverRequirements: [{ part: 'nipples', anatomy: 'senos' }], allowedSides: ['RIGHT'], clothing: SKIN, durations: [20], tags: ['presion'],
     copyBySide: { RIGHT: ['Mordisquea el pezón derecho de {R} a ratos, sin apretar: muerde, suelta, vuelve.'] }, notes: 'pezón derecho + mordida intermitente + 20 s' }),
   /* THROUGH_BRA · concepto aprobado por el diseñador (2026-11-02): sin camiseta y con brasier puesto, una experiencia propia sobre el
      brasier. No es una versión de una carta de acceso directo: cuando el brasier sale, esta carta deja de existir y entran las otras. */
-  I({ id: 'I21', family: 'BREASTS', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'fingertips' }], receiverRequirements: [{ part: 'nipples' }], allowedSides: ['LEFT', 'RIGHT', 'BOTH'], clothing: { receiver: ['THROUGH_BRA'] }, durations: [25, 30],
+  I({ id: 'I21', family: 'BREASTS', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'fingertips' }], receiverRequirements: [{ part: 'nipples', anatomy: 'senos' }], allowedSides: ['LEFT', 'RIGHT', 'BOTH'], clothing: { receiver: ['THROUGH_BRA'] }, durations: [25, 30],
     copyBySide: {
       LEFT: ['Con las yemas de los dedos, acaricia muy suave el pezón izquierdo de {R} por encima del brasier.', 'Por encima del brasier, recorre con las yemas el pezón izquierdo de {R}, apenas rozando.'],
       RIGHT: ['Con las yemas de los dedos, acaricia muy suave el pezón derecho de {R} por encima del brasier.', 'Por encima del brasier, recorre con las yemas el pezón derecho de {R}, apenas rozando.'],
@@ -90,7 +90,7 @@ export const INTIMACY = [
   I({ id: 'I16', family: 'BODY', interactionType: 'POSITIONAL', intraLevelIntensity: 'HIGH', status: 'UNREVIEWED', actorRequirements: [{ part: 'penis' }], receiverRequirements: [{ part: 'breasts' }], requiredOrientation: 'LYING',
     clothing: { actor: ['FULL_BODY_ACCESS'], receiver: ['SKIN_ACCESS'] }, durations: [30, 45, 60], tags: ['intimo'], copy: [],
     notes: 'Aprobada por el diseñador (2026-11-02): pene entre senos, tumbados. Requisitos cerrados (senos a piel: top ≠ ON y bra ≠ ON; pene a piel). PENDIENTE SOLO LA ESCENA: falta la frase; sin ella no sale.' }),
-  I({ id: 'I17', family: 'BODY', interactionType: 'POSITIONAL', intraLevelIntensity: 'HIGH', actorRequirements: [{ part: 'glans' }], receiverRequirements: [{ part: 'nipples' }], allowedSides: ['LEFT', 'RIGHT'], requiredOrientation: 'FACE',
+  I({ id: 'I17', family: 'BODY', interactionType: 'POSITIONAL', intraLevelIntensity: 'HIGH', actorRequirements: [{ part: 'glans' }], receiverRequirements: [{ part: 'nipples', anatomy: 'senos' }], allowedSides: ['LEFT', 'RIGHT'], requiredOrientation: 'FACE',
     clothing: { actor: ['FULL_BODY_ACCESS'], receiver: ['SKIN_ACCESS'] }, durations: [25], tags: ['intimo'],
     copyBySide: { LEFT: ['Roza el pezón izquierdo de {R} con el glande, despacio.'], RIGHT: ['Roza el pezón derecho de {R} con el glande, despacio.'] }, notes: 'glande y pezones con lateralidad (POSITIONAL)' }),
   I({ id: 'I18', family: 'ORAL', intraLevelIntensity: 'MID', actorRequirements: [{ part: 'lips' }], receiverRequirements: [{ part: 'vulva' }], clothing: { receiver: ['SKIN_ACCESS', 'UNDERWEAR_OFF'] }, durations: [30], tags: ['intimo', 'boca'],
@@ -144,4 +144,15 @@ export const INTIMACY = [
     copy: ['Acaricia los testículos de {R} con las yemas de los dedos, muy suave.'], notes: 'acariciar los testículos (diseñador): yemas → testículos, DIRECT' }),
   I({ id: 'I39', family: 'MANUAL', similarityGroup: 'PLAYFUL', intraLevelIntensity: 'MID', actorRequirements: [{ part: 'fingers' }], receiverRequirements: [{ part: 'testicles' }], clothing: { receiver: ['SKIN_ACCESS', 'UNDERWEAR_OFF'] }, durations: [30, 45], tags: ['intimo'],
     copy: ['Juega suavemente con los testículos de {R} entre los dedos, sin prisa y sin apretar.'], notes: 'jugar suavemente con los testículos (diseñador): dedos → testículos, DIRECT' }),
+  /* NIPPLES INDEPENDIENTE (diseñador, 2026-11-03): cuatro interacciones sobre los pezones / tetillas de quien recibe, para CUALQUIER anatomía
+     (requisito real: receiver tiene NIPPLES; nunca pene ni senos ni género). Acceso directo (SKIN_ACCESS): con camiseta puesta no salen; sin brasier,
+     camiseta fuera = piel. Sin lateralidad: la frase del diseñador es en plural. Región CHEST; familia NIPPLES (el mordisco, BITE, como I04 / I10). */
+  I({ id: 'I40', family: 'NIPPLES', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'fingertips' }], receiverRequirements: [{ part: 'nipples' }], clothing: SKIN, durations: [25, 30],
+    copy: ['Acaricia suavemente las tetillas de {R} con las yemas de los dedos.'], notes: 'NIPPLES 01 (diseñador): CARESS · FINGERTIPS → NIPPLES · CHEST · DIRECT' }),
+  I({ id: 'I41', family: 'NIPPLES', similarityGroup: 'ORAL', intraLevelIntensity: 'MID', actorRequirements: [{ part: 'tongue' }], receiverRequirements: [{ part: 'nipples' }], clothing: SKIN, durations: [25],
+    copy: ['Lame en círculos las tetillas de {R}.'], notes: 'NIPPLES 02 (diseñador): LICK · TONGUE → NIPPLES · CHEST · DIRECT' }),
+  I({ id: 'I42', family: 'BITE', similarityGroup: 'BITE', intraLevelIntensity: 'HIGH', actorRequirements: [{ part: 'mouth' }], receiverRequirements: [{ part: 'nipples' }], clothing: SKIN, durations: [20], tags: ['presion'],
+    copy: ['Muerde suavemente las tetillas de {R}.'], notes: 'NIPPLES 03 (diseñador): GENTLE_BITE · MOUTH → NIPPLES · CHEST · DIRECT' }),
+  I({ id: 'I43', family: 'NIPPLES', intraLevelIntensity: 'MID', actorRequirements: [{ part: 'fingertips' }], receiverRequirements: [{ part: 'nipples' }], clothing: SKIN, durations: [20], tags: ['presion'],
+    copy: ['Aprieta suavemente las tetillas de {R} con las yemas de los dedos.'], notes: 'NIPPLES 04 (diseñador): GENTLE_SQUEEZE · FINGERTIPS → NIPPLES · CHEST · DIRECT' }),
 ];

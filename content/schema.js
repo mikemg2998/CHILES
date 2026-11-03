@@ -12,7 +12,7 @@
      similarityGroup     grupo de similitud (ver SIMILARITY_GROUPS): dos cartas del mismo grupo se parecen aunque su familia difiera
      interactionType     'STANDARD' | 'MUTUAL' | 'GUIDED' | 'CHOOSE' | 'PATH' | 'BODY_TO_BODY' | 'UNDRESS' | 'POSITIONAL' | 'SPECIAL'
      actorRequirements   [{ part: id de ACTOR_TOOLS }]      — con qué actúa quien actúa (la anatomía la aporta la parte)
-     receiverRequirements[{ part: id de BODY_PARTS }]       — qué recibe quien recibe
+     receiverRequirements[{ part: id de BODY_PARTS, anatomy? }] — qué recibe quien recibe (anatomy: la carta exige además esa anatomía declarada, p. ej. pezones de senos)
      clothing            { actor: ClothingRequirement[], receiver: ClothingRequirement[] } (ver CLOTHING_REQUIREMENTS)
      allowedSides        ['LEFT','RIGHT','BOTH'] solo donde tiene sentido (la copia va por lado: copyBySide)
      copy                ['frase', …]  ·  copyBySide { LEFT: [...], RIGHT: [...], BOTH: [...] }   — tokens {R} quien recibe · {A} quien actúa
@@ -68,7 +68,7 @@ export const throughGarmentOf = q => (/^THROUGH_(TOP|BRA|PANTIES|BOXERS)$/.test(
 /* Familias de interacción: la idea que la pareja percibe. El historial penaliza repetir familia en cartas seguidas. */
 export const FAMILIES = {
   MASSAGE: 'Masaje', CARESS: 'Caricia', KISS: 'Besos', HUG: 'Abrazo', CLOSENESS: 'Cercanía', HAIR: 'Cabello', HANDS: 'Manos',
-  MUSIC: 'Música', EARS: 'Orejas', NECK: 'Cuello', FEET: 'Pies', BUTTOCKS: 'Nalgas', BREASTS: 'Senos', ABDOMEN: 'Abdomen',
+  MUSIC: 'Música', EARS: 'Orejas', NECK: 'Cuello', FEET: 'Pies', BUTTOCKS: 'Nalgas', BREASTS: 'Senos', NIPPLES: 'Pezones', ABDOMEN: 'Abdomen',
   BITE: 'Mordisco', ORAL: 'Boca', MANUAL: 'Manos sobre anatomía íntima', BREATH: 'Aliento', UNDRESS: 'Ropa', BODY: 'Cuerpo con cuerpo', TRANSITION: 'Transición',
   PLAY: 'Juego', WORDS: 'Palabras', BREATHING: 'Respiración', REST: 'Descanso',
 };

@@ -56,7 +56,11 @@ export const BODY_PARTS_LIST = [
   P('back', 'la espalda', { coveredBy: ['top'] }), P('lowerBack', 'la zona lumbar', { coveredBy: ['top'] }),
   P('chest', 'el pecho', { coveredBy: ['top'] }), P('abdomen', 'el abdomen', { coveredBy: ['top'] }), P('lowerAbdomen', 'el bajo vientre', { coveredBy: ['top'] }),
   P('waist', 'la cintura', { coveredBy: ['top'] }), P('flanks', 'los costados', { lateral: true, coveredBy: ['top'] }), P('hips', 'las caderas', { lateral: true, coveredBy: ['bottoms'] }),
-  P('breasts', 'los senos', { anatomy: 'senos', lateral: true, coveredBy: ['top', 'bra'] }), P('nipples', 'los pezones', { anatomy: 'senos', lateral: true, coveredBy: ['top', 'bra'] }),
+  P('breasts', 'los senos', { anatomy: 'senos', lateral: true, coveredBy: ['top', 'bra'] }),
+  /* NIPPLES es un target INDEPENDIENTE de BREASTS (2026-11-03): existe en cualquier anatomía (anatomy: null). Quien declara senos
+     tiene senos Y pezones; quien no los declara tiene pezones igualmente. Tapado por camiseta y, si la lleva, brasier (sin brasier: camiseta → piel).
+     Una carta que necesite pezones «de senos» lo dice en su requisito ({ part: 'nipples', anatomy: 'senos' }); nunca se infiere. */
+  P('nipples', 'los pezones', { lateral: true, coveredBy: ['top', 'bra'] }),
   // brazos y manos
   P('upperArms', 'los brazos', { lateral: true }), P('forearms', 'los antebrazos', { lateral: true }), P('hands', 'las manos', { lateral: true }),
   P('fingers', 'los dedos', { lateral: true }), P('palms', 'las palmas', { lateral: true }), P('wrists', 'las muñecas', { lateral: true }),
