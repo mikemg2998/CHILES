@@ -7,6 +7,7 @@ import { GameEngine, migrateFavorite } from '../engine/engine.js';
 import { PreferenceManager } from '../engine/prefs.js';
 import { LEVELS, LEVEL_IDS, LEVEL_KEYS, LEVEL_BY_KEY, LEVEL_COPY } from '../engine/levels.js';
 import { formatDuration } from '../engine/duration.js';
+import { unlockAudio, playBeeps } from './beep.js';
 import { AVOIDS, PREF_STATES, PREF_LABEL } from '../engine/session.js';
 import { MOODS } from '../engine/mood.js';
 import { GARMENT_LABEL, ANATOMY, UNDERWEAR_GARMENTS } from '../content/body.js';
@@ -142,24 +143,29 @@ function setTimer(seconds) {
   stopTimer();
   if (!seconds) { timerEl.hidden = true; return; }
   timerEl.hidden = false; timerEl.dataset.total = seconds; timerEl.classList.remove('running', 'done');
-  timerEl.querySelector('.t').textContent = formatDuration(seconds); timerEl.querySelector('.bar').style.transform = 'scaleX(0)';
+  timerEl.querySelector('.t').textContent = formatDuration(seconds); timerEl.querySelector('.hint').textContent = 'toca para empezar'; timerEl.querySelector('.bar').style.transform = 'scaleX(0)';
   timerEl.setAttribute('aria-label', `Temporizador de ${seconds} segundos. Toca para empezar`);
 }
-function stopTimer() { if (timer) { cancelAnimationFrame(timer.raf); timer = null; } }
+function stopTimer() { if (timer) { cancelAnimationFrame(timer.raf); timer.cancelled = true; timer = null; } }
+/* Cada arranque es una ejecución propia: solo la ejecución vigente puede terminar, y termina una sola vez. Parar, cambiar
+   de carta, «Otra», «Más suave», «Pasar» o SIGUIENTE la cancelan antes de 00:00, y entonces no suena nada. */
 function startTimer() {
   const total = Number(timerEl.dataset.total); if (!total) return;
   stopTimer(); timerEl.classList.remove('done'); timerEl.classList.add('running');
-  const t0 = performance.now(); timer = { raf: 0 };
+  const t0 = performance.now(); const run = { raf: 0, cancelled: false, finished: false }; timer = run;
   const tick = now => {
+    if (run.cancelled || run.finished || timer !== run) return;
     const left = Math.max(0, total - (now - t0) / 1000);
     timerEl.querySelector('.t').textContent = formatDuration(Math.ceil(left));
     timerEl.querySelector('.bar').style.transform = `scaleX(${(1 - left / total).toFixed(4)})`;
-    if (left > 0) timer.raf = requestAnimationFrame(tick);
-    else { timer = null; timerEl.classList.remove('running'); timerEl.classList.add('done'); buzz([12, 60, 12]); }
+    if (left > 0) { run.raf = requestAnimationFrame(tick); return; }
+    run.finished = true; timer = null; timerEl.classList.remove('running'); timerEl.classList.add('done');
+    timerEl.querySelector('.hint').textContent = 'tiempo'; timerEl.setAttribute('aria-label', 'Tiempo terminado');
+    playBeeps(); buzz([12, 60, 12]);
   };
-  timer.raf = requestAnimationFrame(tick);
+  run.raf = requestAnimationFrame(tick);
 }
-timerEl.addEventListener('click', () => { if (timerEl.classList.contains('running')) { stopTimer(); setTimer(Number(timerEl.dataset.total)); } else if (!timerEl.classList.contains('done')) startTimer(); });
+timerEl.addEventListener('click', () => { if (timerEl.classList.contains('running')) { stopTimer(); setTimer(Number(timerEl.dataset.total)); } else if (!timerEl.classList.contains('done')) { unlockAudio(); startTimer(); } });
 function renderFavBtn() { $('#btnFav').classList.toggle('on', !!current && engine.state.favorites.some(f => f.id === current.id)); }
 function updateControls() {
   const ended = !!engine.ended(), roll = $('#btnRoll');
@@ -175,6 +181,7 @@ async function play(fn, emptyMsg) {
   let r;
   try { r = fn(); } catch (e) { console.error(e); toast('No he podido preparar la siguiente carta.'); return; }
   if (!r) { if (emptyMsg) toast(emptyMsg); updateControls(); return; }
+  stopTimer(); // la carta cambia: un temporizador en marcha se cancela ya, no al terminar el barajado
   setBusy(true);
   document.body.classList.remove('idle', 'home');
   welcome.hidden = true; endingBox.hidden = true;

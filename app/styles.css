@@ -129,17 +129,23 @@ body.home .turn{display:none}
 @keyframes mixC{0%{transform:translate(0,8px) scale(.99)}50%{transform:translate(0,-10px) scale(1.012)}100%{transform:translate(0,10px) scale(.985)}}
 @keyframes redline{0%{transform:scaleX(0);opacity:0}40%{transform:scaleX(1);opacity:.9}100%{transform:scaleX(1);opacity:0}}
 
-/* temporizador: cifra tranquila, progreso en una línea fina. Toca para empezar o parar */
-.timer{position:relative;display:flex;align-items:baseline;gap:var(--s3);width:100%;min-height:var(--tap);margin:var(--s5) 0 0;padding:var(--s2) 0 var(--s3);border:0;background:transparent;color:var(--text-secondary);text-align:left;cursor:pointer}
-.timer .t{font:500 20px/1 var(--sans);letter-spacing:.02em;color:var(--text-primary);font-variant-numeric:tabular-nums;transition:color var(--t)}
+/* temporizador: centrado en un contenedor discreto, cifra grande y tranquila, progreso en una línea fina abajo.
+   Toca para empezar o parar. Al llegar a 00:00: cifra en rojo, «tiempo» y un único pulso suave del borde (sin destellos) */
+.timer{position:relative;display:flex;flex-direction:column;align-items:center;gap:var(--s2);width:fit-content;min-width:min(100%,168px);max-width:100%;min-height:var(--tap);margin:var(--s5) auto 0;padding:var(--s3) var(--s6) var(--s4);border:1px solid var(--border-subtle);border-radius:var(--r-md);background:rgba(245,239,234,.02);color:var(--text-secondary);text-align:center;cursor:pointer;overflow:hidden;transition:border-color var(--t),background var(--t)}
+.timer .t{font:500 clamp(30px,9vw,36px)/1 var(--sans);letter-spacing:.04em;color:var(--text-primary);font-variant-numeric:tabular-nums;transition:color var(--t)}
 .timer .hint{font:var(--label);letter-spacing:var(--track-label);text-transform:uppercase;color:var(--text-muted);transition:opacity var(--t)}
 .timer::before{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--border-subtle)}
-.timer .bar{position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--red-primary);transform-origin:0 50%;transform:scaleX(0)}
+.timer .bar{position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--red-primary);transform-origin:0 50%;transform:scaleX(0)}
+.timer::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1px var(--border-active);background:rgba(227,19,58,.06);opacity:0;pointer-events:none}
 .timer.running .hint{opacity:0}
-.timer.done .t{color:var(--red-primary)}
-.timer.done .hint{opacity:0}
+.timer.done{border-color:var(--border-strong)}
+.timer.done .t{color:var(--red-primary);animation:donebeat .9s var(--ease) 1}
+.timer.done .hint{opacity:1;color:var(--text-secondary)}
+.timer.done::after{animation:donepulse 1.4s ease-out 1}
 .timer.done .bar{animation:barfade 1.6s ease-out forwards}
 @keyframes barfade{0%{opacity:1}100%{opacity:0}}
+@keyframes donepulse{0%{opacity:0}25%{opacity:1}100%{opacity:0}}
+@keyframes donebeat{0%{transform:scale(1)}30%{transform:scale(1.04)}100%{transform:scale(1)}}
 
 /* feedback: discreto. ♡ ME GUSTA principal, ••• para el resto, marcador al borde */
 .feedback{display:flex;align-items:center;gap:var(--s2);margin-top:var(--s5)}
@@ -304,6 +310,7 @@ body.level-3 .chip{border-color:var(--border-subtle)}
 
 /* ---------- responsive: 320 → 430, altos y bajos ---------- */
 @media (max-width:359px){
+  .timer{padding:var(--s3) var(--s5) var(--s4)}
   .stage .phrase{font-size:clamp(22px,7vw,24px)}
   .round{padding:var(--s4) var(--s3)}
   .chip{padding:0 var(--s3)}

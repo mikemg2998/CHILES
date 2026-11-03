@@ -27,7 +27,17 @@ let failures = 0, passed = 0;
 async function page(opts = {}) {
   const ctx = await browser.newContext({ viewport: { width: opts.width || 390, height: opts.height || 844 }, reducedMotion: opts.reducedMotion || 'no-preference' });
   await ctx.addInitScript(s => localStorage.setItem('pab.v2', JSON.stringify(s)), SAVED);
+  /* espía de audio: cuenta los tonos que el temporizador programa (cada pitido = un oscilador con start()) y los
+     AudioContext creados. Usa el Web Audio real de Chromium; solo observa. */
+  await ctx.addInitScript(() => {
+    window.__beeps = []; window.__ctx = 0; const AC = window.AudioContext; if (!AC) return;
+    window.AudioContext = class extends AC {
+      constructor(...a) { super(...a); window.__ctx++; }
+      createOscillator() { const o = super.createOscillator(); const st = o.start.bind(o); o.start = w => { window.__beeps.push({ at: w, f: o.frequency.value }); return st(w); }; return o; }
+    };
+  });
   const pg = await ctx.newPage(); const errors = [];
+  if (opts.clock) await pg.clock.install();
   pg.on('pageerror', e => errors.push('pageerror ' + e.message)); pg.on('console', m => { if (m.type() === 'error') errors.push('console ' + m.text()); });
   await pg.route('https://api.fontshare.com/**', r => r.fulfill({ status: 200, contentType: 'text/css', body: '' }));
   await pg.goto(URL, { waitUntil: 'networkidle' });
@@ -241,6 +251,126 @@ await test('responsive: sin desbordamiento horizontal ni objetivos pequeños en 
     const cta = await pg.$eval('#btnRoll', b => b.getBoundingClientRect().bottom); const vh = await pg.evaluate(() => innerHeight);
     assert.ok(cta <= vh, `${w}px: el CTA está dentro de la pantalla (${Math.round(cta)} / ${vh})`);
     await start(pg); await pg.waitForTimeout(500); await check('sesión');
+    if (last) await last.context().close(); last = pg;
+  }
+  return last;
+});
+
+/* ---------- aviso del temporizador: 3 pitidos solo al llegar a 00:00 de forma natural ---------- */
+const beeps = pg => pg.evaluate(() => window.__beeps.length);
+const timerState = pg => pg.$eval('#timer', t => ({ hidden: t.hidden, running: t.classList.contains('running'), done: t.classList.contains('done'), text: t.querySelector('.t').textContent, hint: t.querySelector('.hint').textContent, total: Number(t.dataset.total) }));
+async function nextCard(pg) { await pg.click('#btnRoll'); await pg.waitForFunction(() => !document.querySelector('#btnRoll').disabled); }
+async function toTimerCard(pg) { for (let i = 0; i < 20 && await pg.$eval('#timer', t => t.hidden); i++) await nextCard(pg); assert.ok(!(await pg.$eval('#timer', t => t.hidden)), 'hay una carta con tiempo'); return (await timerState(pg)).total; }
+async function menu(pg, label) { await pg.click('#btnMore'); await pg.waitForSelector('#sheetMenu.open'); await pg.click(`#menuList .mi:has-text("${label}")`); await pg.waitForFunction(() => !document.querySelector('#btnRoll').disabled); }
+const ff = (pg, ms) => pg.clock.fastForward(ms);
+
+await test('temporizador a 00:00: exactamente 3 pitidos, una sola vez, con aviso visual', async () => {
+  const pg = await page({ clock: true }); await start(pg);
+  const total = await toTimerCard(pg);
+  assert.equal(await pg.evaluate(() => window.__ctx), 0, 'sin toque no se crea audio');
+  await pg.click('#timer'); assert.equal(await pg.evaluate(() => window.__ctx), 1, 'el audio se desbloquea con el toque');
+  await ff(pg, (total - 1) * 1000); await pg.waitForTimeout(50);
+  assert.equal(await beeps(pg), 0, 'a falta de 1 s no suena');
+  await ff(pg, 1500); await pg.waitForFunction(() => document.querySelector('#timer').classList.contains('done'));
+  assert.equal(await beeps(pg), 3, 'tres pitidos');
+  const b = await pg.evaluate(() => window.__beeps);
+  assert.ok(b.every(x => x.f >= 500 && x.f <= 900), 'tono medio, ni grave ni agudo');
+  assert.ok(b[1].at - b[0].at >= 0.25 && b[2].at - b[1].at >= 0.25, 'con pequeñas pausas entre pitidos');
+  const st = await timerState(pg); assert.equal(st.text, '00:00'); assert.equal(st.hint, 'tiempo'); assert.equal(await pg.$eval('#timer', t => t.getAttribute('aria-label')), 'Tiempo terminado');
+  // doble disparo: sigue en 00:00, más tiempo, tocar el temporizador terminado
+  await ff(pg, 30000); await pg.click('#timer'); await ff(pg, 5000); await pg.waitForTimeout(100);
+  assert.equal(await beeps(pg), 3, 'no repite mientras sigue en 00:00');
+  return pg;
+});
+
+await test('un temporizador nuevo vuelve a sonar; sin tocarlo, una carta con tiempo no suena', async () => {
+  const pg = await page({ clock: true }); await start(pg);
+  let total = await toTimerCard(pg);
+  await pg.click('#timer'); await ff(pg, total * 1000 + 500); await pg.waitForFunction(() => document.querySelector('#timer').classList.contains('done'));
+  assert.equal(await beeps(pg), 3);
+  await nextCard(pg); total = await toTimerCard(pg);
+  assert.ok(!(await timerState(pg)).done, 'la carta nueva llega sin el estado de terminado');
+  await ff(pg, 200000); await pg.waitForTimeout(50);
+  assert.equal(await beeps(pg), 3, 'sin empezar no cuenta ni suena');
+  await pg.click('#timer'); await ff(pg, total * 1000 + 500); await pg.waitForFunction(() => document.querySelector('#timer').classList.contains('done'));
+  assert.equal(await beeps(pg), 6, 'el segundo temporizador suena otra vez, 3 pitidos');
+  return pg;
+});
+
+await test('parar, SIGUIENTE, «Otra», «Más suave» o «Pasar» antes de 00:00: ningún pitido', async () => {
+  const pg = await page({ clock: true }); await start(pg);
+  const cases = [
+    ['tocar para parar', p => p.click('#timer')],
+    ['SIGUIENTE', p => nextCard(p)],
+    ['Otra', p => menu(p, 'Otra')],
+    ['Más suave', p => menu(p, 'Más suave')],
+    ['Pasar', p => menu(p, 'Pasar')],
+  ];
+  for (const [label, cancel] of cases) {
+    const total = await toTimerCard(pg);
+    await pg.click('#timer'); await ff(pg, Math.max(1, total - 2) * 1000);
+    assert.ok((await timerState(pg)).running, `${label}: en marcha`);
+    await cancel(pg);
+    await ff(pg, 200000); await pg.waitForTimeout(50);
+    assert.equal(await beeps(pg), 0, `${label}: no suena`);
+    assert.ok(!(await timerState(pg)).done, `${label}: no queda como terminado`);
+  }
+  return pg;
+});
+
+await test('parar y volver a empezar: sin final falso; la cuenta empieza de nuevo y suena solo al final', async () => {
+  const pg = await page({ clock: true }); await start(pg);
+  const total = await toTimerCard(pg);
+  await pg.click('#timer'); await ff(pg, (total - 3) * 1000);
+  await pg.click('#timer'); assert.equal((await timerState(pg)).running, false, 'parado');
+  await ff(pg, 10000); await pg.click('#timer'); // reanudar = empieza de nuevo desde el total
+  await ff(pg, (total - 2) * 1000); await pg.waitForTimeout(50);
+  assert.equal(await beeps(pg), 0, 'no termina por el tiempo acumulado antes de parar');
+  assert.ok((await timerState(pg)).running);
+  await ff(pg, 3000); await pg.waitForFunction(() => document.querySelector('#timer').classList.contains('done'));
+  assert.equal(await beeps(pg), 3);
+  return pg;
+});
+
+await test('cartas sin tiempo: no hay temporizador y no suena nada', async () => {
+  const pg = await page({ clock: true }); await start(pg);
+  let seen = 0;
+  for (let i = 0; i < 25; i++) { if (await pg.$eval('#timer', t => t.hidden)) { seen++; await ff(pg, 130000); } await nextCard(pg); }
+  assert.ok(seen > 0, 'han salido cartas sin tiempo');
+  assert.equal(await beeps(pg), 0); assert.equal(await pg.evaluate(() => window.__ctx), 0, 'sin toque no se crea audio');
+  return pg;
+});
+
+await test('todas las duraciones (15 … 120 s): suena justo al llegar a 00:00, nunca antes', async () => {
+  const { DURATIONS } = await import('../content/schema.js');
+  assert.ok(DURATIONS.includes(120));
+  const pg = await page({ clock: true }); await start(pg); await toTimerCard(pg);
+  let expected = 0;
+  for (const d of DURATIONS) {
+    await pg.$eval('#timer', (t, d) => { t.dataset.total = d; t.classList.remove('done', 'running'); }, d);
+    await pg.click('#timer');
+    await ff(pg, (d - 0.5) * 1000); await pg.waitForTimeout(30);
+    assert.equal(await beeps(pg), expected, `${d}s: a 0,5 s del final aún no suena`);
+    assert.equal((await timerState(pg)).text, '00:01', `${d}s: muestra 00:01`);
+    await ff(pg, 1000); await pg.waitForFunction(() => document.querySelector('#timer').classList.contains('done'));
+    expected += 3; assert.equal(await beeps(pg), expected, `${d}s: 3 pitidos`);
+  }
+  return pg;
+});
+
+await test('temporizador en móvil: centrado, legible, sin tapar la frase ni desbordar (320 → 430, alto y bajo)', async () => {
+  let last;
+  for (const [w, h] of [[320, 568], [375, 667], [390, 844], [430, 932], [1280, 800]]) {
+    const pg = await page({ width: w, height: h }); await start(pg); await toTimerCard(pg); await pg.waitForTimeout(500);
+    const g = await pg.evaluate(() => {
+      const r = e => e.getBoundingClientRect(), t = r(document.querySelector('#timer')), box = r(document.querySelector('#roundBox')), ph = r(document.querySelector('#phrase'));
+      return { t, box, ph, sw: document.documentElement.scrollWidth, vw: innerWidth, fs: parseFloat(getComputedStyle(document.querySelector('#timer .t')).fontSize) };
+    });
+    assert.ok(Math.abs((g.t.left + g.t.right) / 2 - (g.box.left + g.box.right) / 2) < 2, `${w}px: centrado`);
+    assert.ok(g.t.left >= 0 && g.t.right <= g.vw && g.sw <= g.vw, `${w}px: sin desbordamiento`);
+    assert.ok(g.t.top >= g.ph.bottom, `${w}px: debajo de la frase, sin taparla`);
+    assert.ok(g.t.height >= 44 && g.t.width >= 44, `${w}px: objetivo táctil ≥ 44`);
+    assert.ok(g.fs >= 28 && g.fs <= 40, `${w}px: cifra grande pero no gigante (${g.fs}px)`);
     if (last) await last.context().close(); last = pg;
   }
   return last;
