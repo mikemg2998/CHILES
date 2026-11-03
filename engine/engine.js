@@ -7,7 +7,7 @@ import { PreferenceManager } from './prefs.js';
 import { anatomyOf } from './anatomy.js';
 import { DEFAULT_CLOTHING, normalizeClothing, applyRemoval, removableGarments, applicableGarments, band } from './clothing.js';
 import { SessionState, SessionDirector, MOODS, AVOIDS } from './session.js';
-import { applyIntimacyDiversity } from './diversity.js';
+import { applyIntimacyDiversity, recordMissed, reciprocalKey } from './diversity.js';
 import { buildDeck, weighDeck, pickVariant, pickSide, pickConstraint } from './deck.js';
 import { realize } from './realizer.js';
 import { pickDuration } from './duration.js';
@@ -25,7 +25,7 @@ export class GameEngine {
     this.applicable = [this.garments(0), this.garments(1)];
     this.unlocked = new Map(); // cartas recién desbloqueadas por un cambio de ropa → ronda en la que expira su empujón
     this.state = { round: 0, actor: 0, favorites: [] };
-    this.stats = { emptyDecks: [], rejectedReasons: {}, cooldownRelaxed: [] }; this.seen = { 1: new Set(), 2: new Set(), 3: new Set() };
+    this.stats = { emptyDecks: [], rejectedReasons: {}, cooldownRelaxed: [] }; this.seen = { 1: new Set(), 2: new Set(), 3: new Set() }; this.missed = new Map(); this.reciprocal = new Set();
     this.debug = debug; this.lastDebug = null;
   }
 
@@ -37,7 +37,7 @@ export class GameEngine {
   setMood(player, mood) { this.setIntents(player, mood ? [mood] : []); }
   moodProfile() { return this.session.moodProfile(); }
   setPrefs(player, map) { const out = {}; for (const k in map) if (AVOIDS[k] && (map[k] === 'quiza' || map[k] === 'no')) out[k] = map[k]; this.session.pref[player] = out; }
-  newSession(level) { this.history.reset(); this.state.round = 0; this.state.actor = 0; this.session = new SessionState(level || this.session.level); this.clothing = [DEFAULT_CLOTHING(this.anatomy(0).declared, this.wear(0)), DEFAULT_CLOTHING(this.anatomy(1).declared, this.wear(1))]; this.unlocked = new Map(); this.stats = { emptyDecks: [], rejectedReasons: {}, cooldownRelaxed: [] }; this.seen = { 1: new Set(), 2: new Set(), 3: new Set() }; }
+  newSession(level) { this.history.reset(); this.state.round = 0; this.state.actor = 0; this.session = new SessionState(level || this.session.level); this.clothing = [DEFAULT_CLOTHING(this.anatomy(0).declared, this.wear(0)), DEFAULT_CLOTHING(this.anatomy(1).declared, this.wear(1))]; this.unlocked = new Map(); this.stats = { emptyDecks: [], rejectedReasons: {}, cooldownRelaxed: [] }; this.seen = { 1: new Set(), 2: new Set(), 3: new Set() }; this.missed = new Map(); this.reciprocal = new Set(); }
   ended() { return this.session.ended; }
   feedback(kind) { this.director.feedback(this.session, this.history.last(), kind); }
   endSession(how) { return this.director.end(this.session, how); }
@@ -141,7 +141,7 @@ export class GameEngine {
     let weighted = weighDeck(deck, { history: H, session: S, director: this.director, purpose, favorFamily, unlocked: this.unlocked, round: this.state.round, actor, clothing: this.clothing });
     // diversidad real en Intimidad: cooldown por ID, no vistas primero, desbloqueadas por ropa; UNDRESS conserva su probabilidad
     if (this.intimacyDiversity) {
-      const div = applyIntimacyDiversity(weighted, { level: S.level, history: H, seen: this.seen[S.level], unlocked: this.unlocked, round: this.state.round });
+      const div = applyIntimacyDiversity(weighted, { level: S.level, history: H, seen: this.seen[S.level], unlocked: this.unlocked, round: this.state.round, missed: this.missed, actor, reciprocal: this.reciprocal });
       weighted = div.weighted; if (div.relaxed) this.stats.cooldownRelaxed.push({ round: this.state.round + 1, ...div.relaxed });
     }
     if (!weighted.some(w => w.weight > 0) && weighted.length) weighted = weighted.map(w => ({ ...w, weight: 1 })); // todo pesa cero: azar plano entre lo elegible
@@ -149,6 +149,7 @@ export class GameEngine {
     let sel = null;
     if (weighted.length) {
       const e = this.rng.weighted(weighted.map(w => ({ item: w, weight: w.weight })));
+      if (S.level === 3 && this.intimacyDiversity) recordMissed(this.missed, weighted, e.card.id); // oportunidades perdidas: solo lo que estaba en el sorteo
       const variant = pickVariant(e, H, this.rng);
       const side = pickSide(e.card, variant, H, this.rng);
       const playConstraint = pickConstraint(e.card, H, this.rng);
@@ -188,6 +189,7 @@ export class GameEngine {
     };
     this.history.push(round);
     if (!round.transition && this.seen[level]) this.seen[level].add(c.id);
+    { const rk = !round.transition && reciprocalKey(c, actor); if (rk) this.reciprocal.add(rk); } // quién recibió ya la experiencia recíproca
     this.director.afterRound(this.session, round);
     return round;
   }

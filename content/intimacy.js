@@ -186,4 +186,16 @@ export const INTIMACY = [
   // Abrazo de pie de 30 s (diseñador, 2026-11-03): carta nueva, I20 no cambia. Sin requisito de ropa: vale vestidos o no.
   I({ id: 'I54', family: 'HUG', similarityGroup: 'EMBRACE', interactionType: 'BODY_TO_BODY', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'body' }], receiverRequirements: [{ part: 'wholeBody' }], requiredOrientation: 'STANDING', durations: [30],
     copy: ['Abrazaos de pie durante 30 segundos, pegando vuestros cuerpos y disfrutando del contacto sin hacer nada más.'], notes: 'diseñador (2026-11-03): «Abrácense de pie durante 30 segundos, pegando sus cuerpos…» adaptado a vosotros · FULL_BODY · BODY_TO_BODY · STANDING' }),
+  /* EXPERIENCIA RECÍPROCA «acostado y admirado» (diseñador, 2026-11-03), 120 s. Dos IDs relacionados, uno por papel:
+     I55 = quien recibe ({R}) se acuesta y quien tiene el turno admira · I56 = quien tiene el turno se acuesta y {R} admira.
+     La persona que se acuesta necesita camiseta, pantalón, brasier y ropa interior fuera (FULL_BODY_ACCESS: OFF, NOT_WORN o NONE);
+     los calcetines no cuentan. Comparten cooldownGroup: el cooldown de 10 cartas de Intimidad se aplica a la pareja de cartas,
+     así las dos direcciones pueden darse en la misma sesión pero nunca juntas. reciprocalSubject dice quién se acuesta: si esa
+     persona ya la recibió en la sesión, la carta pesa ×0,2 (no se veta) para que el turno siguiente sea de la otra persona. */
+  I({ id: 'I55', family: 'CLOSENESS', similarityGroup: 'GAZE', cooldownGroup: 'ADMIRE_LYING', reciprocalSubject: 'RECEIVER', intraLevelIntensity: 'MID', actorRequirements: [{ part: 'body' }], receiverRequirements: [{ part: 'wholeBody' }],
+    clothing: { actor: ['ANY'], receiver: ['FULL_BODY_ACCESS'] }, durations: [120],
+    copy: ['{R} se acuesta en la cama con los ojos cerrados. Durante dos minutos, contempla y admira su cuerpo y, si quieres, bésale.'], notes: 'diseñador (2026-11-03): quien recibe se acuesta con los ojos cerrados 2 min; quien actúa contempla, admira y puede besar' }),
+  I({ id: 'I56', family: 'CLOSENESS', similarityGroup: 'GAZE', cooldownGroup: 'ADMIRE_LYING', reciprocalSubject: 'ACTOR', intraLevelIntensity: 'MID', actorRequirements: [{ part: 'body' }], receiverRequirements: [{ part: 'wholeBody' }],
+    clothing: { actor: ['FULL_BODY_ACCESS'], receiver: ['ANY'] }, durations: [120],
+    copy: ['Acuéstate en la cama con los ojos cerrados. Durante dos minutos, {R} contempla y admira tu cuerpo y, si quiere, te besa.'], notes: 'diseñador (2026-11-03): la misma experiencia con los papeles cambiados: quien actúa se acuesta; {R} contempla, admira y puede besar' }),
 ];

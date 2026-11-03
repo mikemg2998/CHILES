@@ -20,7 +20,8 @@ const TOUCHED = [...MODIFIED, ...DELETED, ...REACTIVATED];
 test('las cartas no listadas por el diseñador no han cambiado en nada (texto, variantes, anatomía, ropa, peso, familia, región)', () => {
   assert.ok(Object.keys(BEFORE).length >= 130);
   for (const [id, before] of Object.entries(BEFORE)) if (!TOUCHED.includes(id)) assert.deepEqual(JSON.parse(JSON.stringify(CARD[id])), before, `${id} cambió`);
-  for (const c of CARDS) assert.ok(BEFORE[c.id], `${c.id} es nueva: la curación no añade cartas`);
+  const ADDED_LATER = ['I55', 'I56']; // experiencia recíproca «acostado y admirado» (diseñador, 2026-11-03, tarea posterior)
+  for (const c of CARDS) assert.ok(BEFORE[c.id] || ADDED_LATER.includes(c.id), `${c.id} es nueva: la curación no añade cartas`);
   for (const id of TOUCHED) assert.notDeepEqual(JSON.parse(JSON.stringify(CARD[id])), BEFORE[id], `${id} debía cambiar`);
 });
 test('eliminadas sin sustituta: C21 C28 C30 C49 I16 REJECTED, sin copia, nunca elegibles', () => {
