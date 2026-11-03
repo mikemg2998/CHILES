@@ -58,8 +58,12 @@ await test('SIGUIENTE pide exactamente una carta; pulsar durante el barajado no 
   assert.equal(await rolls(pg), 1);
   const before = await pg.$eval('#phrase', e => e.textContent);
   await pg.click('#btnRoll');
-  await pg.waitForTimeout(60); /* en pleno barajado */
-  assert.ok(await pg.$eval('#stage', e => e.classList.contains('shuffling')), 'el barajado está en curso');
+  await pg.waitForTimeout(60); /* fase 1: la carta se retira */
+  assert.ok(await pg.$eval('#stage', e => e.classList.contains('retiring')), 'fase RETIRAR en curso');
+  await pg.waitForTimeout(200); /* fase 2: capas abstractas */
+  assert.ok(await pg.$eval('#stage', e => e.classList.contains('shuffling')), 'fase BARAJAR en curso');
+  assert.ok(await pg.$eval('#stage .layers', e => Number(getComputedStyle(e).opacity) > 0.5), 'las capas solo existen durante la transición');
+  assert.equal(await pg.$eval('#phrase', e => getComputedStyle(e).opacity), '0', 'la frase anterior ya no está durante el barajado');
   await pg.$eval('#btnRoll', b => b.click()); await pg.$eval('#btnRoll', b => b.click()); /* clics extra sin esperar al disabled */
   await pg.waitForFunction(() => !document.querySelector('#btnRoll').disabled); await pg.waitForTimeout(100);
   assert.equal(await rolls(pg), 2, 'dos pulsaciones efectivas = dos cartas, ni una más');
@@ -67,7 +71,48 @@ await test('SIGUIENTE pide exactamente una carta; pulsar durante el barajado no 
   assert.notEqual(await pg.$eval('#phrase', e => e.textContent), before);
   assert.ok(!(await pg.$eval('#stage', e => e.classList.contains('shuffling'))), 'el barajado termina');
   const dt = await pg.evaluate(async () => { const t0 = performance.now(); document.querySelector('#btnRoll').click(); await new Promise(r => { const i = setInterval(() => { if (!document.querySelector('#btnRoll').disabled) { clearInterval(i); r(); } }, 5); }); return performance.now() - t0; });
-  assert.ok(dt >= 250 && dt <= 700, `barajado entre 250 y 400 ms de animación (medido ${Math.round(dt)} ms)`);
+  assert.ok(dt >= 500 && dt <= 900, `shuffle de 500–700 ms más el revelado (medido ${Math.round(dt)} ms)`);
+  assert.equal(await pg.$eval('#stage .layers', e => getComputedStyle(e).opacity), '0', 'sin capas visibles en reposo: el contenido descansa sobre el negro');
+  return pg;
+});
+
+await test('moods de llegada: exactamente 4 por persona, elección independiente, única por persona y solo para la sesión', async () => {
+  const pg = await page();
+  await pg.click('#btnRoll'); await pg.waitForSelector('#sheetStart.open');
+  assert.equal(await pg.$eval('#sheetStart h2', h => h.textContent.trim()), '¿Cómo llegáis hoy?');
+  assert.equal((await pg.$$('#intents .who')).length, 2, 'dos personas');
+  assert.equal((await pg.$$('#intents .who:nth-child(1) .mood')).length, 4); assert.equal((await pg.$$('#intents .who:nth-child(2) .mood')).length, 4);
+  const labels = await pg.$$eval('#intents .who:nth-child(1) .mood b', bs => bs.map(b => b.textContent.trim()));
+  assert.deepEqual(labels, ['Quiero sentirte cerca', 'Tengo curiosidad', 'A ver qué surge', 'Hoy, algo tranquilo']);
+  assert.ok(!labels.some(l => /cuiden|jugar/i.test(l)), 'sin «Me apetece que me cuiden» ni «Quiero jugar»');
+  const sizes = await pg.$$eval('#intents .mood', bs => bs.map(b => b.getBoundingClientRect().height)); assert.ok(sizes.every(h => h >= 44));
+  await pg.click('#intents .who:nth-child(1) .mood[data-mood="tranquilo"]'); await pg.click('#intents .who:nth-child(2) .mood[data-mood="abierto"]');
+  const checked = () => pg.$$eval('#intents .mood', bs => bs.filter(b => b.getAttribute('aria-checked') === 'true').map(b => b.dataset.mood));
+  assert.deepEqual(await checked(), ['tranquilo', 'abierto'], 'cada persona conserva su señal');
+  await pg.click('#intents .who:nth-child(1) .mood[data-mood="cerca"]');
+  assert.deepEqual(await checked(), ['cerca', 'abierto'], 'una persona solo puede tener un mood');
+  await pg.click('#btnStart'); await pg.waitForSelector('#roundBox:not([hidden])'); await pg.waitForFunction(() => !document.querySelector('#btnRoll').disabled);
+  assert.deepEqual(await pg.evaluate(() => window.pab.session.intents), [['cerca'], ['abierto']]);
+  assert.deepEqual(await pg.evaluate(() => window.pab.moodProfile().moods), ['cerca', 'abierto']);
+  await pg.click('#btnMore'); await pg.waitForSelector('#sheetMenu.open'); await pg.click('#menuList .mi:has-text("Terminar")');
+  await pg.waitForSelector('#ending:not([hidden])'); await pg.click('#btnNew');
+  await pg.waitForSelector('#welcome:not([hidden])'); await pg.click('#btnRoll'); await pg.waitForSelector('#sheetStart.open');
+  assert.deepEqual(await checked(), [], 'la sesión nueva vuelve a preguntar sin mood previo');
+  assert.deepEqual(await pg.evaluate(() => window.pab.session.intents), [[], []]);
+  return pg;
+});
+
+await test('la animación no produce doble temporizador: un solo #timer, parado y reiniciado con cada carta nueva', async () => {
+  const pg = await page(); await start(pg);
+  assert.equal((await pg.$$('#timer')).length, 1);
+  for (let i = 0; i < 12 && await pg.$eval('#timer', t => t.hidden); i++) { await pg.click('#btnRoll'); await pg.waitForFunction(() => !document.querySelector('#btnRoll').disabled); }
+  await pg.click('#timer'); await pg.waitForTimeout(300); assert.ok(await pg.$eval('#timer', t => t.classList.contains('running')));
+  await pg.click('#btnRoll'); await pg.waitForFunction(() => !document.querySelector('#btnRoll').disabled); await pg.waitForTimeout(400);
+  assert.equal((await pg.$$('#timer')).length, 1, 'sigue habiendo un solo temporizador');
+  const st = await pg.$eval('#timer', t => ({ running: t.classList.contains('running'), hidden: t.hidden, text: t.querySelector('.t').textContent, total: Number(t.dataset.total), bar: t.querySelector('.bar').style.transform }));
+  if (!st.hidden) { assert.ok(!st.running, 'la carta nueva llega con el temporizador parado'); assert.equal(st.text, await pg.evaluate(t => { const m = Math.floor(t / 60), s = t % 60; return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`; }, st.total)); assert.equal(st.bar, 'scaleX(0)'); }
+  const text1 = await pg.$eval('#timer .t', e => e.textContent); await pg.waitForTimeout(1100);
+  assert.equal(await pg.$eval('#timer .t', e => e.textContent), text1, 'nada sigue contando por debajo');
   return pg;
 });
 
@@ -174,7 +219,7 @@ await test('reduced motion: sin barajado ni esperas, la carta cambia casi al ins
   const pg = await page({ reducedMotion: 'reduce' }); await start(pg);
   const before = await pg.$eval('#phrase', e => e.textContent);
   const dt = await pg.evaluate(async () => { const t0 = performance.now(); document.querySelector('#btnRoll').click(); await new Promise(r => { const i = setInterval(() => { if (!document.querySelector('#btnRoll').disabled) { clearInterval(i); r(); } }, 2); }); return performance.now() - t0; });
-  assert.ok(dt < 120, `casi instantáneo (${Math.round(dt)} ms)`);
+  assert.ok(dt < 120, `casi instantáneo (${Math.round(dt)} ms)`); await pg.waitForTimeout(80);
   assert.equal(await rolls(pg), 2);
   assert.notEqual(await pg.$eval('#phrase', e => e.textContent), before);
   assert.equal(await pg.$eval('#phrase', e => getComputedStyle(e).opacity), '1', 'la frase es visible sin animación');

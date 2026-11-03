@@ -8,6 +8,7 @@ import { clothingFailure, partAccessible, undressPossible, removableGarments, co
 import { throughGarmentOf, VERBAL_GROUPS } from '../content/schema.js';
 import { copyOptions } from './realizer.js';
 import { regionOf, partsOf } from '../content/index.js';
+import { moodWeight } from './mood.js';
 
 const INTIMATE = p => BODY_PARTS[p] && ['vulva', 'pene'].includes(BODY_PARTS[p].anatomy);
 
@@ -61,7 +62,7 @@ export function buildDeck(cards, ctx) {
 /* ---------- ponderación: factores independientes, nunca un «intensity score» ----------
    Los filtros duros ya pasaron (anatomía, ropa, propiedad, físico, status). Aquí solo pesos blandos:
    baseWeight · cardRecency · familyDiversity · bodyRegionDiversity · regionStarvation · targetDiversity · typeSpacing ·
-   newlyUnlockedBoost · sessionPurpose (+ feedbackAffinity) · favorFamily. Ninguna región gana peso por ser íntima. */
+   newlyUnlockedBoost · sessionPurpose (+ feedbackAffinity) · moodCompatibility · favorFamily. Ninguna región gana peso por ser íntima. */
 /* sameRegionUndressCooldown: acaba de salir una prenda exterior de una zona → quitar la interior de esa misma zona pesa poco durante
    unas cartas, para que la fase intermedia (THROUGH_BRA · THROUGH_PANTIES · THROUGH_BOXERS) tenga tiempo real. Peso, no veto. */
 export function undressCooldown(card, { history, round, actor, clothing }) {
@@ -83,7 +84,7 @@ export function weighDeck(deck, { history, session, director, purpose, favorFami
   const starving = new Set([...eligibleRegions].filter(r => history.sinceRegion(r) >= 8 && history.rounds.length >= 8)); // región con cartas elegibles que lleva mucho sin salir
   return deck.eligible.map(e => {
     const c = e.card, region = regionOf(c, null), parts = partsOf(c, null);
-    const f = { base: c.baseWeight, cardRecency: 1, family: 1, similarity: 1, region: 1, share: 1, starvation: 1, target: 1, type: 1, unlocked: 1, undressCooldown: 1, purpose: 1, favor: 1 };
+    const f = { base: c.baseWeight, cardRecency: 1, family: 1, similarity: 1, region: 1, share: 1, starvation: 1, target: 1, type: 1, unlocked: 1, undressCooldown: 1, purpose: 1, mood: 1, favor: 1 };
     f.cardRecency = history.novelty('cardId', c.id, 14, 1.6);
     const since = history.sinceCard(c.id); if (since === 0) f.cardRecency = 0; else if (since <= 2) f.cardRecency *= 0.05; else if (since <= 4) f.cardRecency *= 0.4; // la anterior nunca vuelve seguida
     f.family = history.familyWeight(c.family);
@@ -105,6 +106,8 @@ export function weighDeck(deck, { history, session, director, purpose, favorFami
     if (unlocked && unlocked.has(c.id) && unlocked.get(c.id) > round) f.unlocked = 1.6; // recién desbloqueada por un cambio de ropa: pequeño empujón que expira
     f.undressCooldown = undressCooldown(c, { history, round, actor, clothing });
     if (director) f.purpose = director.weight(purpose, session, history, c);
+    // MOOD COMPATIBILITY: después del propósito, antes del azar; solo pondera lo ya elegible (nunca rescata una carta)
+    if (session && typeof session.moodProfile === 'function') f.mood = moodWeight(c, session.moodProfile(), history, session);
     if (favorFamily && c.family === favorFamily) f.favor = 2.5;
     const weight = Object.values(f).reduce((a, b) => a * b, 1);
     return { ...e, weight: Math.max(0, weight), factors: f };

@@ -3,20 +3,14 @@
    nivel (nextLevel = USER_DECISION), nunca decide que la pareja «está lista», nunca convierte ME GUSTA en subir.
    Todo este estado vive en memoria. */
 import { LEVELS, LEVEL_COPY } from './levels.js';
-export { LEVEL_COPY };
+import { MOODS, moodProfile, moodPurposeBias } from './mood.js';
+export { LEVEL_COPY, MOODS };
 
 export const PURPOSES = ['CONNECT', 'BUILD', 'EXPLORE', 'DEEPEN', 'MAINTAIN', 'VARIATION', 'SOFTEN', 'COOLDOWN', 'END'];
 export const PURPOSE_LABEL = { CONNECT: 'Conectar', BUILD: 'Construir', EXPLORE: 'Explorar', DEEPEN: 'Profundizar', MAINTAIN: 'Mantener', VARIATION: 'Variar', SOFTEN: 'Suavizar', COOLDOWN: 'Bajar el ritmo', END: 'Cerrar' };
 
-/* «¿Cómo llegáis hoy?»: disponibilidad, no una declaración sobre sexo. Por jugador; se usa lo común y, si no hay, la unión. */
-export const MOODS = {
-  cerca: { label: 'Quiero sentirme cerca' },
-  cuidar: { label: 'Me apetece que me cuiden' },
-  curiosidad: { label: 'Tengo curiosidad' },
-  jugar: { label: 'Quiero jugar' },
-  abierto: { label: 'Abro la puerta a ver qué surge' },
-  tranquilo: { label: 'Hoy, algo tranquilo' },
-};
+/* «¿Cómo llegáis hoy?»: cuatro moods por persona (engine/mood.js). Cada persona elige el suyo; el perfil de sesión es la
+   intersección (lo cauteloso manda). Es información del Session Director y del weighting, nunca de la elegibilidad. */
 /* sí (por defecto) · quizá (puede salir poco; nunca pasa a sí solo) · hoy no (fuera). El «hoy no» de cualquiera vale para los dos. */
 export const PREF_STATES = ['si', 'quiza', 'no'];
 export const PREF_LABEL = { si: 'Sí', quiza: 'Quizá', no: 'Hoy no' };
@@ -40,6 +34,9 @@ export class SessionState {
     this.ended = null; this.lastMessage = null;
   }
   intentSet() { const [a, b] = this.intents; if (!a.length) return new Set(b); if (!b.length) return new Set(a); const inter = a.filter(x => b.includes(x)); return new Set(inter.length ? inter : [...a, ...b]); }
+  /* mood de cada jugador (uno por persona; si eligió varios en un guardado antiguo, el primero) y perfil de intersección */
+  moodOf(player) { return (this.intents[player] || [])[0] || null; }
+  moodProfile() { return moodProfile(this.moodOf(0), this.moodOf(1)); }
   avoidSet() { const out = new Set(); for (const p of this.pref) for (const k in p) if (p[k] === 'no') out.add(k); return out; }
   maybeSet() { const out = new Set(); for (const p of this.pref) for (const k in p) if (p[k] === 'quiza') out.add(k); for (const k of this.avoidSet()) out.delete(k); return out; }
 }
@@ -55,21 +52,17 @@ export class SessionDirector {
     if (S.ended) return { purpose: 'END', reason: 'sesión cerrada' };
     const last = history.last(), fb = S.lastFeedback;
     if (S.soften > 0.3) return { purpose: 'SOFTEN', reason: 'la pareja pidió más suave' };
-    if (fb && last && fb.round === last.n && fb.kind === 'like' && this.rng.chance(0.5)) return { purpose: 'DEEPEN', reason: 'me gusta: algo cercano, sin repetir' };
+    if (fb && last && fb.round === last.n && fb.kind === 'like' && this.rng.chance(0.5)) return { purpose: 'DEEPEN', reason: 'me gusta: algo cercano, sin repetir' }; // el feedback manda sobre el mood inicial
     if (S.roundsInLevel < 2) return { purpose: S.level === 1 ? 'CONNECT' : 'BUILD', reason: 'primeras cartas del nivel' };
-    const intents = S.intentSet();
-    const w = { BUILD: 0.3, EXPLORE: 0.25, MAINTAIN: 0.2, VARIATION: 0.15, COOLDOWN: 0.1, CONNECT: S.level === 1 ? 0.3 : 0.05 };
-    if (intents.has('tranquilo')) { w.BUILD *= 0.6; w.COOLDOWN *= 1.8; w.MAINTAIN *= 1.4; }
-    if (intents.has('curiosidad') || intents.has('abierto')) { w.EXPLORE *= 1.6; w.VARIATION *= 1.3; }
-    if (intents.has('cerca')) { w.CONNECT *= 2; w.COOLDOWN *= 1.3; }
-    if (intents.has('cuidar')) { w.COOLDOWN *= 1.5; w.CONNECT *= 1.6; w.BUILD *= 0.7; }
+    const profile = S.moodProfile();
+    const w = moodPurposeBias({ BUILD: 0.3, EXPLORE: 0.25, MAINTAIN: 0.2, VARIATION: 0.15, COOLDOWN: 0.1, CONNECT: S.level === 1 ? 0.3 : 0.05 }, profile);
     const p = this.rng.weighted(Object.entries(w).map(([k, v]) => ({ item: k, weight: v })));
     return { purpose: p, reason: 'curva de la sesión' };
   }
 
   /* ---- multiplicador por propósito, humor y feedback para un candidato (carta) ---- */
   weight(purpose, S, history, card) {
-    const intents = S.intentSet(), last = history.last();
+    const last = history.last();
     let w = 1;
     const soft = ['MASSAGE', 'HUG', 'CLOSENESS', 'HAIR', 'HANDS', 'MUSIC', 'CARESS'].includes(card.family);
     const inten = card.intraLevelIntensity;
@@ -82,11 +75,7 @@ export class SessionDirector {
       case 'EXPLORE': { const seen = history.rounds.filter(r => r.family === card.family).length; w *= 1 / (1 + 0.5 * seen); break; }
       default: break;
     }
-    if (intents.has('cuidar') && soft) w *= 1.5;
-    if (intents.has('cerca') && ['MUTUAL', 'BODY_TO_BODY'].includes(card.interactionType)) w *= 1.4;
-    if (intents.has('curiosidad') && ['GUIDED', 'CHOOSE', 'PATH'].includes(card.interactionType)) w *= 1.4;
-    if (intents.has('jugar') && (card.playConstraints || card.interactionType === 'CHOOSE' || card.family === 'BITE')) w *= 1.4;
-    if (intents.has('tranquilo') && inten === 'HIGH') w *= 0.5;
+    /* el mood ya no vive aquí: moodWeight (engine/mood.js) se aplica en weighDeck después del propósito y antes del historial */
     /* Intimidad: el director puede favorecer oportunidades, nunca decidir que la pareja está lista */
     if (S.level === 3) {
       const t = card.interactionType;

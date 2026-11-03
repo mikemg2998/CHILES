@@ -52,7 +52,7 @@
       <p class="phrase">Una carta cada vez, pensada por alguien. Hasta dónde llegáis lo decidís vosotros.</p>
     </div>
     <div class="deck">
-    <div class="layers" aria-hidden="true"><i class="layer l2"></i><i class="layer l1"></i></div>
+    <div class="layers" aria-hidden="true"><i class="layer l3"></i><i class="layer l2"></i><i class="layer l1"></i></div>
     <div class="round" id="roundBox" hidden aria-live="polite">
       <p class="phrase" id="phrase"></p>
       <button class="timer" id="timer" type="button" hidden><span class="t">00:30</span><span class="hint">toca para empezar</span><span class="bar"></span></button>
@@ -82,9 +82,9 @@
 
 <section class="sheet" id="sheetStart" aria-hidden="true">
   <div class="sheet-head"><h2>¿Cómo llegáis hoy?</h2><button class="ib" data-close aria-label="Cerrar"><svg><use href="#i-x"/></svg></button></div>
-  <p class="hint">No hace falta saber hasta dónde vais a llegar. Marcad lo que os apetezca ahora; nada de esto se guarda.</p>
-  <div class="two" id="intents"></div>
-  <details class="quiet" id="prefsBox"><summary>Hoy: sí, quizá o no</summary><p class="hint">«Quizá» no se da por hecho: puede salir poco y nunca pasa a «sí» por sí solo. «Hoy no» queda fuera de la sesión.</p><div class="prefs" id="prefs"></div></details>
+  <p class="hint">Elegid cómo os apetece estar hoy. Solo vale para esta sesión.</p>
+  <div class="moods" id="intents"></div>
+  <details class="quiet" id="prefsBox"><summary>¿Algo que hoy no?</summary><p class="hint">«Quizá» sale poco y nunca se da por hecho. «Hoy no» queda fuera de la sesión.</p><div class="prefs" id="prefs"></div></details>
   <button class="btn primary" id="btnStart">Empezar</button>
 </section>
 
@@ -112,7 +112,7 @@
   </div>
   <p class="hint">Solo partes del cuerpo y prendas, no género: así el juego sabe qué puede recibir cada uno, con qué puede actuar y qué ropa entra en juego. Se guarda únicamente en este teléfono.</p>
   <p class="lab">Dispositivo</p>
-  <div class="list"><label class="sw"><span>Vibración</span><input type="checkbox" id="swVibe"><i></i></label></div>
+  <div class="list"><label class="sw"><span>Vibración al cambiar carta</span><input type="checkbox" id="swVibe"><i></i></label></div>
   <button class="btn primary" id="btnSetupDone" hidden>Listo</button>
   <div class="danger">
     <button class="btn" id="btnReset">Empezar sesión nueva</button>

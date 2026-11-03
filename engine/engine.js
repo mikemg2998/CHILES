@@ -31,7 +31,9 @@ export class GameEngine {
   level() { return this.session.level; }
   levelInfo() { return LEVELS[this.session.level]; }
   setLevel(level) { this.director.setLevel(this.session, level); return this.session.level === Number(level); }
-  setIntents(player, list) { this.session.intents[player] = [...new Set(list.filter(k => MOODS[k]))]; }
+  setIntents(player, list) { this.session.intents[player] = [...new Set((Array.isArray(list) ? list : [list]).filter(k => MOODS[k]))]; }
+  setMood(player, mood) { this.setIntents(player, mood ? [mood] : []); }
+  moodProfile() { return this.session.moodProfile(); }
   setPrefs(player, map) { const out = {}; for (const k in map) if (AVOIDS[k] && (map[k] === 'quiza' || map[k] === 'no')) out[k] = map[k]; this.session.pref[player] = out; }
   newSession(level) { this.history.reset(); this.state.round = 0; this.state.actor = 0; this.session = new SessionState(level || this.session.level); this.clothing = [DEFAULT_CLOTHING(this.anatomy(0).declared, this.wear(0)), DEFAULT_CLOTHING(this.anatomy(1).declared, this.wear(1))]; this.unlocked = new Map(); this.stats = { emptyDecks: [], rejectedReasons: {} }; }
   ended() { return this.session.ended; }

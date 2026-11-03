@@ -7,7 +7,8 @@ import { GameEngine, migrateFavorite } from '../engine/engine.js';
 import { PreferenceManager } from '../engine/prefs.js';
 import { LEVELS, LEVEL_IDS, LEVEL_KEYS, LEVEL_BY_KEY, LEVEL_COPY } from '../engine/levels.js';
 import { formatDuration } from '../engine/duration.js';
-import { MOODS, AVOIDS, PREF_STATES, PREF_LABEL } from '../engine/session.js';
+import { AVOIDS, PREF_STATES, PREF_LABEL } from '../engine/session.js';
+import { MOODS } from '../engine/mood.js';
 import { GARMENT_LABEL, ANATOMY, UNDERWEAR_GARMENTS } from '../content/body.js';
 
 const KEY = 'pab.v2';
@@ -98,15 +99,16 @@ function renderTurn() {
   $('#turnA').textContent = a; $('#turnB').textContent = b; $('#turnArrow').textContent = mutual ? '·' : '→';
 }
 
-/* ---------- barajar: una microanimación (250–400 ms) al pedir la siguiente carta. Sin azar visual.
-   Con «reducir movimiento» no se espera nada: fundido casi instantáneo. ---------- */
+/* ---------- barajar: tres fases al pedir la siguiente carta (~600 ms): RETIRAR la carta actual (140 ms) → BARAJAR tres capas
+   abstractas (260 ms) → REVELAR la nueva (200 ms, en showRound). Sin azar visual, sin dados. La vibración, si está activa, va
+   con el reveal. Con «reducir movimiento» no se espera nada: fundido rápido. ---------- */
 const stage = $('#stage');
 const REDUCED = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
-const SHUFFLE_MS = 320;
+const SHUFFLE = { retire: 140, mix: 300, reveal: 200 };
 async function shuffle() {
   if (roundBox.hidden || REDUCED.matches) return;
-  stage.classList.add('shuffling');
-  await wait(SHUFFLE_MS);
+  stage.classList.add('retiring'); await wait(SHUFFLE.retire);
+  stage.classList.remove('retiring'); stage.classList.add('shuffling'); await wait(SHUFFLE.mix);
   stage.classList.remove('shuffling');
 }
 
@@ -173,13 +175,14 @@ async function play(fn, emptyMsg) {
   let r;
   try { r = fn(); } catch (e) { console.error(e); toast('No he podido preparar la siguiente carta.'); return; }
   if (!r) { if (emptyMsg) toast(emptyMsg); updateControls(); return; }
-  setBusy(true); buzz(14);
+  setBusy(true);
   document.body.classList.remove('idle', 'home');
   welcome.hidden = true; endingBox.hidden = true;
   await shuffle();
   roundBox.classList.remove('show');
   current = r;
-  showRound(r);
+  showRound(r); buzz(12); // háptico corto, sincronizado con el reveal
+  if (!REDUCED.matches) await wait(SHUFFLE.reveal); // SIGUIENTE vuelve cuando la carta ya está entera
   setBusy(false);
 }
 /* SIGUIENTE: la primera vez pide la configuración (una sola vez) y un check-in breve; después, directo.
@@ -225,14 +228,16 @@ function endSession() { engine.endSession('parar'); showEnding(); }
 function moodCols(container) {
   container.innerHTML = '';
   for (const p of [0, 1]) {
-    const col = el('div', 'col'); col.appendChild(el('h3', null, nameOf(p)));
+    const block = el('div', 'who'); block.appendChild(el('h3', null, nameOf(p)));
+    const grid = el('div', 'mood-grid'); grid.setAttribute('role', 'radiogroup'); grid.setAttribute('aria-label', `Cómo llega ${nameOf(p)}`);
     for (const [k, v] of Object.entries(MOODS)) {
-      const b = el('button', 'chip', v.label); b.type = 'button';
-      b.classList.toggle('on', ui.moods[p].includes(k));
-      b.addEventListener('click', () => { const i = ui.moods[p].indexOf(k); if (i >= 0) ui.moods[p].splice(i, 1); else ui.moods[p].push(k); b.classList.toggle('on'); buzz(5); });
-      col.appendChild(b);
+      const b = el('button', 'mood'); b.type = 'button'; b.setAttribute('role', 'radio'); b.dataset.mood = k;
+      b.append(el('b', null, v.label), el('small', null, v.descriptor));
+      const on = ui.moods[p][0] === k; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on));
+      b.addEventListener('click', () => { ui.moods[p] = ui.moods[p][0] === k ? [] : [k]; grid.querySelectorAll('.mood').forEach(x => { const sel = x === b && ui.moods[p][0] === k; x.classList.toggle('on', sel); x.setAttribute('aria-checked', String(sel)); }); buzz(5); });
+      grid.appendChild(b);
     }
-    container.appendChild(col);
+    block.appendChild(grid); container.appendChild(block);
   }
 }
 function prefRows(container) {
