@@ -7,7 +7,7 @@ const C = o => card({ level: 1, status: 'APPROVED', source: 'DESIGNER_PROVIDED',
 const A = o => card({ level: 1, status: 'APPROVED', source: 'DESIGNER_APPROVED', intraLevelIntensity: 'LOW', ...o });
 const R = o => card({ level: 1, status: 'REJECTED', source: 'DESIGNER_APPROVED', copy: [], ...o });
 export const CONNECTION = [
-  C({ id: 'C01', similarityGroup: 'MASSAGE', family: 'MASSAGE', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'bothHands' }], receiverRequirements: [{ part: 'back' }], durations: [45],
+  C({ id: 'C01', levels: [1, 3], similarityGroup: 'MASSAGE', family: 'MASSAGE', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'bothHands' }], receiverRequirements: [{ part: 'back' }], durations: [45],
     copy: ['Masajea despacio la espalda de {R}, con las manos abiertas y sin apretar demasiado.', 'Un masaje suave en la espalda de {R}: movimientos largos, sin prisa.'] }),
   C({ id: 'C02', similarityGroup: 'EMBRACE', family: 'HUG', interactionType: 'BODY_TO_BODY', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'arms' }], receiverRequirements: [{ part: 'back' }], requiredOrientation: 'SEATED', durations: [30],
     copy: ['Sentados, abraza a {R} y quedaos así sin hablar hasta que acabe el tiempo.', 'Abrazaos sentados, sin decir nada, durante medio minuto.'] }),
@@ -21,11 +21,11 @@ export const CONNECTION = [
     } }),
   C({ id: 'C05', similarityGroup: 'FACE_CONTACT', family: 'CLOSENESS', interactionType: 'BODY_TO_BODY', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'forehead' }], receiverRequirements: [{ part: 'forehead' }, { part: 'hands' }], requiredOrientation: 'FACE', durations: [40],
     copy: ['Frente con frente con {R}, tomados de las manos, hasta que acabe el tiempo.', 'Apoya tu frente en la de {R} y tomaos de las manos. Quedaos así.'] }),
-  C({ id: 'C06', similarityGroup: 'MASSAGE', family: 'MASSAGE', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'bothHands' }], receiverRequirements: [{ part: 'shoulders' }], durations: [45],
+  C({ id: 'C06', levels: [1, 3], similarityGroup: 'MASSAGE', family: 'MASSAGE', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'bothHands' }], receiverRequirements: [{ part: 'shoulders' }], durations: [45],
     copy: ['{R} cierra los ojos. Masajea sus hombros con las dos manos.', 'Un masaje de hombros para {R}, con los ojos cerrados.'] }),
   C({ id: 'C07', similarityGroup: 'LIGHT_KISSING', family: 'KISS', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'lips' }], receiverRequirements: [{ part: 'lips' }], durations: [30],
     copy: ['Picos en los labios de {R}, uno detrás de otro, durante medio minuto.', 'Besa a {R} en los labios con picos cortos, sin parar hasta que acabe el tiempo.'] }),
-  C({ id: 'C08', similarityGroup: 'MASSAGE', family: 'MASSAGE', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'bothHands' }], receiverRequirements: [{ part: 'calves' }], allowedSides: ['LEFT', 'RIGHT', 'BOTH'], durations: [40],
+  C({ id: 'C08', levels: [1, 3], similarityGroup: 'MASSAGE', family: 'MASSAGE', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'bothHands' }], receiverRequirements: [{ part: 'calves' }], allowedSides: ['LEFT', 'RIGHT', 'BOTH'], durations: [40],
     copyBySide: {
       LEFT: ['Masajea la pantorrilla izquierda de {R} con las dos manos.'],
       RIGHT: ['Masajea la pantorrilla derecha de {R} con las dos manos.'],
@@ -47,7 +47,7 @@ export const CONNECTION = [
     copy: ['{R} descansa con los ojos cerrados. Juega con su cabello.', 'Pasa los dedos por el cabello de {R} mientras descansa con los ojos cerrados.'] }),
   C({ id: 'C14', similarityGroup: 'EMBRACE', family: 'HUG', interactionType: 'BODY_TO_BODY', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'body' }], receiverRequirements: [{ part: 'wholeBody' }], requiredOrientation: 'LYING', durations: [40, 60],
     copy: ['Tumbados de lado, abrazaos sin hablar hasta que acabe el tiempo.'], note: 'Buscad una postura cómoda antes de empezar.' }),
-  C({ id: 'C15', similarityGroup: 'CHOICE', family: 'MASSAGE', interactionType: 'CHOOSE', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'bothHands' }], receiverRequirements: [{ part: 'back' }, { part: 'shoulders' }, { part: 'hands' }], durations: [45],
+  C({ id: 'C15', levels: [1, 3], similarityGroup: 'CHOICE', family: 'MASSAGE', interactionType: 'CHOOSE', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'bothHands' }], receiverRequirements: [{ part: 'back' }, { part: 'shoulders' }, { part: 'hands' }], durations: [45],
     choices: [{ id: 'back', label: 'espalda' }, { id: 'shoulders', label: 'hombros' }, { id: 'hands', label: 'manos' }],
     copy: ['{R} elige su masaje: espalda, hombros o manos. Tú se lo das.'], note: 'Solo esas tres opciones.' }),
   C({ id: 'C16', similarityGroup: 'GUIDED', family: 'CARESS', interactionType: 'GUIDED', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'oneHand' }], receiverRequirements: [{ part: 'hair' }, { part: 'face' }, { part: 'hands' }], durations: [40],
@@ -129,7 +129,7 @@ export const CONNECTION = [
     copy: ['Abrazaos con los ojos cerrados, los dos. Solo notar el abrazo.', 'Un abrazo con los ojos cerrados, sin más, hasta que acabe el tiempo.'] }),
   A({ id: 'C50', family: 'HAIR', similarityGroup: 'HAIR_TOUCH', actorRequirements: [{ part: 'fingertips' }], receiverRequirements: [{ part: 'hair' }], durations: [40],
     copy: ['Masajea suavemente el cuero cabelludo de {R} con las yemas de los dedos.', 'Un masaje suave en la cabeza de {R}: las yemas de los dedos moviéndose despacio por el cuero cabelludo.'] }),
-  A({ id: 'C51', family: 'MASSAGE', similarityGroup: 'MASSAGE', actorRequirements: [{ part: 'bothHands' }], receiverRequirements: [{ part: 'forearms' }], allowedSides: ['LEFT', 'RIGHT', 'BOTH'], durations: [40],
+  A({ id: 'C51', levels: [1, 3], family: 'MASSAGE', similarityGroup: 'MASSAGE', actorRequirements: [{ part: 'bothHands' }], receiverRequirements: [{ part: 'forearms' }], allowedSides: ['LEFT', 'RIGHT', 'BOTH'], durations: [40],
     copyBySide: {
       LEFT: ['Masajea despacio el antebrazo izquierdo de {R}, de la muñeca al codo.'],
       RIGHT: ['Masajea despacio el antebrazo derecho de {R}, de la muñeca al codo.'],

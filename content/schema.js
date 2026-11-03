@@ -4,7 +4,8 @@
 
    CuratedInteraction {
      id                  'C01' | 'D05' | 'I11' | 'U03' …
-     level               1 Conexión · 2 Deseo · 3 Intimidad (solo estos tres)
+     level               1 Conexión · 2 Deseo · 3 Intimidad (solo estos tres): el nivel propio de la carta
+     levels              opcional: niveles en los que ADEMÁS es elegible ([1, 3] = una carta de Conexión que sigue jugándose en Intimidad). Reutilización curada, nunca automática.
      family              InteractionFamily (ver FAMILIES): para no repetir la misma idea en cartas seguidas
      intraLevelIntensity 'LOW' | 'MID' | 'HIGH' (opcional; nunca cambia el nivel, solo ordena dentro de él)
      status              'APPROVED' | 'UNREVIEWED' | 'REJECTED' (solo APPROVED entra en producción)
@@ -82,7 +83,7 @@ const DEFAULTS = {
   intraLevelIntensity: null, status: 'UNREVIEWED', source: 'DESIGNER_PROVIDED', interactionType: 'STANDARD',
   actorRequirements: [], receiverRequirements: [], clothing: { actor: ['ANY'], receiver: ['ANY'] }, allowedSides: null,
   copy: null, copyBySide: null, variants: null, playConstraints: null, durations: [30], timerMode: 'FIXED',
-  choices: null, path: null, undress: null, requiredOrientation: null, note: null, baseWeight: 1, minIntimacyCards: null, tags: [], notes: null, transition: false, similarityGroup: null,
+  choices: null, path: null, undress: null, requiredOrientation: null, note: null, baseWeight: 1, minIntimacyCards: null, tags: [], notes: null, transition: false, similarityGroup: null, levels: null,
 };
 /* constructor con valores por defecto; el id y el nivel son obligatorios */
 export function card(o) {

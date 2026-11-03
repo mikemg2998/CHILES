@@ -7,7 +7,7 @@ import { AVOIDS } from './session.js';
 import { clothingFailure, partAccessible, undressPossible, removableGarments, coverage } from './clothing.js';
 import { throughGarmentOf, VERBAL_GROUPS } from '../content/schema.js';
 import { copyOptions } from './realizer.js';
-import { regionOf, partsOf } from '../content/index.js';
+import { regionOf, partsOf, playableAt } from '../content/index.js';
 import { moodWeight } from './mood.js';
 
 const INTIMATE = p => BODY_PARTS[p] && ['vulva', 'pene'].includes(BODY_PARTS[p].anatomy);
@@ -42,7 +42,7 @@ export function buildDeck(cards, ctx) {
     const rej = r => rejected.push({ id: card.id, reason: r });
     if (card.transition) { rej('TRANSITION'); continue; }
     if (card.status !== 'APPROVED') { rej(`STATUS:${card.status}`); continue; }
-    if (card.level !== ctx.level) { rej('LEVEL'); continue; }
+    if (!playableAt(card, ctx.level)) { rej('LEVEL'); continue; }
     if (avoid.some(t => card.tags.includes(t))) { rej('SESSION:hoy-no'); continue; }
     if (ctx.avoidIds && ctx.avoidIds.includes(card.id)) { rej('SESSION:avoid'); continue; }
     // LATE_SESSION: contenido reservado a una fase muy avanzada; antes del umbral no existe, después compite con su peso bajo

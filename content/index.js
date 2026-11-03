@@ -12,6 +12,10 @@ export const CARDS = [...CONNECTION, ...DESIRE, ...INTIMACY, ...UNDRESS, ...TRAN
 export const CARD = Object.fromEntries(CARDS.map(c => [c.id, c]));
 export const APPROVED = CARDS.filter(c => c.status === 'APPROVED' && !c.transition);
 export const byLevel = (level, { approvedOnly = true } = {}) => CARDS.filter(c => c.level === level && !c.transition && (!approvedOnly || c.status === 'APPROVED'));
+/* niveles en los que una carta es elegible: el suyo y, si lo declara, los de `levels` (reutilización curada entre niveles) */
+export const levelsOf = c => (c.levels && c.levels.length ? c.levels : [c.level]);
+export const playableAt = (c, level) => levelsOf(c).includes(level);
+export const playableAtLevel = (level, { approvedOnly = true } = {}) => CARDS.filter(c => playableAt(c, level) && !c.transition && (!approvedOnly || c.status === 'APPROVED'));
 
 /* etiquetas derivadas (para «hoy no» y para el depurador): boca · presion · ropa · guia · intimo */
 for (const c of CARDS) {
@@ -37,6 +41,7 @@ export function validateContent(cards = CARDS) {
     const e = m => errors.push(`${c.id}: ${m}`);
     if (!c.id) errors.push('carta sin id'); if (ids.has(c.id)) e('id repetido'); ids.add(c.id);
     if (![1, 2, 3].includes(c.level)) e(`nivel inválido ${c.level}`);
+    if (c.levels != null && (!Array.isArray(c.levels) || !c.levels.length || !c.levels.includes(c.level) || c.levels.some(l => ![1, 2, 3].includes(l)))) e('levels: lista de niveles válidos que incluye el propio');
     if (!FAMILIES[c.family]) e(`familia desconocida ${c.family}`);
     if (!STATUSES.includes(c.status)) e(`status inválido ${c.status}`);
     if (!SOURCES.includes(c.source)) e(`source inválido ${c.source}`);

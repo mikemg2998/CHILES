@@ -11,7 +11,7 @@ const ids = (e, actor) => new Set(buildDeck(CARDS, e.context(actor)).eligible.ma
 
 test('I14 REJECTED: no sale, no se reemplaza', () => {
   assert.equal(CARD.I14.status, 'REJECTED'); assert.ok(!APPROVED.some(c => c.id === 'I14'));
-  assert.equal(APPROVED.filter(c => c.level === 3 && c.family === 'BITE' && !partsOf(c, null).includes('glans')).map(c => c.id).sort().join(), 'I04,I10,I19,I42'); // I42: mordisco suave en las tetillas (NIPPLES 03, diseñador 2026-11-03)
+  assert.equal(APPROVED.filter(c => c.level === 3 && c.family === 'BITE' && !partsOf(c, null).includes('glans')).map(c => c.id).sort().join(), 'I04,I10,I19,I42,I48,I49'); // I42 tetillas · I48 pie · I49 cadera (diseñador 2026-11-03)
 });
 test('I16: requisitos cerrados (pene a piel; senos a piel: top ≠ ON y bra ≠ ON), POSITIONAL tumbados, sin variantes; solo falta la escena', () => {
   const c = CARD.I16; assert.equal(c.interactionType, 'POSITIONAL'); assert.equal(c.requiredOrientation, 'LYING'); assert.equal(c.source, 'DESIGNER_PROVIDED'); assert.ok(!c.variants);

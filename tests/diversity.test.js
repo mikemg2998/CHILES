@@ -70,7 +70,8 @@ test('fullAccess ≠ more explicit: with full access the intimate region does no
   const counts = {}; let n = 0;
   for (let s = 0; s < 8; s++) { const e = mk({ level: 3, seed: 300 + s, clothing: [NAKED(), NAKED()] }); for (const r of play(e, 60, { undress: false })) { n++; const g = regionOf(CARD[r.cardId], r.variantId ? CARD[r.cardId].variants.find(v => v.id === r.variantId) : null); counts[g] = (counts[g] || 0) + 1; } }
   assert.ok(counts.INTIMATE / n < 0.33, `INTIMATE ${counts.INTIMATE}/${n}`);
-  for (const g of ['CHEST', 'ABDOMEN', 'NECK', 'HIPS_GLUTES', 'THIGHS_LEGS']) assert.ok((counts[g] || 0) / n > 0.05, `${g} ${counts[g]}/${n}`);
+  // con la expansión corporal V1 hay 11 regiones jugables en vez de 8: el reparto es más ancho y cada región pesa menos (umbral 5 % → 3 %)
+  for (const g of ['CHEST', 'ABDOMEN', 'NECK', 'HIPS_GLUTES', 'THIGHS_LEGS', 'BACK', 'ARMS_HANDS', 'FEET', 'FULL_BODY']) assert.ok((counts[g] || 0) / n > 0.03, `${g} ${counts[g]}/${n}`);
 });
 
 test('garments follow anatomy or the player\'s own choice, never gender', () => {

@@ -4,7 +4,7 @@
    semánticos potenciales · (5) simulaciones: 1 000 selecciones con acceso completo, 200 sesiones normales, 200 largas, separadas
    por receptor · (6) cadenas de misma región · (7) LATE_SESSION.   node tests/coverage.js [--out=archivo.md] */
 import { writeFileSync } from 'node:fs';
-import { CARDS, CARD, APPROVED, regionOf, partsOf, BODY_REGIONS } from '../content/index.js';
+import { CARDS, CARD, APPROVED, regionOf, partsOf, BODY_REGIONS, playableAt } from '../content/index.js';
 import { BODY_PARTS, BODY_PARTS_LIST, ACTOR_TOOLS, GARMENT_LAYERS } from '../content/body.js';
 import { FAMILIES } from '../content/schema.js';
 import { GameEngine } from '../engine/engine.js';
@@ -20,7 +20,7 @@ const sig = d => d.length ? [...d].sort().join('+') : 'sin anatomía';
 const GENITAL = ['vulva', 'clitoris', 'vagina', 'penis', 'glans', 'testicles', 'groin', 'hipCrease', 'anus'];
 
 /* ---------- unidades ---------- */
-const L3 = APPROVED.filter(c => c.level === 3);
+const L3 = APPROVED.filter(c => playableAt(c, 3)); // incluye las reutilizadas desde otros niveles (`levels`)
 const units = L3.flatMap(c => (c.variants ? c.variants.filter(v => v.status === 'APPROVED').map(v => ({ card: c, v, key: c.id + '·' + v.id })) : [{ card: c, v: null, key: c.id }]));
 const tools = u => ((u.v && u.v.actorRequirements) || u.card.actorRequirements).map(r => r.part);
 const parts = u => partsOf(u.card, u.v);

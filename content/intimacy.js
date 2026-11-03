@@ -155,4 +155,35 @@ export const INTIMACY = [
     copy: ['Muerde suavemente las tetillas de {R}.'], notes: 'NIPPLES 03 (diseñador): GENTLE_BITE · MOUTH → NIPPLES · CHEST · DIRECT' }),
   I({ id: 'I43', family: 'NIPPLES', intraLevelIntensity: 'MID', actorRequirements: [{ part: 'fingertips' }], receiverRequirements: [{ part: 'nipples' }], clothing: SKIN, durations: [20], tags: ['presion'],
     copy: ['Aprieta suavemente las tetillas de {R} con las yemas de los dedos.'], notes: 'NIPPLES 04 (diseñador): GENTLE_SQUEEZE · FINGERTIPS → NIPPLES · CHEST · DIRECT' }),
+  /* ======== EXPANSIÓN CORPORAL V1 (diseñador, 2026-11-03): más cuerpo para Intimidad. Aditiva: nada se borra ni se cambia. Las cartas de masaje
+     C01 C06 C08 C51 C15 y el abrazo vestido D10 siguen jugándose en Intimidad por `levels` (reutilización curada), sin copiarlas. ======== */
+  // ARMS_HANDS (sin requisito de ropa: manos y dedos siempre a piel)
+  I({ id: 'I44', family: 'HANDS', similarityGroup: 'ORAL', intraLevelIntensity: 'MID', actorRequirements: [{ part: 'mouth' }], receiverRequirements: [{ part: 'fingers' }], durations: [20, 30],
+    copy: ['Chupa suavemente los dedos de la mano de {R}.'], notes: 'diseñador: SUCK · MOUTH → FINGERS · ARMS_HANDS' }),
+  I({ id: 'I45', family: 'HANDS', similarityGroup: 'LIGHT_KISSING', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'lips' }], receiverRequirements: [{ part: 'hands' }], durations: [20],
+    copy: ['Dale pequeños besos en la mano a {R}.'], notes: 'diseñador: KISS · MOUTH → HANDS · ARMS_HANDS' }),
+  // FEET (a piel: calcetines fuera)
+  I({ id: 'I46', family: 'FEET', similarityGroup: 'ORAL', intraLevelIntensity: 'MID', actorRequirements: [{ part: 'mouth' }], receiverRequirements: [{ part: 'toes' }], clothing: SKIN, durations: [20, 30],
+    copy: ['Chupa suavemente los dedos de los pies de {R}.'], notes: 'diseñador: SUCK · MOUTH → TOES · FEET · DIRECT' }),
+  I({ id: 'I47', family: 'FEET', similarityGroup: 'LIGHT_KISSING', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'lips' }], receiverRequirements: [{ part: 'feet' }], clothing: SKIN, durations: [20],
+    copy: ['Dale pequeños besos en los pies a {R}.'], notes: 'diseñador: KISS · LIPS → FEET · FEET · DIRECT' }),
+  I({ id: 'I48', family: 'BITE', similarityGroup: 'BITE', intraLevelIntensity: 'MID', actorRequirements: [{ part: 'teeth' }], receiverRequirements: [{ part: 'feet' }], clothing: SKIN, durations: [20], tags: ['presion'],
+    copy: ['Mordisquea suavemente el pie de {R}, en una zona cómoda.'], notes: 'diseñador: GENTLE_BITE · TEETH → FEET · FEET · DIRECT (sin zonas inventadas)' }),
+  // HIPS_GLUTES: caderas (target hips, no nalgas), a piel con el pantalón fuera
+  I({ id: 'I49', family: 'BITE', similarityGroup: 'BITE', intraLevelIntensity: 'MID', actorRequirements: [{ part: 'teeth' }], receiverRequirements: [{ part: 'hips' }], clothing: SKIN, durations: [20], tags: ['presion'],
+    copy: ['Mordisquea suavemente la parte de atrás de la cadera de {R}.'], notes: 'diseñador: GENTLE_BITE · TEETH → HIPS (parte posterior) · HIPS_GLUTES · DIRECT' }),
+  // GROIN: ingles (target hipCrease, HIPS_GLUTES; independiente de vulva / pene). Requisitos cerrados; la interacción (acción · herramienta · frase) nunca llegó: sin texto no sale.
+  I({ id: 'I50', family: 'CARESS', status: 'UNREVIEWED', intraLevelIntensity: 'MID', actorRequirements: [], receiverRequirements: [{ part: 'hipCrease' }], clothing: { receiver: ['SKIN_ACCESS'] }, durations: [30],
+    copy: null, notes: 'PENDIENTE (2026-11-03): el diseñador pidió «la interacción proporcionada para las ingles», pero no hay ninguna en el historial: falta acción, herramienta y frase. Target hipCrease (ingles), región HIPS_GLUTES, a piel (pantalón y ropa interior fuera).' }),
+  // BACK: masaje localizado (la espalda entera ya existe: C01 reutilizada en Intimidad). Zonas curadas, elegidas por quien recibe; a piel.
+  I({ id: 'I51', family: 'MASSAGE', similarityGroup: 'CHOICE', interactionType: 'CHOOSE', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'bothHands' }], receiverRequirements: [{ part: 'shoulders' }, { part: 'back' }, { part: 'lowerBack' }], clothing: SKIN, durations: [45, 60],
+    choices: [{ id: 'shoulders', label: 'hombros' }, { id: 'back', label: 'entre los omóplatos' }, { id: 'lowerBack', label: 'zona lumbar' }],
+    copy: ['{R} elige una zona de la espalda: hombros, entre los omóplatos o la zona lumbar. Masajéala despacio, a piel.'], note: 'Solo esas tres zonas.', notes: 'diseñador: MASSAGE localizado · HANDS → BACK · BACK · DIRECT; sin producto cartesiano' }),
+  // FULL_BODY · BODY_TO_BODY de pie (I20 = abrazo desnudos piel con piel, ya existente). Dos experiencias curadas más, mutuas, con el mismo requisito corporal.
+  I({ id: 'I52', family: 'BODY', similarityGroup: 'BODY_CONTACT', interactionType: 'BODY_TO_BODY', intraLevelIntensity: 'MID', actorRequirements: [{ part: 'body' }], receiverRequirements: [{ part: 'wholeBody' }], requiredOrientation: 'STANDING',
+    clothing: { actor: ['FULL_BODY_ACCESS'], receiver: ['FULL_BODY_ACCESS'] }, durations: [45],
+    copy: ['De pie, abrazados cuerpo con cuerpo, besaos despacio sin separaros.'], notes: 'diseñador: BODY_TO_BODY + besos · FULL_BODY · STANDING · mutua' }),
+  I({ id: 'I53', family: 'CARESS', similarityGroup: 'BODY_CONTACT', interactionType: 'BODY_TO_BODY', intraLevelIntensity: 'MID', actorRequirements: [{ part: 'body' }], receiverRequirements: [{ part: 'wholeBody' }], requiredOrientation: 'STANDING',
+    clothing: { actor: ['FULL_BODY_ACCESS'], receiver: ['FULL_BODY_ACCESS'] }, durations: [60],
+    copy: ['De pie y abrazados, acariciad despacio el cuerpo del otro con las manos, sin perder el contacto.'], notes: 'diseñador: BODY_TO_BODY + exploración corporal · FULL_BODY · STANDING · mutua; copy sencillo, sin instrucciones anatómicas' }),
 ];

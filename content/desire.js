@@ -50,7 +50,7 @@ export const DESIRE = [
       { id: 'bite', status: 'APPROVED', copyBySide: { LEFT: ['Mordisquea el lóbulo de la oreja izquierda de {R}, apenas apretando.'], RIGHT: ['Mordisquea el lóbulo de la oreja derecha de {R}, apenas apretando.'], BOTH: ['Mordisquea los lóbulos de {R}, una oreja y luego la otra, apenas apretando.'] }, tags: ['presion'] },
       { id: 'breath', status: 'APPROVED', copyBySide: { LEFT: ['Respira muy cerca de la oreja izquierda de {R}, sin tocar.'], RIGHT: ['Respira muy cerca de la oreja derecha de {R}, sin tocar.'], BOTH: ['Respira muy cerca de una oreja de {R} y luego de la otra, sin tocar.'] } },
     ], notes: 'Variantes migradas del repertorio estricto de orejas: KISS|lips, BITE|teeth y HOVER|breath (EXCELLENT). Nada inventado.' }),
-  D({ id: 'D10', family: 'HUG', interactionType: 'BODY_TO_BODY', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'body' }], receiverRequirements: [{ part: 'wholeBody' }], requiredOrientation: 'STANDING', durations: [50],
+  D({ id: 'D10', levels: [2, 3], family: 'HUG', interactionType: 'BODY_TO_BODY', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'body' }], receiverRequirements: [{ part: 'wholeBody' }], requiredOrientation: 'STANDING', durations: [50],
     copy: ['De pie, abraza a {R} cuerpo con cuerpo y respirad despacio hasta que acabe el tiempo.'] }),
   D({ id: 'D11', family: 'ABDOMEN', interactionType: 'PATH', intraLevelIntensity: 'MID', actorRequirements: [{ part: 'fingertips' }], receiverRequirements: [{ part: 'abdomen' }], durations: [30, 40], path: { from: 'arriba', to: 'abajo' },
     copy: ['Recorre despacio el abdomen de {R} con la punta de los dedos, de arriba abajo, sin salirte del abdomen.'],

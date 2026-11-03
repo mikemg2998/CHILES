@@ -3,7 +3,7 @@
    Intimidad con anatomías y estados asimétricos. Audita repetición, familias, lateralidad, actores, PlayConstraints,
    ropa, UNDRESS, disponibilidad, mazos vacíos, anatomía, propiedad, duración, variantes, cartas bloqueadas y pausa. */
 import { writeFileSync } from 'node:fs';
-import { CARDS, CARD, APPROVED } from '../content/index.js';
+import { CARDS, CARD, APPROVED, playableAt, levelsOf } from '../content/index.js';
 import { GameEngine } from '../engine/engine.js';
 import { buildDeck } from '../engine/deck.js';
 import { FAMILIES } from '../content/schema.js';
@@ -31,7 +31,7 @@ function check(e, r) {
   if (r.seconds == null && c.timerMode !== 'NO_TIMER') problems.push(`${r.cardId}: sin tiempo`);
   if (!r.phrase || /\{[RA]\}/.test(r.phrase)) problems.push(`${r.cardId}: frase sin realizar`);
   if (r.level === 2 && (r.undress || c.clothing.receiver.includes('SKIN_ACCESS'))) problems.push(`${r.cardId}: Deseo con ropa fuera`);
-  if (r.level !== c.level) problems.push(`${r.cardId}: nivel ${r.level} ≠ ${c.level}`);
+  if (!playableAt(c, r.level)) problems.push(`${r.cardId}: nivel ${r.level} no está entre los suyos (${levelsOf(c).join(', ')})`);
   const again = buildDeck([c], e.context(r.actor)); if (!again.eligible.length) problems.push(`${r.cardId}: no pasa el filtro tras salir (${again.rejected[0].reason})`);
 }
 function session(levels, { anatomy, clothing, seed, undressPolicy = 'first' }) {
