@@ -23,7 +23,8 @@ test('BODY_TO_BODY keeps structure; intimate content respects anatomy and clothi
 });
 test('laterality and history work in Intimidad; nothing unapproved appears', () => {
   const e = mk({ level: 3, seed: 9, clothing: [NAKED(), NAKED()] }); const rs = play(e, 400, { undress: false });
-  const i19 = rs.filter(r => r.cardId === 'I19'); assert.ok(new Set(i19.map(r => r.side)).size === 3);
+  // con el catálogo ampliado I19 sale menos por sesión: los tres lados se comprueban sobre tres semillas
+  const i19 = [9, 10, 11].flatMap(seed => play(mk({ level: 3, seed, clothing: [NAKED(), NAKED()] }), 400, { undress: false })).filter(r => r.cardId === 'I19'); assert.equal(new Set(i19.map(r => r.side)).size, 3);
   for (let i = 1; i < rs.length; i++) assert.notEqual(rs[i].cardId, rs[i - 1].cardId);
   for (const r of rs) { assert.equal(CARD[r.cardId].status, 'APPROVED'); assert.ok(!['I14', 'I16', 'U08', 'D07'].includes(r.cardId)); }
   const ids = new Set(rs.map(r => r.cardId)); assert.ok(ids.size >= 15, `variedad ${ids.size}`);
@@ -45,13 +46,13 @@ test('continuing with the game preserves EXACTLY all state; own way closes witho
 test('empty deck never blocks and never relaxes anything: neutral transition + log for the designer', () => {
   // desde la expansión corporal V1, vestidos + sin boca + sin quitarse ropa ya NO deja Intimidad vacía: siguen los masajes y el abrazo reutilizados
   const v = mk({ level: 3, seed: 1, clothing: [DRESSED(), DRESSED()] }); v.setPrefs(0, { boca: 'no', ropa: 'no' });
-  const rv = v.roll(); assert.ok(!rv.transition, 'hay carta'); assert.ok(['C01', 'C06', 'C08', 'C15', 'C51', 'D10', 'I25'].includes(rv.cardId), rv.cardId);
-  // el mecanismo de mazo vacío sigue intacto: sin esas cartas reutilizadas, el mismo escenario cae en la transición neutra
-  const reused = ['C01', 'C06', 'C08', 'C15', 'C51', 'D10'].map(id => [CARD[id], CARD[id].levels]);
+  const rv = v.roll(); assert.ok(!rv.transition, 'hay carta'); assert.ok(['C01', 'C06', 'C08', 'C15', 'C51', 'D10', 'I25', 'I54'].includes(rv.cardId), rv.cardId);
+  // el mecanismo de mazo vacío sigue intacto: sin esas cartas reutilizadas ni el abrazo I54, el mismo escenario cae en la transición neutra
+  const reused = ['C01', 'C06', 'C08', 'C15', 'C51', 'D10'].map(id => [CARD[id], CARD[id].levels]); const hug = CARD.I54.status;
   try {
-    for (const [c] of reused) c.levels = null;
+    for (const [c] of reused) c.levels = null; CARD.I54.status = 'UNREVIEWED';
     const e = mk({ level: 3, seed: 1, clothing: [DRESSED(), DRESSED()] }); e.setPrefs(0, { boca: 'no', ropa: 'no' });
     const r = e.roll(); assert.ok(r.transition); assert.equal(r.cardId, 'T03'); assert.equal(e.stats.emptyDecks.length, 1); assert.ok(e.stats.emptyDecks[0].rejected.length);
     assert.ok(e.roll());
-  } finally { for (const [c, l] of reused) c.levels = l; }
+  } finally { for (const [c, l] of reused) c.levels = l; CARD.I54.status = hug; }
 });

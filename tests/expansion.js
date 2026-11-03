@@ -8,7 +8,7 @@ import { fullAccess, DEFAULT_CLOTHING } from '../engine/clothing.js';
 
 const arg = (k, d) => { const a = process.argv.find(x => x.startsWith(`--${k}=`)); return a ? a.slice(k.length + 3) : d; };
 const OUT = arg('out', ''), N = Number(arg('sessions', 200));
-export const NEW = ['I44', 'I45', 'I46', 'I47', 'I48', 'I49', 'I51', 'I52', 'I53'];
+export const NEW = ['I44', 'I45', 'I46', 'I47', 'I48', 'I49', 'I50', 'I51', 'I52', 'I53', 'I54'];
 export const REUSED = ['C01', 'C06', 'C08', 'C15', 'C51', 'D10'];
 const GENITAL = p => BODY_PARTS[p] && ['vulva', 'pene'].includes(BODY_PARTS[p].anatomy);
 const pct = (a, b) => (b ? (100 * a / b).toFixed(1) + ' %' : '—');

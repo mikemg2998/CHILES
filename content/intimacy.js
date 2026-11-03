@@ -172,9 +172,10 @@ export const INTIMACY = [
   // HIPS_GLUTES: caderas (target hips, no nalgas), a piel con el pantalón fuera
   I({ id: 'I49', family: 'BITE', similarityGroup: 'BITE', intraLevelIntensity: 'MID', actorRequirements: [{ part: 'teeth' }], receiverRequirements: [{ part: 'hips' }], clothing: SKIN, durations: [20], tags: ['presion'],
     copy: ['Mordisquea suavemente la parte de atrás de la cadera de {R}.'], notes: 'diseñador: GENTLE_BITE · TEETH → HIPS (parte posterior) · HIPS_GLUTES · DIRECT' }),
-  // GROIN: ingles (target hipCrease, HIPS_GLUTES; independiente de vulva / pene). Requisitos cerrados; la interacción (acción · herramienta · frase) nunca llegó: sin texto no sale.
-  I({ id: 'I50', family: 'CARESS', status: 'UNREVIEWED', intraLevelIntensity: 'MID', actorRequirements: [], receiverRequirements: [{ part: 'hipCrease' }], clothing: { receiver: ['SKIN_ACCESS'] }, durations: [30],
-    copy: null, notes: 'PENDIENTE (2026-11-03): el diseñador pidió «la interacción proporcionada para las ingles», pero no hay ninguna en el historial: falta acción, herramienta y frase. Target hipCrease (ingles), región HIPS_GLUTES, a piel (pantalón y ropa interior fuera).' }),
+  // GROIN: ingles (target hipCrease, HIPS_GLUTES; independiente de vulva / pene). Mutua: los dos con las ingles a piel (pantalón y ropa interior fuera).
+  I({ id: 'I50', family: 'KISS', interactionType: 'MUTUAL', intraLevelIntensity: 'MID', actorRequirements: [{ part: 'lips' }], receiverRequirements: [{ part: 'hipCrease' }],
+    clothing: { actor: ['BOTTOM_ACCESS', 'UNDERWEAR_OFF'], receiver: ['SKIN_ACCESS'] }, durations: [30],
+    copy: ['Besaos en las ingles lentamente durante 30 segundos.'], notes: 'diseñador (2026-11-03): «Bésense en las ingles lentamente durante 30 segundos.» adaptado a vosotros · KISS · LIPS → HIP_CREASE · HIPS_GLUTES · DIRECT · mutua' }),
   // BACK: masaje localizado (la espalda entera ya existe: C01 reutilizada en Intimidad). Zonas curadas, elegidas por quien recibe; a piel.
   I({ id: 'I51', family: 'MASSAGE', similarityGroup: 'CHOICE', interactionType: 'CHOOSE', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'bothHands' }], receiverRequirements: [{ part: 'shoulders' }, { part: 'back' }, { part: 'lowerBack' }], clothing: SKIN, durations: [45, 60],
     choices: [{ id: 'shoulders', label: 'hombros' }, { id: 'back', label: 'entre los omóplatos' }, { id: 'lowerBack', label: 'zona lumbar' }],
@@ -186,4 +187,7 @@ export const INTIMACY = [
   I({ id: 'I53', family: 'CARESS', similarityGroup: 'BODY_CONTACT', interactionType: 'BODY_TO_BODY', intraLevelIntensity: 'MID', actorRequirements: [{ part: 'body' }], receiverRequirements: [{ part: 'wholeBody' }], requiredOrientation: 'STANDING',
     clothing: { actor: ['FULL_BODY_ACCESS'], receiver: ['FULL_BODY_ACCESS'] }, durations: [60],
     copy: ['De pie y abrazados, acariciad despacio el cuerpo del otro con las manos, sin perder el contacto.'], notes: 'diseñador: BODY_TO_BODY + exploración corporal · FULL_BODY · STANDING · mutua; copy sencillo, sin instrucciones anatómicas' }),
+  // Abrazo de pie de 30 s (diseñador, 2026-11-03): carta nueva, I20 no cambia. Sin requisito de ropa: vale vestidos o no.
+  I({ id: 'I54', family: 'HUG', similarityGroup: 'EMBRACE', interactionType: 'BODY_TO_BODY', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'body' }], receiverRequirements: [{ part: 'wholeBody' }], requiredOrientation: 'STANDING', durations: [30],
+    copy: ['Abrazaos de pie durante 30 segundos, pegando vuestros cuerpos y disfrutando del contacto sin hacer nada más.'], notes: 'diseñador (2026-11-03): «Abrácense de pie durante 30 segundos, pegando sus cuerpos…» adaptado a vosotros · FULL_BODY · BODY_TO_BODY · STANDING' }),
 ];

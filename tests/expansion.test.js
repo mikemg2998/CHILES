@@ -11,7 +11,7 @@ import { moodProfile, moodWeight } from '../engine/mood.js';
 import { mk, play, NAKED, DRESSED } from './helpers.js';
 
 const BEFORE = JSON.parse(readFileSync(new URL('./approved-before-expansion.json', import.meta.url), 'utf8'));
-const NEW = { I44: ['fingers', 'ARMS_HANDS'], I45: ['hands', 'ARMS_HANDS'], I46: ['toes', 'FEET'], I47: ['feet', 'FEET'], I48: ['feet', 'FEET'], I49: ['hips', 'HIPS_GLUTES'], I51: ['back', 'BACK'], I52: ['wholeBody', 'FULL_BODY'], I53: ['wholeBody', 'FULL_BODY'] };
+const NEW = { I44: ['fingers', 'ARMS_HANDS'], I45: ['hands', 'ARMS_HANDS'], I46: ['toes', 'FEET'], I47: ['feet', 'FEET'], I48: ['feet', 'FEET'], I49: ['hips', 'HIPS_GLUTES'], I51: ['back', 'BACK'], I52: ['wholeBody', 'FULL_BODY'], I53: ['wholeBody', 'FULL_BODY'], I50: ['hipCrease', 'HIPS_GLUTES'], I54: ['wholeBody', 'FULL_BODY'] };
 const REUSED = ['C01', 'C06', 'C08', 'C15', 'C51', 'D10'];
 const ids = (e, actor) => new Set(buildDeck(CARDS, e.context(actor)).eligible.map(x => x.card.id));
 const both = e => new Set([...ids(e, 0), ...ids(e, 1)]);
@@ -22,7 +22,8 @@ test('regresión: ninguna carta APPROVED anterior desaparece ni cambia de estado
   for (const id of BEFORE) { assert.ok(CARD[id], `${id} ha desaparecido`); assert.equal(CARD[id].status, 'APPROVED', `${id} ya no es APPROVED`); }
   const L3before = BEFORE.filter(id => CARD[id].level === 3).length, L3now = APPROVED.filter(c => c.level === 3).length;
   assert.equal(L3now, L3before + Object.keys(NEW).length, 'newTotal = previousApprovedTotal + nuevas');
-  assert.equal(CARD.I50.status, 'UNREVIEWED', 'ingles: pendiente de la interacción del diseñador, no sale');
+  assert.equal(CARD.I20.durations.join(), '60'); assert.deepEqual(CARD.I20.clothing.receiver, ['FULL_BODY_ACCESS']); // I20 intacta
+  assert.equal(CARD.I50.interactionType, 'MUTUAL'); assert.equal(CARD.I54.durations.join(), '30'); assert.deepEqual(CARD.I54.clothing.receiver, ['ANY']);
 });
 test('nuevas cartas: DESIGNER_PROVIDED, target y región correctos, targets separados (manos ≠ dedos, pies ≠ dedos, caderas ≠ nalgas, ingles ≠ genitales)', () => {
   for (const [id, [part, region]] of Object.entries(NEW)) {
@@ -34,17 +35,19 @@ test('nuevas cartas: DESIGNER_PROVIDED, target y región correctos, targets sepa
   assert.deepEqual(partsOf(CARD.I50, null), ['hipCrease']);
   assert.ok(!APPROVED.filter(c => Object.keys(NEW).includes(c.id)).some(c => c.intraLevelIntensity === 'HIGH'), 'nada es HIGH por estar en Intimidad');
 });
-test('FULL_BODY no es INTIMATE: I20 I52 I53 son BODY_TO_BODY de pie, mutuos, región FULL_BODY', () => {
+test('FULL_BODY no es INTIMATE: I20 I52 I53 son BODY_TO_BODY de pie, mutuos, región FULL_BODY; I54 también, sin requisito de ropa', () => {
+  { const c = CARD.I54; assert.equal(c.interactionType, 'BODY_TO_BODY'); assert.equal(c.requiredOrientation, 'STANDING'); assert.equal(regionOf(c, null), 'FULL_BODY'); }
   for (const id of ['I20', 'I52', 'I53']) { const c = CARD[id]; assert.equal(c.interactionType, 'BODY_TO_BODY'); assert.equal(c.requiredOrientation, 'STANDING'); assert.equal(regionOf(c, null), 'FULL_BODY'); assert.ok(!c.tags.includes('intimo')); assert.deepEqual(c.clothing.receiver, ['FULL_BODY_ACCESS']); assert.deepEqual(c.clothing.actor, ['FULL_BODY_ACCESS']); }
 });
 test('ClothingState: entrar a Intimidad no es estar desnudos', () => {
   const dressed = both(mk({ level: 3, clothing: [DRESSED(), DRESSED()] }));
   for (const id of ['I46', 'I47', 'I48', 'I49', 'I51', 'I52', 'I53', 'I20']) assert.ok(!dressed.has(id), `${id} vestidos`);
-  for (const id of ['I44', 'I45', ...REUSED]) assert.ok(dressed.has(id), `${id} se juega vestidos`);
+  for (const id of ['I44', 'I45', 'I54', ...REUSED]) assert.ok(dressed.has(id), `${id} se juega vestidos`); assert.ok(!dressed.has('I50'));
   const socks = both(mk({ level: 3, clothing: [st({ socks: 'OFF' }), st({ socks: 'OFF' })] })); for (const id of ['I46', 'I47', 'I48']) assert.ok(socks.has(id), `${id} sin calcetines`);
   const top = both(mk({ level: 3, clothing: [st({ top: 'OFF', bra: 'OFF' }), st({ top: 'OFF' })] })); assert.ok(top.has('I51')); assert.ok(!top.has('I49'));
   const pants = both(mk({ level: 3, clothing: [st({ bottoms: 'OFF' }), st({ bottoms: 'OFF' })] })); assert.ok(pants.has('I49'), 'caderas con el pantalón fuera, ropa interior puesta'); assert.ok(!pants.has('I52'));
-  const one = both(mk({ level: 3, clothing: [NAKED(), DRESSED()] })); for (const id of ['I20', 'I52', 'I53']) assert.ok(!one.has(id), `${id}: exige acceso completo de los DOS`);
+  const one = both(mk({ level: 3, clothing: [NAKED(), DRESSED()] })); for (const id of ['I20', 'I52', 'I53', 'I50']) assert.ok(!one.has(id), `${id}: exige acceso de los DOS`);
+  const underOff = st({ bottoms: 'OFF', panties: 'OFF', boxers: 'OFF' }); assert.ok(both(mk({ level: 3, clothing: [underOff, underOff] })).has('I50'), 'I50 con las ingles a piel de los dos');
   const naked = both(mk({ level: 3, clothing: [NAKED(), NAKED()] })); for (const id of [...Object.keys(NEW), ...REUSED, 'I20']) assert.ok(naked.has(id), `${id} desnudos`);
   assert.equal(coverage('hips', st({ bottoms: 'OFF' })).mode, 'DIRECT_SKIN_ACCESS');
 });
