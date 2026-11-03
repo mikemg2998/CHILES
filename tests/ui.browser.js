@@ -26,13 +26,15 @@ const browser = await chromium.launch();
 let failures = 0, passed = 0;
 async function page(opts = {}) {
   const ctx = await browser.newContext({ viewport: { width: opts.width || 390, height: opts.height || 844 }, reducedMotion: opts.reducedMotion || 'no-preference' });
-  await ctx.addInitScript(s => localStorage.setItem('pab.v2', JSON.stringify(s)), SAVED);
+  await ctx.addInitScript(s => localStorage.setItem('pab.v2', JSON.stringify(s)), opts.saved || SAVED);
+  if (opts.init) await ctx.addInitScript(opts.init);
   /* espía de audio: cuenta los tonos que el temporizador programa (cada pitido = un oscilador con start()) y los
      AudioContext creados. Usa el Web Audio real de Chromium; solo observa. */
   await ctx.addInitScript(() => {
     window.__beeps = []; window.__ctx = 0; const AC = window.AudioContext; if (!AC) return;
     window.AudioContext = class extends AC {
-      constructor(...a) { super(...a); window.__ctx++; }
+      constructor(...a) { super(...a); window.__ctx++; window.__sessionAtCtx = navigator.audioSession ? navigator.audioSession.type : null; window.__lastCtx = this; }
+      createBufferSource() { const b = super.createBufferSource(); const st = b.start.bind(b); b.start = (...x) => { window.__sources = (window.__sources || 0) + 1; return st(...x); }; return b; }
       createOscillator() { const o = super.createOscillator(); const st = o.start.bind(o); o.start = w => { window.__beeps.push({ at: w, f: o.frequency.value }); return st(w); }; return o; }
     };
   });
@@ -40,7 +42,7 @@ async function page(opts = {}) {
   if (opts.clock) await pg.clock.install();
   pg.on('pageerror', e => errors.push('pageerror ' + e.message)); pg.on('console', m => { if (m.type() === 'error') errors.push('console ' + m.text()); });
   await pg.route('https://api.fontshare.com/**', r => r.fulfill({ status: 200, contentType: 'text/css', body: '' }));
-  await pg.goto(URL, { waitUntil: 'networkidle' });
+  await pg.goto(URL + (opts.query || ''), { waitUntil: 'networkidle' });
   pg.errors = errors;
   /* contadores sobre el motor real: cuántas veces se pidió una carta y cuántas veces se registró feedback */
   await pg.evaluate(() => { const e = window.pab; window.__rolls = 0; window.__fb = []; const roll = e.roll.bind(e); e.roll = (...a) => { window.__rolls++; return roll(...a); }; const fb = e.feedback.bind(e); e.feedback = k => { window.__fb.push(k); return fb(k); }; });
@@ -374,6 +376,74 @@ await test('temporizador en móvil: centrado, legible, sin tapar la frase ni des
     if (last) await last.context().close(); last = pg;
   }
   return last;
+});
+
+/* ---------- iPhone / Safari: sesión de audio «playback», sin vibración web ---------- */
+/* Simula lo que Safari en iOS expone: navigator.audioSession (iOS 16.4+) y ningún navigator.vibrate. */
+const IOS = () => {
+  delete Navigator.prototype.vibrate;
+  const hist = []; let type = 'auto'; window.__sessionHist = hist;
+  Object.defineProperty(navigator, 'audioSession', { configurable: true, value: { get type() { return type; }, set type(v) { type = v; hist.push(v); } } });
+};
+const NO_APIS = () => { delete Navigator.prototype.vibrate; delete Navigator.prototype.audioSession; };
+const ANDROID = () => { window.__vib = []; Navigator.prototype.vibrate = function (p) { window.__vib.push(p); return true; }; };
+async function runToZero(pg) { const st = await timerState(pg); await pg.click('#timer'); await ff(pg, st.total * 1000 + 500); await pg.waitForFunction(() => document.querySelector('#timer').classList.contains('done')); }
+
+await test('iPhone: el toque prepara la sesión «playback» sin sonar; a 00:00 suenan 3 pitidos y luego se suelta el audio', async () => {
+  const pg = await page({ clock: true, init: IOS }); await start(pg); await toTimerCard(pg);
+  assert.equal(await pg.evaluate(() => typeof navigator.vibrate), 'undefined');
+  await pg.click('#timer');
+  const u = await pg.evaluate(() => ({ s: navigator.audioSession.type, atCtx: window.__sessionAtCtx, ctx: window.__ctx, beeps: window.__beeps.length, src: window.__sources || 0 }));
+  assert.deepEqual(u, { s: 'playback', atCtx: 'playback', ctx: 1, beeps: 0, src: 0 }, 'sesión playback antes de crear el audio, sin ningún sonido al desbloquear');
+  const total = (await timerState(pg)).total; await ff(pg, total * 1000 + 500); await pg.waitForFunction(() => document.querySelector('#timer').classList.contains('done'));
+  assert.equal(await beeps(pg), 3); assert.equal(await pg.evaluate(() => navigator.audioSession.type), 'playback', 'suena con la sesión de reproducción');
+  await ff(pg, 2000); await pg.waitForTimeout(50);
+  assert.equal(await pg.evaluate(() => navigator.audioSession.type), 'auto', 'después de los pitidos la sesión vuelve a auto (no retiene la música de otras apps)');
+  assert.equal(await pg.evaluate(() => window.__lastCtx.state), 'suspended');
+  // otro temporizador vuelve a preparar y a sonar
+  await nextCard(pg); await toTimerCard(pg); await runToZero(pg);
+  assert.equal(await beeps(pg), 6); assert.equal(await pg.evaluate(() => window.__ctx), 1, 'un solo AudioContext reutilizado');
+  return pg;
+});
+
+await test('iPhone: cancelar antes de 00:00 no suena y suelta la sesión; sin ajuste de vibración', async () => {
+  const pg = await page({ clock: true, init: IOS }); await start(pg); await toTimerCard(pg);
+  await pg.click('#timer'); await ff(pg, 2000); await nextCard(pg);
+  await ff(pg, 200000); await pg.waitForTimeout(50);
+  assert.equal(await beeps(pg), 0);
+  assert.equal(await pg.evaluate(() => navigator.audioSession.type), 'auto');
+  await pg.click('#btnSettings'); await pg.waitForTimeout(300);
+  assert.equal(await pg.$eval('#swVibe', e => e.closest('.list').hidden), true, 'no se ofrece una vibración que iOS no tiene');
+  return pg;
+});
+
+await test('navegador sin audioSession ni vibrate: 3 pitidos y ningún error', async () => {
+  const pg = await page({ clock: true, init: NO_APIS, saved: { ...SAVED, vibrate: true } }); await start(pg); await toTimerCard(pg);
+  assert.equal(await pg.evaluate(() => typeof navigator.audioSession + '/' + typeof navigator.vibrate), 'undefined/undefined');
+  await runToZero(pg); await ff(pg, 2000); await pg.waitForTimeout(50);
+  assert.equal(await beeps(pg), 3);
+  return pg; // test() comprueba que no hay errores de consola
+});
+
+await test('Android / Chrome: sin cambios — 3 pitidos y la vibración opcional sigue', async () => {
+  const pg = await page({ clock: true, init: ANDROID, saved: { ...SAVED, vibrate: true } }); await start(pg); await toTimerCard(pg);
+  assert.equal(await pg.evaluate(() => 'audioSession' in navigator), false);
+  await pg.evaluate(() => { window.__vib.length = 0; });
+  await runToZero(pg);
+  assert.equal(await beeps(pg), 3);
+  assert.deepEqual(await pg.evaluate(() => window.__vib), [[12, 60, 12]], 'vibra al terminar, como antes');
+  await pg.click('#btnSettings'); await pg.waitForTimeout(300);
+  assert.equal(await pg.$eval('#swVibe', e => e.closest('.list').hidden), false, 'el ajuste de vibración sigue visible');
+  return pg;
+});
+
+await test('modo de prueba ?aviso: cualquier temporizador dura 3 s y suena al terminar', async () => {
+  const pg = await page({ clock: true, query: '&aviso' }); await start(pg); await toTimerCard(pg);
+  assert.equal((await timerState(pg)).text, '00:03');
+  await pg.click('#timer'); await ff(pg, 2500); await pg.waitForTimeout(30); assert.equal(await beeps(pg), 0);
+  await ff(pg, 1000); await pg.waitForFunction(() => document.querySelector('#timer').classList.contains('done'));
+  assert.equal(await beeps(pg), 3);
+  return pg;
 });
 
 await browser.close(); server.close();

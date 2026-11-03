@@ -7,7 +7,7 @@ import { GameEngine, migrateFavorite } from '../engine/engine.js';
 import { PreferenceManager } from '../engine/prefs.js';
 import { LEVELS, LEVEL_IDS, LEVEL_KEYS, LEVEL_BY_KEY, LEVEL_COPY } from '../engine/levels.js';
 import { formatDuration } from '../engine/duration.js';
-import { unlockAudio, playBeeps } from './beep.js';
+import { unlockAudio, playBeeps, releaseAudio } from './beep.js';
 import { AVOIDS, PREF_STATES, PREF_LABEL } from '../engine/session.js';
 import { MOODS } from '../engine/mood.js';
 import { GARMENT_LABEL, ANATOMY, UNDERWEAR_GARMENTS } from '../content/body.js';
@@ -16,6 +16,8 @@ const KEY = 'pab.v2';
 const SCHEMA = 5; // 4 = cartas curadas · 5 = prendas interiores por jugador (un guardado antiguo sin `underwear` se deriva de la configuración corporal, nunca se lee como «no la llevo»)
 const $ = s => document.querySelector(s);
 const DEBUG = new URLSearchParams(location.search).has('debug');
+/* prueba del aviso (desarrollo): con ?aviso en la dirección, todo temporizador dura 3 s para oír los pitidos sin esperar */
+const TEST_ALERT = new URLSearchParams(location.search).has('aviso');
 
 /* ---------- estado persistente (solo preferencias) ---------- */
 const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } };
@@ -34,7 +36,10 @@ if (savedSchema < SCHEMA && (saved.prefs || saved.favorites)) persist();
 function persist() {
   try { localStorage.setItem(KEY, JSON.stringify({ schema: SCHEMA, prefs: prefs.toJSON(), favorites: engine.state.favorites, vibrate: ui.vibrate, setupDone: ui.setupDone })); } catch { /* sin almacenamiento: la partida sigue */ }
 }
-const buzz = p => { if (ui.vibrate && navigator.vibrate) { try { navigator.vibrate(p); } catch { /* nada */ } } };
+/* vibración: solo donde el navegador la ofrece (Android / Chrome). Safari en iPhone no implementa navigator.vibrate, así que
+   allí no se ofrece el ajuste ni se promete; el aviso es sonido + visual. */
+const CAN_VIBRATE = typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function';
+const buzz = p => { if (ui.vibrate && CAN_VIBRATE) { try { navigator.vibrate(p); } catch { /* nada */ } } };
 
 /* ---------- utilidades ---------- */
 const realNames = () => (prefs.names || []).filter(n => n && n.trim());
@@ -142,11 +147,12 @@ const timerEl = $('#timer'); let timer = null;
 function setTimer(seconds) {
   stopTimer();
   if (!seconds) { timerEl.hidden = true; return; }
+  if (TEST_ALERT) seconds = 3;
   timerEl.hidden = false; timerEl.dataset.total = seconds; timerEl.classList.remove('running', 'done');
   timerEl.querySelector('.t').textContent = formatDuration(seconds); timerEl.querySelector('.hint').textContent = 'toca para empezar'; timerEl.querySelector('.bar').style.transform = 'scaleX(0)';
   timerEl.setAttribute('aria-label', `Temporizador de ${seconds} segundos. Toca para empezar`);
 }
-function stopTimer() { if (timer) { cancelAnimationFrame(timer.raf); timer.cancelled = true; timer = null; } }
+function stopTimer() { if (timer) { cancelAnimationFrame(timer.raf); timer.cancelled = true; timer = null; releaseAudio(); } }
 /* Cada arranque es una ejecución propia: solo la ejecución vigente puede terminar, y termina una sola vez. Parar, cambiar
    de carta, «Otra», «Más suave», «Pasar» o SIGUIENTE la cancelan antes de 00:00, y entonces no suena nada. */
 function startTimer() {
@@ -427,4 +433,6 @@ $('#btnClearFavs').addEventListener('click', e => {
 });
 
 /* ---------- arranque ---------- */
+if (!CAN_VIBRATE) $('#swVibe').closest('.list').hidden = true; // iPhone: sin vibración web, no se ofrece el ajuste
+if (TEST_ALERT) toast('Prueba del aviso: temporizadores de 3 s');
 renderLevel(); renderTurn(); renderFavCount(); updateControls();
