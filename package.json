@@ -7,6 +7,7 @@
     "test": "node --test 'tests/*.test.js'",
     "simulate": "node tests/simulate.js 100",
     "check": "node tests/validate.js && node --test 'tests/*.test.js' && node tests/simulate.js 100 > /dev/null && echo '✓ check'",
-    "check:ui": "node tests/ui.browser.js"
+    "check:ui": "node tests/ui.browser.js",
+    "audit:coverage": "node tests/coverage.js"
   }
 }
