@@ -83,7 +83,7 @@ export const BODY_PARTS_LIST = [
 export const BODY_PARTS = Object.fromEntries(BODY_PARTS_LIST.map(p => [p.id, p]));
 
 const A = (id, label, o = {}) => Object.assign({ id, label, kind: 'hand', anatomy: null, lateral: false, coveredBy: [] }, o);
-/* 2026-11-04: `vulva` como herramienta de quien tiene el turno (I57, I60, I61, I62), igual que `penis`. */
+/* 2026-11-04: `vulva` como herramienta de quien tiene el turno (I57, I60, I61, I62, I66), igual que `penis`. */
 export const ACTOR_TOOLS_LIST = [
   A('oneHand', 'una mano', { lateral: true }), A('bothHands', 'las dos manos'), A('fingers', 'los dedos', { lateral: true }), A('fingertips', 'las yemas de los dedos', { lateral: true }),
   A('oneFinger', 'un dedo'), A('twoFingers', 'dos dedos'), A('threeFingers', 'tres dedos'), A('thumbs', 'los pulgares'), A('nails', 'las uñas'), A('palm', 'la palma'),

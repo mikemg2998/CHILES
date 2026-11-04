@@ -46,13 +46,13 @@ test('continuing with the game preserves EXACTLY all state; own way closes witho
 test('empty deck never blocks and never relaxes anything: neutral transition + log for the designer', () => {
   // desde la expansión corporal V1, vestidos + sin boca + sin quitarse ropa ya NO deja Intimidad vacía: siguen los masajes y el abrazo reutilizados
   const v = mk({ level: 3, seed: 1, clothing: [DRESSED(), DRESSED()] }); v.setPrefs(0, { boca: 'no', ropa: 'no' });
-  const rv = v.roll(); assert.ok(!rv.transition, 'hay carta'); assert.ok(['C01', 'C06', 'C08', 'C15', 'C51', 'D10', 'I25', 'I54'].includes(rv.cardId), rv.cardId);
-  // el mecanismo de mazo vacío sigue intacto: sin esas cartas reutilizadas ni el abrazo I54, el mismo escenario cae en la transición neutra
-  const reused = ['C01', 'C06', 'C08', 'C15', 'C51', 'D10'].map(id => [CARD[id], CARD[id].levels]); const hug = CARD.I54.status;
+  const rv = v.roll(); assert.ok(!rv.transition, 'hay carta'); assert.ok(['C01', 'C06', 'C08', 'C15', 'C51', 'D10', 'I25', 'I54', 'I63', 'I64'].includes(rv.cardId), rv.cardId); // I63/I64 (caricias guiadas, 2026-11-04) también valen con ropa
+  // el mecanismo de mazo vacío sigue intacto: sin esas cartas reutilizadas, el abrazo I54 ni las caricias guiadas I63/I64, el mismo escenario cae en la transición neutra
+  const reused = ['C01', 'C06', 'C08', 'C15', 'C51', 'D10'].map(id => [CARD[id], CARD[id].levels]); const hug = CARD.I54.status; const guided = [CARD.I63, CARD.I64].map(c => c.status);
   try {
-    for (const [c] of reused) c.levels = null; CARD.I54.status = 'UNREVIEWED';
+    for (const [c] of reused) c.levels = null; CARD.I54.status = 'UNREVIEWED'; CARD.I63.status = CARD.I64.status = 'UNREVIEWED';
     const e = mk({ level: 3, seed: 1, clothing: [DRESSED(), DRESSED()] }); e.setPrefs(0, { boca: 'no', ropa: 'no' });
     const r = e.roll(); assert.ok(r.transition); assert.equal(r.cardId, 'T03'); assert.equal(e.stats.emptyDecks.length, 1); assert.ok(e.stats.emptyDecks[0].rejected.length);
     assert.ok(e.roll());
-  } finally { for (const [c, l] of reused) c.levels = l; CARD.I54.status = hug; }
+  } finally { for (const [c, l] of reused) c.levels = l; CARD.I54.status = hug; [CARD.I63.status, CARD.I64.status] = guided; }
 });

@@ -22,7 +22,7 @@ test('regresión: ninguna carta APPROVED anterior desaparece ni cambia de estado
   const CURATED_OUT = ['C21', 'C28', 'C30', 'C49']; // eliminadas explícitamente por el diseñador (curación 2026-11-03)
   for (const id of BEFORE) { assert.ok(CARD[id], `${id} ha desaparecido`); assert.equal(CARD[id].status, CURATED_OUT.includes(id) ? 'REJECTED' : 'APPROVED', `${id} cambió de estado`); }
   const L3before = BEFORE.filter(id => CARD[id].level === 3).length, L3now = APPROVED.filter(c => c.level === 3).length;
-  assert.equal(L3now, L3before + Object.keys(NEW).length + 1 + 2 + 6, 'newTotal = previousApprovedTotal + nuevas + I24 reactivada + I55/I56 + I57–I62');
+  assert.equal(L3now, L3before + Object.keys(NEW).length + 1 + 2 + 6 + 4, 'newTotal = previousApprovedTotal + nuevas + I24 reactivada + I55/I56 + I57–I62 + I63–I66');
   assert.equal(CARD.I20.durations.join(), '60'); assert.deepEqual(CARD.I20.clothing.receiver, ['FULL_BODY_ACCESS']); // I20 intacta
   assert.equal(CARD.I50.interactionType, 'MUTUAL'); assert.equal(CARD.I54.durations.join(), '30'); assert.deepEqual(CARD.I54.clothing.receiver, ['ANY']);
 });

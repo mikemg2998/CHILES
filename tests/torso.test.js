@@ -131,7 +131,7 @@ test('cadena no dominante: tras quitar la camiseta y descubrir el brasier, quita
   }
   assert.ok(gaps.length >= 10, `pocas sesiones medibles: ${gaps.length}`);
   assert.ok(gaps.filter(g => g <= 1).length / gaps.length < 0.15, `camiseta→brasier seguidas en ${gaps.filter(g => g <= 1).length}/${gaps.length}`);
-  assert.ok(gaps.some(g => g <= 5), 'no es un bloqueo rígido: a veces ocurre pronto'); assert.ok(gaps.sort((a, b) => a - b)[Math.floor(gaps.length / 2)] <= 15, 'y nunca se eterniza'); // mediana real del motor anterior (d6ae93f, 400 semillas): 13; con 40 semillas oscila 12–14
+  assert.ok(gaps.some(g => g <= 7), 'no es un bloqueo rígido: a veces ocurre pronto'); /* ≤ 7 (antes ≤ 5): con I63/I64 siempre disponibles (2026-11-04) el mazo crece y el hueco mínimo pasa de 5 a 6 con estas semillas, sin tocar UNDRESS */ assert.ok(gaps.sort((a, b) => a - b)[Math.floor(gaps.length / 2)] <= 15, 'y nunca se eterniza'); // mediana real del motor anterior (d6ae93f, 400 semillas): 13; con 40 semillas oscila 12–14
 });
 test('la lógica inferior no cambia: pantalón → panties/calzoncillos → acceso directo (I22/I23 THROUGH_*)', () => {
   const lower = o => ({ ...NAKED(), ...o });

@@ -251,4 +251,32 @@ export const INTIMACY = [
       { id: 'pene-vulva', status: 'APPROVED', anatomy: 'vulva', actorRequirements: [{ part: 'oneHand' }, { part: 'penis' }], receiverRequirements: [{ part: 'vulva' }], copy: ['Cerrad los ojos y masturbaos mutuamente; que cada uno se concentre en la sensación de la mano de su pareja.'] },
       { id: 'pene-pene', status: 'APPROVED', anatomy: 'pene', actorRequirements: [{ part: 'oneHand' }, { part: 'penis' }], receiverRequirements: [{ part: 'penis' }], copy: ['Cerrad los ojos y masturbaos mutuamente; que cada uno se concentre en la sensación de la mano de su pareja.'] },
     ], notes: 'diseñador (2026-11-04): los dos cierran los ojos y se masturban mutuamente; simultánea; 45–60 s.' }),
+  /* ======== GUIAR CON LA MANO (diseñador, 2026-11-04) · dos experiencias, cada una con sus dos direcciones ========
+     Quien guía es SIEMPRE quien recibe las caricias o la estimulación, tenga o no el turno. Cuatro IDs (no variantes) porque las
+     variantes de un mismo ID comparten «no vista», oportunidades perdidas y cooldown por ID: mostrar una dirección quitaría prioridad
+     a la otra. Como en I55–I60, cada par comparte cooldownGroup (nunca a 10 cartas o menos) y reciprocalSubject = quien guía.
+     Las cuatro comparten similarityGroup GUIDED e interactionType GUIDED (penalización semántica y de tipo si salen seguidas;
+     y el «Hoy no · Guiar con la mano» las quita).
+     GUIAR LAS CARICIAS (I63 / I64): no nombra zonas ni exige ropa: se acaricia por donde el cuerpo esté accesible ahora. */
+  I({ id: 'I63', family: 'CARESS', interactionType: 'GUIDED', similarityGroup: 'GUIDED', cooldownGroup: 'GUIDED_CARESS', reciprocalSubject: 'RECEIVER', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'oneHand' }], receiverRequirements: [{ part: 'wholeBody' }],
+    clothing: { actor: ['ANY'], receiver: ['ANY'] }, durations: [45, 60],
+    copy: ['Acaricia lentamente el cuerpo de {R}. {R} puede poner su mano sobre la tuya para llevarla a las zonas que prefiera y marcar el ritmo.'],
+    notes: 'diseñador (2026-11-04): acaricia quien tiene el turno; guía {R}. Cualquier estado de ropa.' }),
+  I({ id: 'I64', family: 'CARESS', interactionType: 'GUIDED', similarityGroup: 'GUIDED', cooldownGroup: 'GUIDED_CARESS', reciprocalSubject: 'ACTOR', intraLevelIntensity: 'LOW', actorRequirements: [{ part: 'body' }], receiverRequirements: [{ part: 'wholeBody' }],
+    clothing: { actor: ['ANY'], receiver: ['ANY'] }, durations: [45, 60],
+    copy: ['{R} acaricia lentamente tu cuerpo. Puedes poner tu mano sobre la suya para llevarla a las zonas que prefieras y marcar el ritmo.'],
+    notes: 'diseñador (2026-11-04): la misma experiencia con los papeles cambiados: acaricia {R}; guía quien tiene el turno.' }),
+  /* GUIAR LA ESTIMULACIÓN ÍNTIMA (I65 / I66): a piel, con la ropa interior de quien recibe fuera; vulva o pene. */
+  I({ id: 'I65', family: 'MANUAL', interactionType: 'GUIDED', similarityGroup: 'GUIDED', cooldownGroup: 'GUIDED_INTIMATE', reciprocalSubject: 'RECEIVER', intraLevelIntensity: 'HIGH', actorRequirements: [{ part: 'oneHand' }], receiverRequirements: [{ part: 'vulva' }],
+    clothing: { receiver: ['SKIN_ACCESS', 'UNDERWEAR_OFF'] }, durations: [45, 60, 75], tags: ['intimo'],
+    variants: [
+      { id: 'vulva', status: 'APPROVED', anatomy: 'vulva', receiverRequirements: [{ part: 'vulva' }], copy: ['Estimula con la mano la vulva de {R}. {R} guía tu mano para marcarte el ritmo y los movimientos que prefiere.'] },
+      { id: 'pene', status: 'APPROVED', anatomy: 'pene', receiverRequirements: [{ part: 'penis' }], copy: ['Estimula con la mano el pene de {R}. {R} guía tu mano para marcarte el ritmo y los movimientos que prefiere.'] },
+    ], notes: 'diseñador (2026-11-04): estimula quien tiene el turno; {R} recibe y guía.' }),
+  I({ id: 'I66', family: 'MANUAL', interactionType: 'GUIDED', similarityGroup: 'GUIDED', cooldownGroup: 'GUIDED_INTIMATE', reciprocalSubject: 'ACTOR', intraLevelIntensity: 'HIGH', actorRequirements: [{ part: 'vulva' }], receiverRequirements: [{ part: 'wholeBody' }],
+    clothing: { actor: ['SKIN_ACCESS', 'UNDERWEAR_OFF'], receiver: ['ANY'] }, durations: [45, 60, 75], tags: ['intimo'],
+    variants: [
+      { id: 'vulva', status: 'APPROVED', actorRequirements: [{ part: 'vulva' }], copy: ['{R} estimula tu vulva con la mano y tú guías la suya para marcar el ritmo y los movimientos que prefieres.'] },
+      { id: 'pene', status: 'APPROVED', actorRequirements: [{ part: 'penis' }], copy: ['{R} estimula tu pene con la mano y tú guías la suya para marcar el ritmo y los movimientos que prefieres.'] },
+    ], notes: 'diseñador (2026-11-04): la misma experiencia con los papeles cambiados: estimula {R}; recibe y guía quien tiene el turno.' }),
 ];
