@@ -81,7 +81,6 @@ test('en partidas reales vestidas: las caricias salen antes de quitarse nada; la
   for (let s = 0; s < 300; s++) {
     const e = e3([DRESSED(), DRESSED()], ANA_LEO, 20000 + s);
     for (let i = 0; i < 40; i++) {
-      if (e.pauseDue()) e.continueGuided();
       const before = e.clothing.map(c => ({ ...c })); const r = e.roll(); if (!r) break;
       const allOn = before.every(c => ['top', 'bottoms'].every(g => c[g] === 'ON'));
       if (['I63', 'I64'].includes(r.cardId) && allOn) caressDressed++;
@@ -110,12 +109,12 @@ test('las dos direcciones de cada experiencia en una sesión, nunca a 10 cartas 
 
 test('selector: participan en no vistas, desbloqueo, oportunidades perdidas y reciprocidad; penalización de grupo y tipo tras otra guiada', () => {
   const e = e3([NAKED(), NAKED()], ANA_LEO, 41); const f = {};
-  for (let i = 0; i < 40; i++) { if (e.pauseDue()) e.continueGuided(); const before = new Set(e.reciprocal); e.roll(); const a = e.lastDebug.actor;
+  for (let i = 0; i < 40; i++) { const before = new Set(e.reciprocal); e.roll(); const a = e.lastDebug.actor;
     for (const c of e.lastDebug.candidates) if (GUIDE.includes(c.id)) { f[c.id] = c.factors; assert.equal(c.factors.reciprocal, before.has(reciprocalKey(CARD[c.id], a)) ? 0.2 : 1, `${c.id} reciprocidad`); } }
   for (const id of GUIDE) { assert.ok(f[id], `${id} en el sorteo`); for (const k of ['unseen', 'unlockedHold', 'missed']) assert.ok(k in f[id], `${id} ${k}`); assert.equal(f[id].base, 1); }
   // justo después de una guiada, las otras tres pesan menos (similarityGroup GUIDED y tipo GUIDED)
   const g = e3([NAKED(), NAKED()], ANA_LEO, 42);
-  for (let i = 0; i < 200 && !(g.history.rounds[0] && GUIDE.includes(g.history.rounds[0].cardId)); i++) { if (g.pauseDue()) g.continueGuided(); g.roll(); }
+  for (let i = 0; i < 200 && !(g.history.rounds[0] && GUIDE.includes(g.history.rounds[0].cardId)); i++) { g.roll(); }
   assert.ok(GUIDE.includes(g.history.rounds[0].cardId), 'sale una guiada');
   const w = weighDeck(buildDeck(CARDS, g.context(g.state.actor)), { history: g.history, session: g.session, director: null, purpose: 'MAINTAIN', unlocked: g.unlocked, round: g.state.round, actor: g.state.actor, clothing: g.clothing });
   const others = w.filter(x => GUIDE.includes(x.card.id) && cooldownKey(x.card.id) !== cooldownKey(g.history.rounds[0].cardId));

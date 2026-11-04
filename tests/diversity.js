@@ -27,7 +27,7 @@ for (const c of APPROVED.filter(c => c.level === 3)) inc(approvedByRegion, c.reg
 const sel = { region: {}, target: {}, family: {}, actor: {}, receiver: {}, side: {}, card: {}, n: 0 };
 for (let i = 0; i < CONFIGS.length; i++) {
   const e = mk(CONFIGS[i], 100 + i); e.clothing = [fullAccess(e.anatomy(0).declared), fullAccess(e.anatomy(1).declared)];
-  for (let k = 0; k < 250; k++) { if (e.pauseDue()) e.continueGuided(); const r = e.roll(); if (r.transition) continue; sel.n++; const c = CARD[r.cardId], v = r.variantId ? c.variants.find(x => x.id === r.variantId) : null; inc(sel.region, regionOf(c, v)); for (const p of partsOf(c, v)) inc(sel.target, p); inc(sel.family, FAMILIES[c.family]); inc(sel.actor, r.actorName); inc(sel.receiver, r.receiverName); if (r.side) inc(sel.side, r.side); inc(sel.card, r.cardId); }
+  for (let k = 0; k < 250; k++) { const r = e.roll(); if (r.transition) continue; sel.n++; const c = CARD[r.cardId], v = r.variantId ? c.variants.find(x => x.id === r.variantId) : null; inc(sel.region, regionOf(c, v)); for (const p of partsOf(c, v)) inc(sel.target, p); inc(sel.family, FAMILIES[c.family]); inc(sel.actor, r.actorName); inc(sel.receiver, r.receiverName); if (r.side) inc(sel.side, r.side); inc(sel.card, r.cardId); }
 }
 
 /* (c) 100 sesiones reales */
@@ -37,7 +37,6 @@ for (let s = 0; s < 100; s++) {
   const regions = new Set(), targets = new Set(), fams = new Set(); let streak = 0, best = 0, lastR = null, intimate = 0, n = 0; const ids = [];
   const pending = []; // {ids: Set, round}
   for (let k = 0; k < 40; k++) {
-    if (e.pauseDue()) e.continueGuided();
     const r = e.roll(); if (r.transition) continue; n++; ids.push(r.cardId);
     const c = CARD[r.cardId], v = r.variantId ? c.variants.find(x => x.id === r.variantId) : null, reg = regionOf(c, v);
     regions.add(reg); for (const p of partsOf(c, v)) targets.add(p); fams.add(c.family); if (reg === 'INTIMATE') intimate++; inc(ses.region, reg);

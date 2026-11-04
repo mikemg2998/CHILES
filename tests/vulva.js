@@ -44,7 +44,7 @@ const N = 200, ROUNDS = 30, count = {}, byTarget = { vulva: 0, clitoris: 0, vagi
 for (let seed = 1; seed <= N; seed++) {
   const e = new GameEngine({ prefs: { names: ['Ana', 'Leo'], bodyParts: [['vulva', 'senos'], ['pene']] }, seed, level: 3 }); let hit = false;
   for (let i = 0; i < ROUNDS; i++) {
-    const r = e.roll(); if (!r) break; total++; if (e.pauseDue()) e.continueGuided();
+    const r = e.roll(); if (!r) break; total++; 
     for (const p of r.parts) if (p in byTarget) { byTarget[p]++; if (p === 'vulva') { count[r.cardId + (r.variantId ? '·' + r.variantId : '')] = (count[r.cardId + (r.variantId ? '·' + r.variantId : '')] || 0) + 1; if (!hit) { hit = true; sessionsWithVulva++; firstVulva.push(r.n); } } }
     if (r.undress) for (const p of r.undress.players) { const g = r.undress.garment === 'ANY' ? e.removable(p)[0] : r.undress.garment; if (g) e.recordUndress(p, g); }
   }

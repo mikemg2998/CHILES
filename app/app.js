@@ -8,6 +8,7 @@ import { PreferenceManager } from '../engine/prefs.js';
 import { LEVELS, LEVEL_IDS, LEVEL_KEYS, LEVEL_BY_KEY, LEVEL_COPY } from '../engine/levels.js';
 import { formatDuration } from '../engine/duration.js';
 import { unlockAudio, playBeeps, releaseAudio } from './beep.js';
+import { IntimacyClock } from './intimacy-clock.js';
 import { AVOIDS, PREF_STATES, PREF_LABEL } from '../engine/session.js';
 import { MOODS } from '../engine/mood.js';
 import { GARMENT_LABEL, ANATOMY, UNDERWEAR_GARMENTS } from '../content/body.js';
@@ -28,9 +29,25 @@ prefs.mode = LEVELS[LEVEL_BY_KEY[prefs.mode]].key; // claves antiguas («explora
 const engine = new GameEngine({ prefs, debug: DEBUG });
 const savedSchema = Number(saved.schema) || 2;
 engine.state.favorites = (Array.isArray(saved.favorites) ? saved.favorites : []).map(f => migrateFavorite(f)).filter(Boolean);
-const ui = { vibrate: saved.vibrate !== false, setupDone: !!saved.setupDone || !!saved.prefs, started: false, moods: [[], []], pref: {}, clothingAsked: false, pauseShownAt: null };
+const ui = { vibrate: saved.vibrate !== false, setupDone: !!saved.setupDone || !!saved.prefs, started: false, moods: [[], []], pref: {}, clothingAsked: false };
 let current = null, busy = false, ctaTimer = 0;
 if (DEBUG) window.pab = engine;
+
+/* ---------- reloj interno de Intimidad → atmósfera (nunca se muestra el tiempo) ----------
+   Separado del motor: solo escribe la variable CSS --heat en <html>; ni elegibilidad ni pesos lo ven.
+   Un único intervalo de 10 s creado una vez; si la página está oculta no hace nada y, al volver, el hueco se suma con tope. */
+const clock = new IntimacyClock();
+let heatShown = -1;
+const clockActive = () => engine.level() === 3 && ui.started && !engine.session.ended;
+function syncClock() {
+  clock.setActive(clockActive());
+  const h = Math.round(clock.heat() * 1000) / 1000;
+  if (h !== heatShown) { heatShown = h; document.documentElement.style.setProperty('--heat', String(h)); }
+}
+setInterval(() => { if (!document.hidden) syncClock(); }, 10000);
+document.addEventListener('visibilitychange', syncClock); // al ocultarse suma hasta ahora; al volver, el hueco (máx. 5 min)
+addEventListener('pageshow', syncClock); // vuelta desde la caché de Safari
+if (DEBUG) window.pabClock = clock;
 if (savedSchema < SCHEMA && (saved.prefs || saved.favorites)) persist();
 
 function persist() {
@@ -83,7 +100,7 @@ async function chooseLevel(id) {
   if (busy || id === engine.level()) return;
   engine.setLevel(id); prefs.mode = LEVELS[id].key; persist();
   engine.session.lastMessage = null;
-  renderLevel(); updateControls(); buzz(8);
+  renderLevel(); updateControls(); syncClock(); buzz(8);
   await levelFlash(id);
   if (id === 3 && !ui.clothingAsked) openClothing(true); // Intimidad empieza desde la ropa real, no desde la desnudez
 }
@@ -140,7 +157,7 @@ function renderDebug() {
   const S = engine.session;
   el.textContent = `purpose ${d.purpose} (${d.reason}) · level ${d.level}${d.band ? ' · ' + d.band : ''} · winner ${d.winner}${d.variant ? ' / ' + d.variant : ''}${d.side ? ' / ' + d.side : ''}${d.playConstraint ? ' / ' + d.playConstraint : ''} · ${d.seconds ?? 'sin tiempo'}${d.fallback ? ' · MAZO VACÍO' : ''}\n` +
     `candidates: ${d.candidates.map(c => `${c.id} ${c.weight}`).join(', ')}\nrejected: ${d.rejected.filter(r => !['LEVEL', 'TRANSITION'].includes(r.reason)).map(r => `${r.id}:${r.reason}`).join(', ')}\n` +
-    `session: rounds ${S.rounds} · intimacy ${S.intimacyCardCount}/${S.pauseAt ?? '–'} · soften ${S.soften.toFixed(2)} · clothing ${JSON.stringify(engine.clothing)} · familyScore ${JSON.stringify(S.familyScore)}`;
+    `session: rounds ${S.rounds} · intimacy ${S.intimacyCardCount} · soften ${S.soften.toFixed(2)} · clothing ${JSON.stringify(engine.clothing)} · familyScore ${JSON.stringify(S.familyScore)}`;
 }
 /* ---------- temporizador: un toque para empezar, fácil de ignorar ---------- */
 const timerEl = $('#timer'); let timer = null;
@@ -189,7 +206,7 @@ async function play(fn, emptyMsg) {
   if (!r) { if (emptyMsg) toast(emptyMsg); updateControls(); return; }
   stopTimer(); // la carta cambia: un temporizador en marcha se cancela ya, no al terminar el barajado
   setBusy(true);
-  document.body.classList.remove('idle', 'home');
+  document.body.classList.remove('idle', 'home'); syncClock();
   welcome.hidden = true; endingBox.hidden = true;
   await shuffle();
   roundBox.classList.remove('show');
@@ -199,12 +216,12 @@ async function play(fn, emptyMsg) {
   setBusy(false);
 }
 /* SIGUIENTE: la primera vez pide la configuración (una sola vez) y un check-in breve; después, directo.
-   Antes de la siguiente carta: si la actual era UNDRESS se registra qué pasó; en Intimidad, la pausa de continuidad. */
+   Antes de la siguiente carta: si la actual era UNDRESS se registra qué pasó. Sin pausa de continuidad: el juego nunca
+   interrumpe para preguntar si seguir; terminar es siempre voluntario (••• → Terminar la sesión). */
 function next() {
   if (busy) return;
   if (engine.state.round === 0 && !ui.started) { if (!ui.setupDone) { openSetup(); return; } openStart(); return; }
   if (current && current.undress && !current.undress.applied) { resolveUndress(current, () => next()); return; }
-  if (engine.pauseDue() && ui.pauseShownAt !== engine.session.pauseAt) { ui.pauseShownAt = engine.session.pauseAt; openPause(); return; }
   play(() => engine.roll());
 }
 $('#btnRoll').addEventListener('click', next);
@@ -273,7 +290,7 @@ function openStart() { moodCols($('#intents')); prefRows($('#prefs')); $('#prefs
 $('#btnStart').addEventListener('click', () => {
   for (const p of [0, 1]) engine.setIntents(p, ui.moods[p]);
   engine.setPrefs(0, ui.pref); engine.setPrefs(1, {});
-  ui.started = true; closeSheets();
+  ui.started = true; closeSheets(); syncClock();
   if (engine.level() === 3 && !ui.clothingAsked) { setTimeout(() => openClothing(true), 300); return; }
   setTimeout(() => play(() => engine.roll()), 250);
 });
@@ -322,20 +339,18 @@ function resolveUndress(round, done) {
 }
 
 /* ---------- pausa de continuidad (Intimidad): ni meta ni consentimiento; seguir conserva todo ---------- */
-function openPause() { open($('#sheetPause')); }
-$('#btnPauseGame').addEventListener('click', () => { engine.continueGuided(); closeSheets(); setTimeout(() => play(() => engine.roll()), 250); });
-$('#btnPauseAlone').addEventListener('click', () => { engine.continueAlone(); closeSheets(); showEnding(); });
 
 /* ---------- cierre y sesión nueva ---------- */
 function showEnding() {
   stopTimer(); current = null; roundBox.hidden = true; welcome.hidden = true; endingBox.hidden = false;
   $('#endingText').textContent = engine.session.lastMessage || 'Hasta aquí estuvo bien.';
   document.body.classList.add('idle'); stage.classList.remove('live'); renderTurn(); updateControls();
+  syncClock(); // fin real: el reloj se congela y no suma nada más
 }
 function newSession() {
-  engine.newSession(engine.level()); current = null; ui.started = false; ui.moods = [[], []]; ui.pref = {}; ui.clothingAsked = false; ui.pauseShownAt = null;
+  engine.newSession(engine.level()); clock.reset(); heatShown = -1; current = null; ui.started = false; ui.moods = [[], []]; ui.pref = {}; ui.clothingAsked = false;
   roundBox.hidden = true; roundBox.classList.remove('show'); endingBox.hidden = true; welcome.hidden = false;
-  document.body.classList.add('idle', 'home'); stage.classList.remove('live'); renderTurn(); renderLevel(); updateControls();
+  document.body.classList.add('idle', 'home'); stage.classList.remove('live'); renderTurn(); renderLevel(); updateControls(); syncClock();
 }
 
 /* ---------- Lo nuestro: lo que os funciona, guardado solo en este teléfono ---------- */
@@ -382,7 +397,7 @@ function closeSheets() {
   backdrop.classList.remove('show'); setTimeout(() => { if (!openSheet) backdrop.hidden = true; }, 300);
   if (was === $('#sheetSettings') && setupMode) finishSetup();
 }
-backdrop.addEventListener('click', () => { if (openSheet === $('#sheetPause') || openSheet === $('#sheetUndress')) return; closeSheets(); });
+backdrop.addEventListener('click', () => { if (openSheet === $('#sheetUndress')) return; closeSheets(); });
 document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => closeSheets()));
 $('#btnFavs').addEventListener('click', () => { renderFavs(); open($('#sheetFavs')); });
 $('#btnSettings').addEventListener('click', () => { renderSettings(); open($('#sheetSettings')); });

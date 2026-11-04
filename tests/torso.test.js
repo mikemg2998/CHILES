@@ -89,7 +89,6 @@ test('TEST 7 · BRA NOT_WORN: ninguna carta UNDRESS ofrece el brasier en toda la
     assert.equal(e.clothing[0].bra, 'NOT_WORN');
     const r = e.roll(); if (!r) break;
     if (r.undress) for (const p of r.undress.players) { const g = r.undress.garment === 'ANY' ? e.removable(p)[0] : r.undress.garment; if (g) e.recordUndress(p, g); }
-    if (e.pauseDue()) e.continueGuided();
   }
   assert.equal(e.clothing[0].bra, 'NOT_WORN'); assert.ok(!e.recordUndress(0, 'bra'), 'ni siquiera a la fuerza');
 });
@@ -124,9 +123,9 @@ test('cadena no dominante: tras quitar la camiseta y descubrir el brasier, quita
   const gaps = [];
   for (let seed = 1; seed <= 40; seed++) {
     const e = mk({ level: 3, seed, clothing: [{ ...DRESSED(), socks: 'OFF', bottoms: 'OFF', panties: 'OFF' }, NAKED()] }); let topAt = null;
-    for (let i = 0; i < 40 && topAt === null; i++) { const r = e.roll(); if (r.undress) for (const p of r.undress.players) { const g = r.undress.garment === 'ANY' ? e.removable(p)[0] : r.undress.garment; if (g) e.recordUndress(p, g); } if (e.clothing[0].top === 'OFF') topAt = e.state.round; if (e.pauseDue()) e.continueGuided(); }
+    for (let i = 0; i < 40 && topAt === null; i++) { const r = e.roll(); if (r.undress) for (const p of r.undress.players) { const g = r.undress.garment === 'ANY' ? e.removable(p)[0] : r.undress.garment; if (g) e.recordUndress(p, g); } if (e.clothing[0].top === 'OFF') topAt = e.state.round; }
     if (topAt === null) continue;
-    for (let i = 0; i < 40 && e.clothing[0].bra === 'ON'; i++) { const r = e.roll(); if (r.undress) for (const p of r.undress.players) { const g = r.undress.garment === 'ANY' ? e.removable(p)[0] : r.undress.garment; if (g) e.recordUndress(p, g); } if (e.pauseDue()) e.continueGuided(); }
+    for (let i = 0; i < 40 && e.clothing[0].bra === 'ON'; i++) { const r = e.roll(); if (r.undress) for (const p of r.undress.players) { const g = r.undress.garment === 'ANY' ? e.removable(p)[0] : r.undress.garment; if (g) e.recordUndress(p, g); } }
     if (e.clothing[0].bra === 'OFF') gaps.push(e.state.round - topAt);
   }
   assert.ok(gaps.length >= 10, `pocas sesiones medibles: ${gaps.length}`);
@@ -162,7 +161,7 @@ test('los dos recorridos con el catálogo real, recalculando tras cada prenda', 
 });
 test('I25 sale en la app con su frase real y respeta lado y anatomía', () => {
   const e = eng(chest({ top: 'ON', bra: 'ON' }), { seed: 2 }); let seen = null;
-  for (let i = 0; i < 80 && !seen; i++) { const r = e.roll(); if (r.cardId === 'I25') seen = r; if (e.pauseDue()) e.continueGuided(); }
+  for (let i = 0; i < 80 && !seen; i++) { const r = e.roll(); if (r.cardId === 'I25') seen = r; }
   assert.ok(seen, 'I25 no salió en 80 cartas'); assert.ok(['LEFT', 'RIGHT', 'BOTH'].includes(seen.side)); assert.match(seen.phrase, /por encima de la camiseta/i); assert.equal(seen.seconds, 30); assert.equal(seen.receiver, 0);
 });
 test('la interfaz y el motor comparten los estados: «No la llevo» = NOT_WORN, y un guardado no cambia nada (la ropa no persiste)', () => {

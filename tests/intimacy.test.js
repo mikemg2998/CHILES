@@ -2,7 +2,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { CARDS, CARD } from '../content/index.js';
-import { PAUSE_WINDOW } from '../engine/session.js';
 import { mk, play, DRESSED, NAKED } from './helpers.js';
 
 test('UNDRESS cards do not dominate and change ClothingState; availability is recalculated', () => {
@@ -29,19 +28,10 @@ test('laterality and history work in Intimidad; nothing unapproved appears', () 
   for (const r of rs) { assert.equal(CARD[r.cardId].status, 'APPROVED'); assert.ok(!['I14', 'I16', 'U08', 'D07'].includes(r.cardId)); }
   const ids = new Set(rs.map(r => r.cardId)); assert.ok(ids.size >= 15, `variedad ${ids.size}`);
 });
-test('the continuity pause falls in the 13–17 window, not always at 15', () => {
-  const at = new Set();
-  for (let s = 0; s < 30; s++) { const e = mk({ level: 3, seed: 200 + s }); let n = 0; while (!e.pauseDue()) { const r = e.roll(); if (r.undress) for (const p of r.undress.players) { const g = r.undress.garment === 'ANY' ? e.removable(p)[0] : r.undress.garment; if (g) e.recordUndress(p, g); } n++; assert.ok(n < 30); } assert.ok(n >= PAUSE_WINDOW[0] && n <= PAUSE_WINDOW[1], String(n)); at.add(n); }
-  assert.ok(at.size >= 3);
-});
-test('continuing with the game preserves EXACTLY all state; own way closes without victory', () => {
-  const e = mk({ level: 3, seed: 31 }); play(e, 14); e.feedback('like'); while (!e.pauseDue()) play(e, 1);
-  const snap = JSON.stringify({ c: e.clothing, h: e.history.rounds.map(r => r.cardId), f: e.session.familyScore, l: e.session.liked, a: e.state.actor, n: e.state.round, lvl: e.session.level, bp: e.prefs.bodyParts });
-  e.continueGuided();
-  assert.equal(JSON.stringify({ c: e.clothing, h: e.history.rounds.map(r => r.cardId), f: e.session.familyScore, l: e.session.liked, a: e.state.actor, n: e.state.round, lvl: e.session.level, bp: e.prefs.bodyParts }), snap);
-  assert.ok(!e.pauseDue()); let k = 0; while (!e.pauseDue() && k < 40) { play(e, 1); k++; } assert.ok(k >= PAUSE_WINDOW[0] - 1, `volvió a preguntar pronto: ${k}`);
-  const msg = e.continueAlone(); assert.equal(e.ended(), 'solos'); assert.ok(!/ganaste|victoria|completado|final|objetivo/i.test(msg)); assert.equal(e.roll(), null);
-  const f = mk({ level: 3 }); assert.ok(!/ganaste|victoria|completado|final boss|objetivo/i.test(f.endSession('parar')));
+test('sin pausa de continuidad: el motor ya no expone pauseDue/continueGuided/continueAlone; terminar es voluntario y sin victoria', () => {
+  const e = mk({ level: 3, seed: 31 }); for (const k of ['pauseDue', 'continueGuided', 'continueAlone']) assert.equal(typeof e[k], 'undefined', k);
+  play(e, 40); assert.equal(e.ended(), null); assert.ok(e.roll());
+  const msg = e.endSession('parar'); assert.equal(e.ended(), 'parar'); assert.ok(!/ganaste|victoria|completado|final boss|objetivo/i.test(msg)); assert.equal(e.roll(), null);
 });
 test('empty deck never blocks and never relaxes anything: neutral transition + log for the designer', () => {
   // desde la expansión corporal V1, vestidos + sin boca + sin quitarse ropa ya NO deja Intimidad vacía: siguen los masajes y el abrazo reutilizados

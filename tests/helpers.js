@@ -7,7 +7,6 @@ export const mk = (o = {}) => { const e = new GameEngine({ prefs: { names: ['Ana
 export function play(e, n, { undress = true } = {}) {
   const out = [];
   for (let i = 0; i < n; i++) {
-    if (e.pauseDue()) e.continueGuided();
     const r = e.roll(); if (!r) break; out.push(r);
     if (undress && r.undress) for (const p of r.undress.players) { const g = r.undress.garment === 'ANY' ? e.removable(p)[0] : r.undress.garment; if (g) e.recordUndress(p, g); }
   }

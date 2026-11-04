@@ -21,7 +21,6 @@ export const AVOIDS = {
   guia: { label: 'Guiar con la mano', tag: 'guia' },
   intimo: { label: 'Anatomía íntima', tag: 'intimo' },
 };
-export const PAUSE_WINDOW = [13, 17]; // pausa de continuidad en Intimidad: alrededor de la carta 15, no siempre la 15
 
 export class SessionState {
   constructor(level = 1) {
@@ -30,7 +29,7 @@ export class SessionState {
     this.rounds = 0; this.roundsInLevel = 0; this.purposes = [];
     this.soften = 0; // 0…1: la pareja pidió «más suave»; decae sola
     this.feedback = []; this.liked = []; this.familyScore = {}; this.typeScore = {}; this.lastFeedback = null;
-    this.intimacyCardCount = 0; this.pauseAt = null; this.pausesShown = 0;
+    this.intimacyCardCount = 0; // cartas jugadas en Intimidad (LATE_SESSION); sin pausa de continuidad desde 2026-11-04
     this.ended = null; this.lastMessage = null;
   }
   intentSet() { const [a, b] = this.intents; if (!a.length) return new Set(b); if (!b.length) return new Set(a); const inter = a.filter(x => b.includes(x)); return new Set(inter.length ? inter : [...a, ...b]); }
@@ -91,12 +90,9 @@ export class SessionDirector {
     S.rounds++; S.roundsInLevel++;
     S.purposes.unshift(round.purpose); if (S.purposes.length > 12) S.purposes.pop();
     S.soften = Math.max(0, S.soften - 0.25);
-    if (S.level === 3 && !round.transition) { S.intimacyCardCount++; if (S.pauseAt == null) S.pauseAt = PAUSE_WINDOW[0] + Math.floor(this.rng.next() * (PAUSE_WINDOW[1] - PAUSE_WINDOW[0] + 1)); }
+    if (S.level === 3 && !round.transition) S.intimacyCardCount++;
   }
-  /* ¿toca la pausa de continuidad antes de la siguiente carta? (solo en Intimidad, alrededor de la carta 15) */
-  pauseDue(S) { return S.level === 3 && S.pauseAt != null && S.intimacyCardCount >= S.pauseAt; }
-  /* seguir con el juego: TODO el estado se conserva; la siguiente pausa queda lejos */
-  continueGuided(S) { S.pausesShown++; S.pauseAt = S.intimacyCardCount + PAUSE_WINDOW[0] + Math.floor(this.rng.next() * (PAUSE_WINDOW[1] - PAUSE_WINDOW[0] + 1)); }
+  /* Sin pausa de continuidad (diseñador, 2026-11-04): el juego nunca pregunta si la pareja quiere terminar; solo termina cuando ella decide. */
 
   /* ---- feedback: ME GUSTA favorece familias afines de forma suave. Nunca repite la carta, nunca sube intensidad ni nivel. ---- */
   feedback(S, round, kind) {
@@ -115,5 +111,5 @@ export class SessionDirector {
   }
   softer(S) { S.soften = Math.min(1, S.soften + 0.6); }
   /* cierre sin victoria, sin objetivo, sin nivel completado */
-  end(S, how = 'parar') { S.ended = how; S.lastMessage = how === 'solos' ? 'A partir de aquí, vosotros decidís.' : 'Hasta aquí estuvo bien.'; return S.lastMessage; }
+  end(S, how = 'parar') { S.ended = how; S.lastMessage = 'Hasta aquí estuvo bien.'; return S.lastMessage; }
 }

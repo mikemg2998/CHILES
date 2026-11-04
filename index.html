@@ -20,6 +20,7 @@
 <link rel="stylesheet" href="app/styles.css?v=12">
 </head>
 <body class="idle home">
+<div class="ambient" aria-hidden="true"></div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="i-mark" viewBox="0 0 24 24"><path d="M7 3.5h10a1 1 0 0 1 1 1V21l-6-4.2L6 21V4.5a1 1 0 0 1 1-1z"/></symbol>
   <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></symbol>
@@ -132,15 +133,6 @@
   <p class="hint">Para que las siguientes cartas sepan cómo estáis. Se puede corregir después en ••• → Estado de ropa.</p>
   <div class="two" id="undressGrid"></div>
   <button class="btn primary" id="btnUndressDone">Seguir</button>
-</section>
-
-<section class="sheet" id="sheetPause" aria-hidden="true">
-  <div class="sheet-head"><h2>¿Queréis seguir por vuestra cuenta?</h2></div>
-  <p class="hint">Podéis continuar juntos o dejar que el juego siga guiando.</p>
-  <div class="actions">
-    <button class="btn" id="btnPauseAlone">Seguir por nuestra cuenta</button>
-    <button class="btn primary" id="btnPauseGame">Seguir con el juego</button>
-  </div>
 </section>
 
 <div class="toast" id="toast" role="status"></div>

@@ -25,7 +25,6 @@ export function runCombo(combo, level, { sessions = N, cards = R, seedBase = 0 }
     e.setMood(0, combo[0]); e.setMood(1, combo[1]);
     const ids = [], fams = new Set(), regs = new Set(), tg = new Set(); let firstHigh = null; const ints = [];
     for (let k = 0; k < cards; k++) {
-      if (e.pauseDue()) e.continueGuided();
       const r = e.roll(); if (!r || r.transition) continue;
       const c = CARD[r.cardId]; s.n++;
       inc(s.inten, c.intraLevelIntensity || 'MID'); inc(s.fam, FAMILIES[c.family] || c.family); inc(s.purpose, r.purpose); inc(s.type, c.interactionType); inc(s.region, r.region); if (c.similarityGroup) inc(s.group, c.similarityGroup); inc(s.cards, r.cardId);

@@ -35,7 +35,6 @@ function run({ sessions, cards, dressed }) {
     e.clothing = dressed ? [DEFAULT_CLOTHING(['pene']), DEFAULT_CLOTHING(['vulva', 'senos'])] : [fullAccess(['pene']), fullAccess(['vulva', 'senos'])];
     const regs = new Set(); let full = null, b2b = false;
     for (let k = 0; k < cards; k++) {
-      if (e.pauseDue()) e.continueGuided();
       const r = e.roll(); if (!r) break; if (r.transition) continue;
       if (r.undress) for (const p of r.undress.players) { const g = r.undress.garment === 'ANY' ? e.removable(p)[0] : r.undress.garment; if (g) e.recordUndress(p, g); }
       const c = CARD[r.cardId]; if (c.interactionType === 'UNDRESS') { inc(s.type, 'UNDRESS'); continue; }

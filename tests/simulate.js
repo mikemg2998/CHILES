@@ -1,7 +1,7 @@
 /* SIMULADOR (§68). node tests/simulate.js [sesiones] [--out=fichero.md]
    ≥100 sesiones solo Conexión · 100 Conexión→Deseo · 100 Conexión→Deseo→Intimidad · sesiones largas (≥50 cartas) en
    Intimidad con anatomías y estados asimétricos. Audita repetición, familias, lateralidad, actores, PlayConstraints,
-   ropa, UNDRESS, disponibilidad, mazos vacíos, anatomía, propiedad, duración, variantes, cartas bloqueadas y pausa. */
+   ropa, UNDRESS, disponibilidad, mazos vacíos, anatomía, propiedad, duración, variantes y cartas bloqueadas. */
 import { writeFileSync } from 'node:fs';
 import { CARDS, CARD, APPROVED, playableAt, levelsOf } from '../content/index.js';
 import { GameEngine } from '../engine/engine.js';
@@ -12,7 +12,7 @@ const N = Number(process.argv.find(a => /^\d+$/.test(a)) || 100);
 const OUT = (process.argv.find(a => a.startsWith('--out=')) || '').slice(6);
 const ANATOMIES = [[['vulva', 'senos'], ['pene']], [['pene'], ['vulva', 'senos']], [['vulva', 'senos'], ['vulva', 'senos']], [['pene'], ['pene']], [['vulva'], ['pene', 'senos']], [[], []]];
 const CLOTH = [{ top: 'ON', bottoms: 'ON', socks: 'ON', bra: 'ON', panties: 'ON', boxers: 'ON' }, { top: 'ON', bottoms: 'ON', socks: 'NONE', bra: 'ON', panties: 'ON', boxers: 'ON' }, { top: 'OFF', bottoms: 'ON', socks: 'ON', bra: 'ON', panties: 'ON', boxers: 'ON' }, { top: 'OFF', bottoms: 'OFF', socks: 'OFF', bra: 'OFF', panties: 'ON', boxers: 'ON' }];
-const problems = [], stats = { sessions: 0, cards: 0, backToBack: 0, within5: 0, byLevel: {}, family: {}, side: {}, constraint: {}, variant: {}, duration: {}, actors: [0, 0], undress: 0, intimacy: 0, empty: 0, transitions: 0, pauses: [], clothingChanges: 0, asymmetricRounds: 0, neverSeen: new Set(APPROVED.map(c => c.id)), typeCount: {}, bands: {}, directionEmpty: {} };
+const problems = [], stats = { sessions: 0, cards: 0, backToBack: 0, within5: 0, byLevel: {}, family: {}, side: {}, constraint: {}, variant: {}, duration: {}, actors: [0, 0], undress: 0, intimacy: 0, empty: 0, transitions: 0, clothingChanges: 0, asymmetricRounds: 0, neverSeen: new Set(APPROVED.map(c => c.id)), typeCount: {}, bands: {}, directionEmpty: {} };
 const inc = (m, k) => { m[k] = (m[k] || 0) + 1; };
 
 function check(e, r) {
@@ -41,7 +41,6 @@ function session(levels, { anatomy, clothing, seed, undressPolicy = 'first' }) {
   for (const [L, n] of levels) {
     if (L !== e.level()) { e.setLevel(L); }
     for (let i = 0; i < n; i++) {
-      if (e.pauseDue()) { stats.pauses.push(e.session.intimacyCardCount); e.continueGuided(); }
       const r = e.roll(); if (!r) { problems.push('roll devolvió null'); break; }
       if (i % 9 === 4) e.feedback('like');
       check(e, r); rounds.push(r); stats.cards++; inc(stats.byLevel, r.level); inc(stats.family, FAMILIES[r.family]); inc(stats.typeCount, r.interactionType);
@@ -64,7 +63,6 @@ for (let s = 0; s < Math.max(10, N / 5); s++) session([[1, 5], [2, 10], [3, 50]]
 const pct = (a, b) => b ? (100 * a / b).toFixed(1) + ' %' : '–';
 const table = m => Object.entries(m).sort((a, b) => b[1] - a[1]).map(([k, v]) => `| ${k} | ${v} | ${pct(v, Object.values(m).reduce((x, y) => x + y, 0))} |`).join('\n');
 const unreviewed = CARDS.filter(c => c.status !== 'APPROVED' && !c.transition).map(c => c.id);
-const pauseHist = {}; for (const p of stats.pauses) inc(pauseHist, p);
 const md = `# Simulación · cartas curadas (${new Date().toISOString().slice(0, 10)})
 
 Sesiones: ${stats.sessions} (${N} solo Conexión · ${N} Conexión→Deseo · ${N} Conexión→Deseo→Intimidad · ${Math.max(10, N / 5)} largas de 65 cartas) · cartas jugadas: ${stats.cards}
@@ -110,7 +108,6 @@ ${table(stats.duration)}
 - Cartas en Intimidad: ${stats.intimacy} · UNDRESS: ${stats.undress} (${pct(stats.undress, stats.intimacy)}) · cambios de ropa aplicados: ${stats.clothingChanges}
 - Rondas con estados de ropa asimétricos: ${stats.asymmetricRounds} (${pct(stats.asymmetricRounds, stats.intimacy)})
 - Bandas internas (consecuencia del estado real): ${Object.entries(stats.bands).map(([k, v]) => `${k} ${v}`).join(' · ')}
-- Pausa de continuidad: ${stats.pauses.length} pausas; en la carta ${Object.entries(pauseHist).sort((a, b) => a[0] - b[0]).map(([k, v]) => `${k} (${v})`).join(', ')}
 
 ## Mazos vacíos por situación
 ${Object.keys(stats.directionEmpty).length ? Object.entries(stats.directionEmpty).map(([k, v]) => `- ${v} × ${k}`).join('\n') : '- ninguno'}

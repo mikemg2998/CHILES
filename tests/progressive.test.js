@@ -83,7 +83,7 @@ test('11 · con todo lo demás igual, una carta con muchas oportunidades perdida
 test('12 · el multiplicador es monótono y nunca supera el techo', () => {
   let prev = 0; for (let n = 0; n <= 10000; n++) { const f = missedFactor(n); assert.ok(f >= prev && f <= MISSED_MAX); prev = f; }
   assert.equal(missedFactor(0), 1); assert.equal(missedFactor(10), 1 + 10 * MISSED_STEP); assert.equal(missedFactor(1e9), MISSED_MAX);
-  for (let s = 0; s < 10; s++) { const e = mk({ level: 3, seed: 90 + s, clothing: [NAKED(), NAKED()] }); for (let i = 0; i < 40; i++) { if (e.pauseDue()) e.continueGuided(); e.roll(); for (const c of e.lastDebug.candidates) assert.ok((c.factors.missed ?? 1) <= MISSED_MAX); } }
+  for (let s = 0; s < 10; s++) { const e = mk({ level: 3, seed: 90 + s, clothing: [NAKED(), NAKED()] }); for (let i = 0; i < 40; i++) { e.roll(); for (const c of e.lastDebug.candidates) assert.ok((c.factors.missed ?? 1) <= MISSED_MAX); } }
 });
 test('Conexión y Deseo no acumulan oportunidades', () => {
   for (const L of [1, 2]) { const e = mk({ level: L, seed: 11 }); play(e, 30); assert.equal(e.missed.size, 0); }
@@ -136,7 +136,7 @@ test('12 · participan en cooldown, no vistas, desbloqueo y prioridad progresiva
   for (const id of ['I55', 'I56']) { const c = CARD[id]; assert.equal(c.status, 'APPROVED'); assert.equal(c.level, 3); assert.equal(c.baseWeight, 1); assert.equal(c.similarityGroup, 'GAZE'); assert.equal(c.cooldownGroup, 'ADMIRE_LYING'); }
   assert.equal(cooldownKey('I55'), cooldownKey('I56'));
   const e = mk({ level: 3, seed: 12, clothing: [NAKED(), NAKED()] });
-  let at = -1; for (let i = 0; i < 80 && at < 0; i++) { if (e.pauseDue()) e.continueGuided(); const r = e.roll(); if (['I55', 'I56'].includes(r.cardId)) at = i; else if (nonU(e.lastDebug.candidates).some(c => c.id === 'I55')) { assert.equal(e.lastDebug.candidates.find(c => c.id === 'I55').factors.unseen, UNSEEN); } }
+  let at = -1; for (let i = 0; i < 80 && at < 0; i++) { const r = e.roll(); if (['I55', 'I56'].includes(r.cardId)) at = i; else if (nonU(e.lastDebug.candidates).some(c => c.id === 'I55')) { assert.equal(e.lastDebug.candidates.find(c => c.id === 'I55').factors.unseen, UNSEEN); } }
   assert.ok(at >= 0, 'sale en 80 cartas');
   for (let k = 0; k < COOLDOWN - 1; k++) { e.roll(); assert.ok(!e.lastDebug.candidates.some(c => ['I55', 'I56'].includes(c.id)), `la pareja vuelve a ${k + 1} cartas`); }
   const e2 = mk({ level: 3, seed: 13, clothing: [NAKED(), NAKED()] }); play(e2, 5); assert.ok((e2.missed.get('I55') || 0) + (e2.missed.get('I56') || 0) > 0, 'acumulan oportunidades');
@@ -147,7 +147,7 @@ test('reciprocidad: quien ya se acostó pesa ×0,2 para repetir; la otra persona
   assert.equal(reciprocalKey(CARD.I55, 0), 'ADMIRE_LYING:1'); assert.equal(reciprocalKey(CARD.I56, 0), 'ADMIRE_LYING:0'); assert.equal(reciprocalKey(CARD.I01, 0), null);
   const e = mk({ level: 3, seed: 21, clothing: [NAKED(), NAKED()] }); e.reciprocal.add('ADMIRE_LYING:0'); // el jugador 0 ya se acostó
   play(e, 11); // pasa cualquier cooldown
-  for (let i = 0; i < 30; i++) { if (e.pauseDue()) e.continueGuided(); const before = new Set(e.reciprocal); e.roll(); const a = e.lastDebug.actor;
+  for (let i = 0; i < 30; i++) { const before = new Set(e.reciprocal); e.roll(); const a = e.lastDebug.actor;
     for (const c of e.lastDebug.candidates) if (['I55', 'I56'].includes(c.id)) { const lier = c.id === 'I55' ? 1 - a : a; assert.equal(c.factors.reciprocal, before.has(`ADMIRE_LYING:${lier}`) ? RECIPROCAL_REPEAT : 1, `${c.id} actor ${a}`); } } // el peso sigue al estado real antes de la carta: quien ya se acostó en la sesión
   let same = 0, both = 0; for (let s = 0; s < 400; s++) { const x = mk({ level: 3, seed: 8000 + s, clothing: [NAKED(), NAKED()] }); const rs = play(x, 40).filter(r => ['I55', 'I56'].includes(r.cardId)); const l = rs.map(lier); for (let k = 1; k < l.length; k++) if (l[k] === l[k - 1]) same++; if (new Set(l).size === 2) both++; }
   assert.ok(both > same, `ambas direcciones ${both} · misma persona seguida ${same}`);

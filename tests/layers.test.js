@@ -79,7 +79,6 @@ test('a normal UNDRESS never removes underwear still covered, nor two layers at 
   for (let s = 0; s < 10; s++) {
     const e = mk({ level: 3, seed: 700 + s }); let prev = e.clothing.map(c => ({ ...c }));
     for (let i = 0; i < 40; i++) {
-      if (e.pauseDue()) e.continueGuided();
       const r = e.roll(); if (!r) break;
       if (r.undress) for (const p of r.undress.players) { const g = r.undress.garment === 'ANY' ? e.removable(p)[0] : r.undress.garment; if (g) e.recordUndress(p, g); }
       for (const p of [0, 1]) { const now = e.clothing[p], changed = GARMENTS.filter(g => prev[p][g] !== now[g]); assert.ok(changed.length <= 1, `dos capas a la vez: ${changed}`); for (const g of changed) { assert.equal(now[g], 'OFF'); if (GARMENT_LAYERS[g].under) assert.equal(prev[p][GARMENT_LAYERS[g].under], 'OFF', `${g} se quitó con ${GARMENT_LAYERS[g].under} puesto`); } }
@@ -108,7 +107,7 @@ test('sameRegionUndressCooldown: right after the trousers come off, removing the
 });
 test('intermediate phase really exists: after the trousers come off, the underwear stays on for a while (weighting, not a fixed count)', () => {
   let gaps = [], immediate = 0, n = 0;
-  for (let s = 0; s < 60; s++) {
+  for (let s = 0; s < 100; s++) { // 100 sesiones (antes 60): sin el sorteo de la pausa cambia la secuencia aleatoria y 60 semillas daban una muestra pequeña
     const e = mk({ level: 3, seed: 900 + s }); const rs = play(e, 40); const log = e.history.recentClothingChanges.slice().reverse();
     for (const p of [0, 1]) { const b = log.find(c => c.player === p && c.garment === 'bottoms'), u = log.find(c => c.player === p && ['panties', 'boxers'].includes(c.garment)); if (b && u) { n++; const gap = u.round - b.round; gaps.push(gap); if (gap <= 1) immediate++; } }
   }

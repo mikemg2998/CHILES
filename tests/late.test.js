@@ -1,11 +1,10 @@
 /* Clítoris y vagina como targets con contenido real (diseñador, 2026-11-02) y contenido LATE_SESSION (≥ 35 cartas de Intimidad).
-   La pausa 13–17 no reinicia el contador; el contenido tardío nunca sale antes del umbral, puede salir después, no está garantizado,
+   El contador de Intimidad nunca se interrumpe (sin pausa); el contenido tardío nunca sale antes del umbral, puede salir después, no está garantizado,
    no escala la sesión y no se come la diversidad corporal. */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { CARDS, CARD, APPROVED, regionOf, partsOf } from '../content/index.js';
 import { BODY_PARTS, ACTOR_TOOLS } from '../content/body.js';
-import { PAUSE_WINDOW } from '../engine/session.js';
 import { buildDeck, weighDeck } from '../engine/deck.js';
 import { mk, play, NAKED, DRESSED } from './helpers.js';
 
@@ -32,15 +31,15 @@ test('anatomía: clítoris y vagina solo con vulva declarada; I29 además exige 
   const noPene = mk({ level: 3, seed: 1, clothing: [NAKED(), NAKED()], prefs: { bodyParts: [['vulva', 'senos'], ['vulva']] } }); assert.ok(!ids(noPene).has('I29')); assert.ok(ids(noPene).has('I26'));
   const boxers = mk({ level: 3, seed: 1, clothing: [NAKED(), { ...NAKED(), boxers: 'ON' }] }); assert.ok(!ids(boxers).has('I29')); assert.ok(ids(boxers).has('I27'));
 });
-test('la pausa 13–17 no reinicia el contador: seguir con el juego cuenta 18, 19 … 45', () => {
-  const e = naked({ seed: 3 }); let pauses = 0;
-  for (let i = 0; i < 45; i++) { if (e.pauseDue()) { pauses++; const before = e.session.intimacyCardCount; e.continueGuided(); assert.equal(e.session.intimacyCardCount, before, 'seguir no reinicia'); assert.ok(e.session.pauseAt >= before + PAUSE_WINDOW[0]); } assert.ok(e.roll()); }
-  assert.equal(e.session.intimacyCardCount, 45); assert.ok(pauses >= 2, `pausas: ${pauses}`); assert.equal(e.session.ended, null);
+test('sin pausa: el contador de Intimidad cuenta 1 … 45 seguido y la sesión nunca termina sola', () => {
+  const e = naked({ seed: 3 });
+  for (let i = 0; i < 45; i++) assert.ok(e.roll());
+  assert.equal(e.session.intimacyCardCount, 45); assert.equal(e.session.ended, null);
 });
 test('LATE_SESSION: inelegible antes de 35 aunque todo esté a piel; elegible después con peso bajo y sin empujón de desbloqueo', () => {
   const e = naked({ seed: 5 });
-  for (let n = 0; n < 34; n++) { const r = rej(e); for (const id of LATE) assert.equal(r[id], `LATE_SESSION:${e.session.intimacyCardCount}/35`, `${id} en ${e.session.intimacyCardCount}`); if (e.pauseDue()) e.continueGuided(); e.roll(); }
-  while (e.session.intimacyCardCount < 35) { if (e.pauseDue()) e.continueGuided(); e.roll(); }
+  for (let n = 0; n < 34; n++) { const r = rej(e); for (const id of LATE) assert.equal(r[id], `LATE_SESSION:${e.session.intimacyCardCount}/35`, `${id} en ${e.session.intimacyCardCount}`); e.roll(); }
+  while (e.session.intimacyCardCount < 35) e.roll();
   for (const id of LATE) assert.ok(ids(e).has(id), id); for (const id of LATE) assert.ok(ids(e, 0).has(id) === false, 'Ana no tiene pene: no actúa en ' + id);
   const w = weighDeck(buildDeck(CARDS, e.context(1)), { history: e.history, session: e.session, director: null, purpose: 'MAINTAIN', unlocked: e.unlocked, round: e.state.round, actor: 1, clothing: e.clothing });
   for (const id of LATE) { const x = w.find(y => y.card.id === id); assert.equal(x.factors.base, 0.5); assert.equal(x.factors.unlocked, 1, 'cruzar el umbral no es un desbloqueo de ropa'); }
@@ -49,7 +48,7 @@ test('sesiones largas (200 × 50, desnudos desde el inicio): el contenido tardí
   let sessionsWithLate = 0, lateRounds = [], afterLateIntimate = [], regionsAfter = [];
   for (let seed = 1; seed <= 200; seed++) {
     const e = naked({ seed }); let first = null;
-    for (let i = 0; i < 50; i++) { if (e.pauseDue()) e.continueGuided(); const r = e.roll(); if (LATE.includes(r.cardId)) { assert.ok(e.session.intimacyCardCount >= 35, `${r.cardId} en la carta ${e.session.intimacyCardCount}`); if (first === null) { first = r.n; lateRounds.push(r.n); } } }
+    for (let i = 0; i < 50; i++) { const r = e.roll(); if (LATE.includes(r.cardId)) { assert.ok(e.session.intimacyCardCount >= 35, `${r.cardId} en la carta ${e.session.intimacyCardCount}`); if (first === null) { first = r.n; lateRounds.push(r.n); } } }
     if (first !== null) { sessionsWithLate++; const after = e.history.rounds.filter(r => r.n > first); afterLateIntimate.push(after.filter(r => r.region === 'INTIMATE').length / Math.max(1, after.length)); regionsAfter.push(new Set(after.map(r => r.region)).size); }
   }
   assert.ok(sessionsWithLate >= 15, `sale en pocas sesiones: ${sessionsWithLate}`); // 15 (antes 20): con I57–I61 (2026-11-04) el catálogo crece y la tardía pasa de 21 a 18 de 200 sesiones de forma natural assert.ok(sessionsWithLate <= 190, `sale en casi todas: ${sessionsWithLate}`);

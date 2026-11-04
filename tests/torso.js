@@ -26,7 +26,7 @@ function run(title, start, seed) {
   const chestNow = () => buildDeck(ALL, e.context(1)).eligible.map(x => x.card).filter(isChest).map(c => c.id).join(' ') || 'ninguna';
   L.push(`Cartas de pecho elegibles ahora: ${chestNow()} · brasier quitable: ${e.removable(0).includes('bra') ? 'sí' : 'no'}`);
   for (let i = 0; i < 60; i++) {
-    const r = e.roll(); if (!r) break; if (e.pauseDue()) e.continueGuided();
+    const r = e.roll(); if (!r) break; 
     let note = r.cardId === 'I25' || r.cardId === 'I21' ? ` «${r.phrase}» (${r.seconds} s)` : '';
     if (r.undress) for (const p of r.undress.players) { const opts = e.removable(p); const g = r.undress.garment === 'ANY' ? opts[0] : r.undress.garment; if (g && e.recordUndress(p, g)) note = ` → ${['Ana', 'Leo'][p]} se quita ${g} (opciones ofrecidas: ${opts.join(' ') || 'ninguna'}). Ahora ${accessMode('nipples', e.clothing[0])}; pecho elegible: ${chestNow()}; brasier quitable: ${e.removable(0).includes('bra') ? 'sí' : 'no'}`; }
     L.push(`${String(r.n).padStart(2)}. ${r.actorName} → ${r.cardId}${note}`);

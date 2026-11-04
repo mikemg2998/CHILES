@@ -21,7 +21,7 @@ test('legacy EXPLORACIÓN maps to DESEO', () => { assert.equal(migrateLevelId(3)
 test('the director never changes the level; feedback never changes the level', () => {
   for (const L of LEVEL_IDS) {
     const e = mk({ level: L, seed: 3 + L });
-    for (let i = 0; i < 80; i++) { const r = e.roll(); assert.equal(r.level, L); assert.equal(e.level(), L); if (i % 3 === 0) e.feedback('like'); if (i % 7 === 0) e.softer(); if (i % 5 === 0) e.reroll(); if (e.pauseDue()) e.continueGuided(); }
+    for (let i = 0; i < 80; i++) { const r = e.roll(); assert.equal(r.level, L); assert.equal(e.level(), L); if (i % 3 === 0) e.feedback('like'); if (i % 7 === 0) e.softer(); if (i % 5 === 0) e.reroll(); }
     assert.equal(e.level(), L);
   }
 });

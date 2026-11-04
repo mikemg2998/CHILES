@@ -24,6 +24,6 @@ test('acceso directo: bloqueadas con pantalón o calzoncillos puestos; elegibles
 });
 test('diversidad: con acceso directo, el lado de Leo no se encadena pene → glande → testículos', () => {
   let chains3 = 0, intimate = 0, cards = 0;
-  for (let seed = 1; seed <= 100; seed++) { const e = mk({ level: 3, seed, clothing: [NAKED(), NAKED()] }); let run = 0; for (let i = 0; i < 40; i++) { if (e.pauseDue()) e.continueGuided(); const r = e.roll(); if (r.actor === 0) { cards++; if (r.parts.some(p => ['penis', 'glans', 'testicles'].includes(p))) { intimate++; run++; if (run >= 3) chains3++; } else run = 0; } else run = 0; } }
+  for (let seed = 1; seed <= 100; seed++) { const e = mk({ level: 3, seed, clothing: [NAKED(), NAKED()] }); let run = 0; for (let i = 0; i < 40; i++) { const r = e.roll(); if (r.actor === 0) { cards++; if (r.parts.some(p => ['penis', 'glans', 'testicles'].includes(p))) { intimate++; run++; if (run >= 3) chains3++; } else run = 0; } else run = 0; } }
   assert.ok(intimate / cards < 0.45, `cuota íntima en Leo ${intimate / cards}`); assert.ok(chains3 / 100 < 0.5, `cadenas de 3: ${chains3 / 100} por sesión`);
 });

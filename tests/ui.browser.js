@@ -1,7 +1,8 @@
 /* Pruebas de interfaz en navegador real (Playwright + Chromium). Solo UI: comprueban que el rediseño no cambia el
    comportamiento. No forman parte de `npm run check` (requieren el navegador); se lanzan con `npm run check:ui`.
    Cubre: SIGUIENTE = exactamente una carta; el barajado no roba cartas; ♡ una sola vez; selector de nivel sin pantalla
-   completa; estado de ropa persiste al cerrar y reabrir; pausa de continuidad; reduced motion; sin dados; sin
+   completa; estado de ropa persiste al cerrar y reabrir; sin pausa de continuidad; reloj interno y atmósfera de Intimidad;
+   reduced motion; sin dados; sin
    desbordamiento horizontal en 320/375/390/430; sin errores de consola. */
 import http from 'node:http';
 import fs from 'node:fs';
@@ -40,6 +41,7 @@ async function page(opts = {}) {
   });
   const pg = await ctx.newPage(); const errors = [];
   if (opts.clock) await pg.clock.install();
+  if (opts.lateInit) await pg.addInitScript(opts.lateInit); // después del reloj falso: puede envolver sus temporizadores
   pg.on('pageerror', e => errors.push('pageerror ' + e.message)); pg.on('console', m => { if (m.type() === 'error') errors.push('console ' + m.text()); });
   await pg.route('https://api.fontshare.com/**', r => r.fulfill({ status: 200, contentType: 'text/css', body: '' }));
   await pg.goto(URL + (opts.query || ''), { waitUntil: 'networkidle' });
@@ -52,6 +54,7 @@ const isOpen = (pg, id) => pg.$eval(id, e => e.classList.contains('open'));
 const rolls = pg => pg.evaluate(() => window.__rolls);
 async function start(pg) { await pg.click('#btnRoll'); await pg.waitForSelector('#sheetStart.open'); await pg.click('#btnStart'); await pg.waitForSelector('#roundBox:not([hidden])'); await pg.waitForFunction(() => !document.querySelector('#btnRoll').disabled); }
 async function test(name, fn) {
+  if (process.env.ONLY && !name.includes(process.env.ONLY)) return; // ONLY=texto npm run check:ui → solo esas pruebas
   let pg;
   try { pg = await fn(); assert.deepEqual(pg?.errors || [], [], 'errores de consola'); passed++; console.log(`ok · ${name}`); }
   catch (e) { failures++; console.log(`FAIL · ${name}\n   ${e.message}`); }
@@ -193,37 +196,6 @@ await test('estado de ropa: PUESTA / FUERA / NO LA LLEVO se guarda y se mantiene
   const on = await pg.$$eval('#clothingGrid .col:nth-child(2) .garment', rows => rows.map(r => [...r.querySelectorAll('.seg button')].findIndex(b => b.classList.contains('on'))));
   assert.equal(on[0], 1, 'camiseta sigue en FUERA'); assert.equal(on[on.length - 1], 2, 'última prenda sigue en NO LA LLEVO');
   assert.deepEqual(await pg.evaluate(() => ({ ...window.pab.clothing[1] })), c1, 'reabrir no cambia nada');
-  return pg;
-});
-
-await test('pausa de Intimidad: «Seguir con el juego» continúa; «Seguir por nuestra cuenta» cierra sin victoria', async () => {
-  async function toPause(pg) {
-    for (let i = 0; i < 40; i++) {
-      if (await isOpen(pg, '#sheetPause')) return true;
-      if (await isOpen(pg, '#sheetUndress')) { for (const col of await pg.$$('#undressGrid .col')) { const c = await col.$$('.chip'); await c[c.length - 1].click(); } await pg.click('#btnUndressDone'); await pg.waitForTimeout(350); continue; }
-      await pg.waitForFunction(() => !document.querySelector('#btnRoll').disabled); await pg.click('#btnRoll'); await pg.waitForTimeout(80);
-    }
-    return false;
-  }
-  const pg = await page();
-  await pg.evaluate(() => { window.pab.setLevel(3); });
-  await pg.click('#btnRoll'); await pg.waitForSelector('#sheetStart.open'); await pg.click('#btnStart');
-  await pg.waitForSelector('#sheetClothing.open'); await pg.click('#btnClothingDone'); /* Intimidad empieza desde la ropa real */
-  await pg.waitForSelector('#roundBox:not([hidden])'); await pg.waitForFunction(() => !document.querySelector('#btnRoll').disabled);
-  assert.ok(await toPause(pg), 'la pausa aparece entre la carta 13 y la 17');
-  const count = await pg.evaluate(() => window.pab.session.intimacyCardCount);
-  assert.ok(count >= 13 && count <= 17, `pausa en ${count}`);
-  assert.equal(await pg.$eval('#btnPauseAlone', b => b.textContent.trim()), 'Seguir por nuestra cuenta');
-  assert.equal(await pg.$eval('#btnPauseGame', b => b.textContent.trim()), 'Seguir con el juego');
-  await pg.mouse.click(10, 10); await pg.waitForTimeout(200); assert.ok(await isOpen(pg, '#sheetPause'), 'la pausa no se cierra tocando fuera');
-  const round = await pg.evaluate(() => window.pab.state.round);
-  await pg.click('#btnPauseGame'); await pg.waitForFunction(r => window.pab.state.round > r, round); await pg.waitForFunction(() => !document.querySelector('#btnRoll').disabled); await pg.waitForTimeout(150);
-  assert.equal(await pg.evaluate(() => window.pab.state.round), round + 1, 'seguir con el juego da exactamente una carta');
-  assert.ok(await pg.evaluate(() => window.pab.session.intimacyCardCount) >= count, 'el contador no se reinicia');
-  assert.ok(await toPause(pg), 'segunda pausa');
-  await pg.click('#btnPauseAlone'); await pg.waitForSelector('#ending:not([hidden])');
-  assert.ok(await pg.$eval('#btnNew', b => !b.hidden), 'cierre: nueva sesión disponible');
-  assert.ok(!/victoria|ganado|nivel completado/i.test(await pg.$eval('#endingText', e => e.textContent)));
   return pg;
 });
 
@@ -443,6 +415,128 @@ await test('modo de prueba ?aviso: cualquier temporizador dura 3 s y suena al te
   await pg.click('#timer'); await ff(pg, 2500); await pg.waitForTimeout(30); assert.equal(await beeps(pg), 0);
   await ff(pg, 1000); await pg.waitForFunction(() => document.querySelector('#timer').classList.contains('done'));
   assert.equal(await beeps(pg), 3);
+  return pg;
+});
+
+/* ---------- sin pausa de continuidad (2026-11-04) ---------- */
+async function enterIntimacy(pg) {
+  await pg.evaluate(() => { window.pab.setLevel(3); });
+  await pg.click('#btnRoll'); await pg.waitForSelector('#sheetStart.open'); await pg.click('#btnStart');
+  await pg.waitForSelector('#sheetClothing.open'); await pg.click('#btnClothingDone'); /* Intimidad empieza desde la ropa real */
+  await pg.waitForSelector('#roundBox:not([hidden])'); await pg.waitForFunction(() => !document.querySelector('#btnRoll').disabled);
+}
+/* SIGUIENTE en Intimidad: si la carta era de quitarse ropa, primero se responde (la hoja de ropa no es una pausa) */
+async function resolveUndressSheet(pg, pick = 'last') { if (!(await isOpen(pg, '#sheetUndress'))) return; for (const col of await pg.$$('#undressGrid .col')) { const c = await col.$$('.chip'); await c[pick === 'last' ? c.length - 1 : 0].click(); } await pg.click('#btnUndressDone'); await pg.waitForFunction(() => !document.querySelector('#sheetUndress').classList.contains('open')); }
+async function nextIntimate(pg, pick) {
+  for (let i = 0; i < 3; i++) {
+    await resolveUndressSheet(pg, pick); await pg.waitForFunction(() => !document.querySelector('#btnRoll').disabled);
+    const r = await pg.evaluate(() => window.pab.state.round); await pg.click('#btnRoll');
+    await pg.waitForFunction(r => window.pab.state.round > r || document.querySelector('#sheetUndress').classList.contains('open'), r);
+    if (await pg.evaluate(r => window.pab.state.round > r, r)) { await pg.waitForFunction(() => !document.querySelector('#btnRoll').disabled); return; }
+  }
+}
+/* SIGUIENTE como la pareja: si sale una carta de quitarse ropa, se responde; devuelve las hojas que se abrieron por el camino */
+async function playOn(pg, toCount) {
+  const opened = new Set();
+  for (let i = 0; i < 200 && await pg.evaluate(() => window.pab.session.intimacyCardCount) < toCount; i++) {
+    for (const id of await pg.$$eval('.sheet.open', l => l.map(x => x.id))) opened.add(id);
+    if (await isOpen(pg, '#sheetUndress')) { for (const col of await pg.$$('#undressGrid .col')) { const c = await col.$$('.chip'); await c[c.length - 1].click(); } await pg.click('#btnUndressDone'); await pg.waitForTimeout(350); continue; }
+    await pg.waitForFunction(() => !document.querySelector('#btnRoll').disabled); await pg.click('#btnRoll'); await pg.waitForTimeout(60);
+  }
+  for (const id of await pg.$$eval('.sheet.open', l => l.map(x => x.id))) opened.add(id);
+  opened.delete('sheetUndress'); return [...opened];
+}
+await test('sin pausa: 60 cartas seguidas en Intimidad (13–17, 30, 40, 60) sin ninguna pregunta ni modal; terminar sigue siendo voluntario', async () => {
+  const pg = await page();
+  assert.equal(await pg.$('#sheetPause'), null, 'la hoja de la pausa ya no existe'); assert.equal(await pg.$('#btnPauseAlone'), null); assert.equal(await pg.$('#btnPauseGame'), null);
+  await enterIntimacy(pg);
+  for (const n of [17, 30, 40, 60]) {
+    assert.deepEqual(await playOn(pg, n), [], `ninguna hoja abierta hasta la carta ${n}`);
+    assert.equal(await pg.evaluate(() => window.pab.session.ended), null);
+    assert.ok(!/Queréis seguir|Seguir por nuestra cuenta|Seguir con el juego/i.test(await pg.evaluate(() => document.body.innerText)));
+  }
+  const hist = await pg.evaluate(() => window.pab.history.rounds.length), cloth = await pg.evaluate(() => JSON.stringify(window.pab.clothing));
+  assert.deepEqual(await playOn(pg, 61), [], 'la carta 61 llega igual');
+  assert.equal(await pg.evaluate(() => window.pab.session.intimacyCardCount), 61); assert.ok(await pg.evaluate(() => window.pab.history.rounds.length) >= Math.min(60, hist), 'historial intacto');
+  assert.ok(cloth.length > 0);
+  await pg.waitForFunction(() => !document.querySelector('#btnRoll').disabled); await pg.waitForTimeout(150);
+  await pg.click('#btnMore'); await pg.waitForSelector('#sheetMenu.open'); await pg.click('#menuList .mi:has-text("Terminar la sesión")');
+  await pg.waitForSelector('#ending:not([hidden])');
+  assert.equal(await pg.$eval('#endingText', e => e.textContent), 'Hasta aquí estuvo bien.');
+  assert.ok(await pg.$eval('#btnNew', b => !b.hidden), 'cierre: nueva sesión disponible');
+  return pg;
+});
+
+/* ---------- reloj interno de Intimidad: tiempo simulado ---------- */
+const COUNT_INTERVALS = () => { const si = window.setInterval; window.__iv = 0; window.setInterval = (f, ms, ...a) => { if (ms === 10000) window.__iv++; return si(f, ms, ...a); }; };
+const heatVar = pg => pg.evaluate(() => Number(getComputedStyle(document.documentElement).getPropertyValue('--heat') || 0));
+const ambientOpacity = pg => pg.$eval('.ambient', a => Number(getComputedStyle(a).opacity));
+const clockMin = pg => pg.evaluate(() => window.pabClock.elapsedMs() / 60000);
+const MIN = 60000;
+/* texto visible fuera del temporizador de la carta: ningún reloj de sesión, minutos, porcentaje ni duración */
+const sessionTimeShown = pg => pg.evaluate(() => {
+  const clone = document.body.cloneNode(true); for (const t of clone.querySelectorAll('#timer, script, style, [hidden], .sheet:not(.open)')) t.remove();
+  const txt = clone.innerText || clone.textContent;
+  return /\d+\s*(min|minutos|minuto|h\b|horas)|\d{1,2}:\d{2}|\d+\s*%|tiempo (de sesión|restante|transcurrido)|llevamos|quedan/i.test(txt) ? txt : null;
+});
+await test('reloj: Conexión y Deseo no lo inician; Intimidad sí; 34 normal · 35 empieza · 37 intermedio · 40 final · 50 igual; sin tiempo en pantalla', async () => {
+  const pg = await page({ clock: true, lateInit: COUNT_INTERVALS, reducedMotion: 'reduce' }); await start(pg);
+  await pg.clock.runFor(30 * MIN); await nextCard(pg); assert.equal(await clockMin(pg), 0, 'Conexión no acumula');
+  await pg.click('#levelBtn'); await pg.waitForSelector('#sheetLevel.open'); await pg.click('#levelList .lv:nth-child(2)'); await pg.clock.runFor(2000);
+  assert.equal(await pg.evaluate(() => window.pab.level()), 2);
+  await pg.clock.runFor(30 * MIN); await nextCard(pg); assert.equal(await clockMin(pg), 0, 'Deseo no acumula'); assert.equal(await heatVar(pg), 0);
+  await pg.click('#levelBtn'); await pg.waitForSelector('#sheetLevel.open'); await pg.click('#levelList .lv:nth-child(3)');
+  await pg.waitForSelector('#sheetClothing.open', { timeout: 4000 }); await pg.click('#btnClothingDone'); await pg.clock.runFor(1000);
+  await pg.waitForFunction(() => !document.querySelector('#btnRoll').disabled);
+  assert.ok(await pg.evaluate(() => window.pabClock.running), 'entrar en Intimidad lo inicia');
+  const at = async (m, label) => { const now = await clockMin(pg); await pg.clock.runFor(Math.max(0, (m - now) * MIN)); await pg.waitForTimeout(30); return { heat: await heatVar(pg), op: await ambientOpacity(pg), min: await clockMin(pg), label }; };
+  let r = await at(34); assert.equal(r.heat, 0, `34 min: ${JSON.stringify(r)}`); assert.equal(r.op, 0);
+  await nextIntimate(pg); await resolveUndressSheet(pg); await pg.click('#btnMore'); await pg.waitForSelector('#sheetMenu.open'); await pg.click('#menuList .mi:has-text("Estado de ropa")'); await pg.waitForSelector('#sheetClothing.open'); await pg.click('#btnClothingDone');
+  await pg.waitForTimeout(200); await pg.mouse.click(5, 5); await pg.waitForTimeout(300);
+  r = await at(35.01); assert.ok(r.heat >= 0 && r.heat < 0.03, `35 min: ${JSON.stringify(r)}`);
+  r = await at(37); assert.ok(r.heat > 0.3 && r.heat < 0.5, `37 min: ${JSON.stringify(r)}`); assert.ok(Math.abs(r.op - r.heat) < 0.01, 'la capa sigue a --heat');
+  assert.equal(await pg.$$eval('.sheet.open', l => l.length), 0, 'a los 35–37 min no aparece nada');
+  r = await at(40.2); assert.equal(r.heat, 1, `40 min: ${JSON.stringify(r)}`); assert.equal(r.op, 1);
+  assert.equal(await pg.$$eval('.sheet.open', l => l.length), 0, 'a los 40 min no aparece nada');
+  r = await at(50); assert.equal(r.heat, 1); assert.equal(r.op, 1);
+  assert.equal(await sessionTimeShown(pg), null, 'ningún tiempo de sesión en pantalla');
+  const iv = await pg.evaluate(() => window.__iv); assert.equal(iv, 1, `un solo intervalo del reloj, por muchas pantallas que se abran (${iv})`);
+  return pg;
+});
+await test('reloj: cartas, ropa, menú y cambios de pantalla no lo reinician; la página oculta suma como mucho 5 min; terminar lo congela; sesión nueva lo pone a 0', async () => {
+  const pg = await page({ clock: true, init: () => { let hid = false; Object.defineProperty(document, 'hidden', { get: () => hid }); Object.defineProperty(document, 'visibilityState', { get: () => hid ? 'hidden' : 'visible' }); window.__setHidden = v => { hid = v; document.dispatchEvent(new Event('visibilitychange')); }; }, reducedMotion: 'reduce' });
+  await enterIntimacy(pg);
+  for (let i = 0; i < 8; i++) { await pg.clock.runFor(MIN); await nextIntimate(pg, 'first'); }
+  await resolveUndressSheet(pg, 'first');
+  const m8 = await clockMin(pg); assert.ok(m8 >= 8 && m8 < 8.2, `8 cartas en 8 min: ${m8}`);
+  await pg.click('#btnMore'); await pg.waitForSelector('#sheetMenu.open'); await pg.mouse.click(5, 5); await pg.waitForTimeout(300);
+  await pg.click('#btnFavs').catch(() => {}); await pg.waitForTimeout(200); await pg.mouse.click(5, 5); await pg.waitForTimeout(300);
+  assert.ok(await clockMin(pg) >= m8, 'abrir hojas no reinicia');
+  await pg.evaluate(() => window.__setHidden(true)); await pg.clock.runFor(90 * MIN); await pg.evaluate(() => window.__setHidden(false));
+  const back = await clockMin(pg); assert.ok(back - m8 >= 5 && back - m8 < 5.3, `90 min fuera suman 5: ${back - m8}`);
+  await pg.click('#btnMore'); await pg.waitForSelector('#sheetMenu.open'); await pg.click('#menuList .mi:has-text("Terminar la sesión")'); await pg.waitForSelector('#ending:not([hidden])');
+  const frozen = await clockMin(pg); await pg.clock.runFor(60 * MIN); assert.ok(Math.abs(await clockMin(pg) - frozen) < 1e-9, 'tras el fin no suma');
+  await pg.click('#btnNew'); await pg.clock.runFor(500); assert.equal(await clockMin(pg), 0, 'sesión nueva: 0'); assert.equal(await heatVar(pg), 0);
+  return pg;
+});
+await test('atmósfera: detrás del contenido, sin toques, sin tocar el color del texto ni del rojo; después de 40 min todo funciona (SIGUIENTE, temporizador, pitidos)', async () => {
+  const pg = await page({ clock: true, reducedMotion: 'reduce' }); await enterIntimacy(pg);
+  const colors = () => pg.evaluate(() => { const g = s => { const e = document.querySelector(s); return e ? getComputedStyle(e).color + '|' + getComputedStyle(e).backgroundColor : null; }; return [g('#phrase') || g('.phrase'), g('#btnRoll'), g('#levelBtn'), g('.turn'), g('#timer .t')]; });
+  await pg.clock.runFor(5000); await pg.waitForTimeout(50); const before = await colors();
+  await pg.clock.runFor(41 * MIN); await pg.waitForTimeout(30); assert.equal(await heatVar(pg), 1);
+  assert.deepEqual(await colors(), before, 'texto, SIGUIENTE, selector de nivel y temporizador con los mismos colores');
+  const amb = await pg.$eval('.ambient', a => { const s = getComputedStyle(a), w = getComputedStyle(document.querySelector('.wrap')); return { pe: s.pointerEvents, z: Number(s.zIndex), wz: Number(w.zIndex), aria: a.getAttribute('aria-hidden'), pos: s.position }; });
+  assert.deepEqual(amb, { pe: 'none', z: 0, wz: 1, aria: 'true', pos: 'fixed' });
+  const top = await pg.evaluate(() => { const b = document.querySelector('#btnRoll').getBoundingClientRect(); return document.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2).closest('#btnRoll') != null; });
+  assert.ok(top, 'SIGUIENTE recibe el toque, no la capa');
+  for (let i = 0; i < 30 && await pg.$eval('#timer', t => t.hidden); i++) await nextIntimate(pg);
+  await resolveUndressSheet(pg); const total = (await timerState(pg)).total; assert.ok(total > 0, 'hay una carta con tiempo');
+  await pg.click('#timer'); await ff(pg, total * 1000 + 500); await pg.waitForFunction(() => document.querySelector('#timer').classList.contains('done'));
+  assert.equal(await beeps(pg), 3, 'el temporizador de carta sigue sonando 3 veces');
+  // salir de Intimidad: la película se retira
+  await resolveUndressSheet(pg); await pg.click('#levelBtn'); await pg.waitForSelector('#sheetLevel.open'); await pg.click('#levelList .lv:nth-child(2)'); await pg.clock.runFor(2000);
+  await pg.waitForTimeout(150); const st = await pg.evaluate(() => ({ lvl: window.pab.level(), cls: document.body.className, op: getComputedStyle(document.querySelector('.ambient')).opacity }));
+  assert.equal(st.op, '0', `en Deseo no hay atmósfera ${JSON.stringify(st)}`);
   return pg;
 });
 

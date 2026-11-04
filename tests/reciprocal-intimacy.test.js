@@ -112,7 +112,6 @@ test('nunca salen antes de que la ropa lo permita (partidas reales empezando ves
   for (let s = 0; s < 300; s++) {
     const e = e3([DRESSED(), DRESSED()], s % 2 ? ANA_LEO : { bodyParts: [['pene'], ['pene']] }, 3000 + s);
     for (let i = 0; i < 40; i++) {
-      if (e.pauseDue()) e.continueGuided();
       const before = e.clothing.map(c => ({ ...c })); const r = e.roll(); if (!r) break;
       if (NEW.includes(r.cardId)) {
         n++; const a = r.actor, b = 1 - a;
@@ -144,13 +143,13 @@ test('reciprocidad: quien ya hizo la acción principal pesa ×0,2 para repetir; 
   assert.equal(reciprocalKey(CARD.I59, 0), 'WET_ORAL:1'); assert.equal(reciprocalKey(CARD.I60, 0), 'WET_ORAL:0');
   assert.equal(reciprocalKey(CARD.I61, 0), null, 'I61 no es recíproca: una sola carta para los dos turnos');
   const e = e3([NAKED(), NAKED()], ANA_LEO, 31); play(e, 11);
-  for (let i = 0; i < 40; i++) { if (e.pauseDue()) e.continueGuided(); const before = new Set(e.reciprocal); e.roll(); const a = e.lastDebug.actor;
+  for (let i = 0; i < 40; i++) { const before = new Set(e.reciprocal); e.roll(); const a = e.lastDebug.actor;
     for (const c of e.lastDebug.candidates) if (['I57', 'I58', 'I59', 'I60'].includes(c.id)) assert.equal(c.factors.reciprocal, before.has(reciprocalKey(CARD[c.id], a)) ? 0.2 : 1, `${c.id} actor ${a}`); }
 });
 
 test('participan en cooldown, no vistas, desbloqueo y oportunidades perdidas, sin pesos inflados', () => {
   const e = e3([NAKED(), NAKED()], ANA_LEO, 77); const seenFactors = {};
-  for (let i = 0; i < 40; i++) { if (e.pauseDue()) e.continueGuided(); e.roll(); for (const c of e.lastDebug.candidates) if (NEW.includes(c.id)) seenFactors[c.id] = c.factors; }
+  for (let i = 0; i < 40; i++) { e.roll(); for (const c of e.lastDebug.candidates) if (NEW.includes(c.id)) seenFactors[c.id] = c.factors; }
   for (const id of NEW) { const f = seenFactors[id]; assert.ok(f, `${id} estuvo en el sorteo`); for (const k of ['unseen', 'unlockedHold', 'missed']) assert.ok(k in f, `${id} ${k}`); assert.equal(f.base, 1, `${id} peso base 1`); }
   const e2 = e3([NAKED(), NAKED()], ANA_LEO, 78); play(e2, 6); assert.ok(NEW.some(id => (e2.missed.get(id) || 0) > 0), 'acumulan oportunidades perdidas');
   // cooldown compartido: con I57 recién jugada, I58 queda fuera del sorteo aunque sea elegible
@@ -183,7 +182,6 @@ test('I62: duración entre 45 y 60 s elegida por el temporizador existente y fij
   for (let s = 0; s < 300; s++) {
     const e = e3(s % 2 ? [NAKED(), NAKED()] : [DRESSED(), DRESSED()], s % 3 ? ANA_LEO : { bodyParts: [['pene'], ['pene']] }, 11000 + s); // mitad desnudos (para que salga) · mitad vestidos (para comprobar que no sale antes)
     for (let i = 0; i < 40; i++) {
-      if (e.pauseDue()) e.continueGuided();
       const before = e.clothing.map(c => ({ ...c })); const r = e.roll(); if (!r) break;
       const cand = e.lastDebug.candidates.find(c => c.id === 'I62'); if (cand) { asCandidate++; for (const k of ['unseen', 'unlockedHold', 'missed']) assert.ok(k in cand.factors, k); assert.equal(cand.factors.base, 1); }
       if (r.cardId === 'I62') {

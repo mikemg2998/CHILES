@@ -1,5 +1,5 @@
 /* Simulación de diversidad en Intimidad (curación 2026-11-03). Juega N sesiones de Intimidad (vestidos al entrar,
-   desvistiendo como la interfaz, pausa incluida) con semillas y anatomías fijas, y mide por carta, por región / familia /
+   desvistiendo como la interfaz, sin pausa) con semillas y anatomías fijas, y mide por carta, por región / familia /
    target, repetición, cobertura, progresión de ropa y cartas recién desbloqueadas.
    Uso: node tests/intimacy-sim.js --root=<carpeta del repo> --sessions=10000 --cards=40 [--no-layer] --out=<json>
    --root permite medir otro commit (p. ej. un worktree del motor anterior) con las mismas semillas. */
@@ -35,7 +35,6 @@ for (let s = 0; s < N; s++) {
   e.clothing = [DRESSED(), DRESSED()];
   const seq = [], seen = new Map(), eligibleCount = {}, unlockEvents = [];
   for (let i = 0; i < CARDS_PER; i++) {
-    if (e.pauseDue()) e.continueGuided();
     const r = e.roll(); if (!r) break;
     const dbg = e.lastDebug, rej = new Set(dbg.rejected.map(x => x.id));
     for (const id of L3) if (!rej.has(id)) { eligibleCount[id] = (eligibleCount[id] || 0) + 1; card[id].opp++; }

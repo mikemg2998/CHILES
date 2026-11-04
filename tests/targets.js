@@ -44,7 +44,6 @@ function simulate(N, R, start, label) {
   for (let seed = 1; seed <= N; seed++) {
     const e = mkE(seed, start); const fe = {}, fs = {};
     for (let i = 0; i < R; i++) {
-      if (e.pauseDue()) e.continueGuided();
       for (const t in TARGETS) { const actor = ['penis', 'glans', 'testicles'].includes(t) ? 0 : 1; if (!(t in fe) && buildDeck(CARDS, e.context(actor)).eligible.some(x => x.variants ? x.variants.some(v => partsOf(x.card, v).includes(t)) : partsOf(x.card, null).includes(t))) fe[t] = e.session.intimacyCardCount + 1; }
       const direct = { vulva: e.clothing[0].bottoms !== 'ON' && e.clothing[0].panties !== 'ON', penis: e.clothing[1].bottoms !== 'ON' && e.clothing[1].boxers !== 'ON' }; direct.clitoris = direct.vulva; direct.vagina = direct.vulva; direct.glans = direct.penis; direct.testicles = direct.penis;
       const r = e.roll(); if (!r) break; total++;
@@ -66,10 +65,10 @@ const c2 = simulate(200, 50, [NAKED, NAKED], '4 · Sesiones largas (desnudos des
 const invisible = Object.values(cat).flat().filter(u => u.card.minIntimacyCards == null).map(u => u.card.id + (u.v ? '·' + u.v.id : '')).filter(k => !unreachable.includes(k.split('·')[0]) && ((c1[k] || 0) + (c2[k] || 0)) / 16000 < 0.001);
 L.push('', `Cartas prácticamente invisibles (< 0,1 % en 16 000 cartas de sesiones reales + largas): ${invisible.length ? invisible.map(k => `${k} (${(c1[k] || 0) + (c2[k] || 0)})`).join(' · ') : 'ninguna'}.`);
 // LATE_SESSION: posición de aparición
-let before = 0, sessionsLate = 0, positions = []; for (let seed = 1; seed <= 200; seed++) { const e = mkE(seed, [NAKED, NAKED]); let hit = false; for (let i = 0; i < 50; i++) { if (e.pauseDue()) e.continueGuided(); const r = e.roll(); if (['I32', 'I33'].includes(r.cardId)) { if (e.session.intimacyCardCount < 35) before++; if (!hit) { hit = true; sessionsLate++; positions.push(r.n); } } } }
+let before = 0, sessionsLate = 0, positions = []; for (let seed = 1; seed <= 200; seed++) { const e = mkE(seed, [NAKED, NAKED]); let hit = false; for (let i = 0; i < 50; i++) { const r = e.roll(); if (['I32', 'I33'].includes(r.cardId)) { if (e.session.intimacyCardCount < 35) before++; if (!hit) { hit = true; sessionsLate++; positions.push(r.n); } } } }
 L.push('', '## 5 · LATE_SESSION (I32 · I33) en las sesiones largas', '', `- Apariciones antes de la carta 35: ${before}.`, `- Sesiones (de 200) en las que sale al menos una: ${sessionsLate}; primera aparición media en la carta ${positions.length ? (positions.reduce((a, b) => a + b, 0) / positions.length).toFixed(1) : '—'} (mín ${Math.min(...positions)}, máx ${Math.max(...positions)}).`, `- Peso base 0,5 sin empujón; la sesión puede acabar antes sin que salgan.`);
 // cadenas íntimas: ¿PENE → GLANDE → TESTÍCULOS seguidas solo porque hay acceso directo?
 { let chains3 = 0, chains2 = 0, sessions = 200, leoIntimate = 0, leoCards = 0; const LEO = ['penis', 'glans', 'testicles'];
-  for (let seed = 1; seed <= sessions; seed++) { const e = mkE(seed, [NAKED, NAKED]); let run = 0; for (let i = 0; i < 50; i++) { if (e.pauseDue()) e.continueGuided(); const r = e.roll(); if (r.actor === 0) { leoCards++; const hit = r.parts.some(p => LEO.includes(p)); if (hit) { leoIntimate++; run++; if (run === 2) chains2++; if (run >= 3) chains3++; } else run = 0; } else run = 0; } }
+  for (let seed = 1; seed <= sessions; seed++) { const e = mkE(seed, [NAKED, NAKED]); let run = 0; for (let i = 0; i < 50; i++) { const r = e.roll(); if (r.actor === 0) { leoCards++; const hit = r.parts.some(p => LEO.includes(p)); if (hit) { leoIntimate++; run++; if (run === 2) chains2++; if (run >= 3) chains3++; } else run = 0; } else run = 0; } }
   L.push('', '## 6 · Cadenas íntimas en el lado de Leo (sesiones largas, desnudos)', '', `- Cartas en las que Ana actúa sobre Leo: ${leoCards}; de ellas con target pene / glande / testículos: ${leoIntimate} (${(100 * leoIntimate / leoCards).toFixed(1)} %).`, `- Dos cartas íntimas de Leo seguidas (sin otra carta en medio): ${chains2} veces en ${sessions} sesiones; tres o más seguidas: ${chains3}.`); }
 const text = L.join('\n'); console.log(text); if (out) writeFileSync(out, text + '\n');

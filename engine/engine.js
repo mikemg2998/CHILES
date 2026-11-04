@@ -41,10 +41,6 @@ export class GameEngine {
   ended() { return this.session.ended; }
   feedback(kind) { this.director.feedback(this.session, this.history.last(), kind); }
   endSession(how) { return this.director.end(this.session, how); }
-  /* pausa de continuidad en Intimidad: ni consentimiento ni cambio de nivel; seguir conserva TODO el estado */
-  pauseDue() { return !this.session.ended && this.director.pauseDue(this.session); }
-  continueGuided() { this.director.continueGuided(this.session); }
-  continueAlone() { return this.endSession('solos'); }
 
   /* ---------- anatomía y ropa ---------- */
   anatomy(player) { const sig = JSON.stringify(this.prefs.bodyParts[player] || []); this._an ||= [null, null]; if (!this._an[player] || this._an[player].sig !== sig) this._an[player] = { sig, value: anatomyOf(player, this.prefs.bodyParts) }; return this._an[player].value; }

@@ -171,7 +171,6 @@ function simulate({ sessions, cards, naked, label, seedBase, pairs = PAIRS, only
     const ids = [], per = {}; let lateHit = false, gLast = null, gRun = 0;
     for (const p of [0, 1]) per[p] = { regions: new Set(), targets: new Set(), last: null, run: 0, first: {}, n: 0 };
     for (let i = 0; i < cards; i++) {
-      if (e.pauseDue()) e.continueGuided();
       const r = e.roll(); if (!r) break;
       record(S, e, r, ids, null); ids.push(r.cardId);
       if (!r.transition && r.interactionType !== 'UNDRESS') { if (r.region === gLast) { gRun++; if (gRun === 2) { glob.seq2++; if (r.region === 'INTIMATE') glob.seq2I++; } if (gRun >= 3) { glob.seq3++; if (r.region === 'INTIMATE') glob.seq3I++; } } else gRun = 1; gLast = r.region; }
@@ -207,12 +206,12 @@ for (const r of RECEIVERS) { const k = sig(r); simulate({ sessions: 8, cards: 25
 const normal = simulate({ sessions: 200, cards: 30, naked: false, label: '6 · 200 sesiones normales (30 cartas, empiezan vestidos, UNDRESS aplicada como en la app)', seedBase: 1000 });
 const long = simulate({ sessions: 200, cards: 50, naked: true, label: '7 · 200 sesiones largas (50 cartas, acceso completo desde el inicio)', seedBase: 5000 });
 /* LATE_SESSION */
-L.push('', '## 8 · Cartas tardías (I32 · I33)', '', `- Sesiones normales (30 cartas): apariciones ${normal.late.hits}, antes de la carta 35: ${normal.late.before35}.`, `- Sesiones largas (50 cartas): apariciones ${long.late.hits} en ${long.late.sessionsWith} de 200 sesiones (${pct(long.late.sessionsWith, 200)}); antes de la carta 35: ${long.late.before35}; primera aparición media en la carta ${avg(long.late.pos)}${long.late.pos.length ? ` (mín ${Math.min(...long.late.pos)}, máx ${Math.max(...long.late.pos)})` : ''}.`, '- La pausa 13–17 no reinicia el contador (continueGuided conserva intimacyCardCount).');
+L.push('', '## 8 · Cartas tardías (I32 · I33)', '', `- Sesiones normales (30 cartas): apariciones ${normal.late.hits}, antes de la carta 35: ${normal.late.before35}.`, `- Sesiones largas (50 cartas): apariciones ${long.late.hits} en ${long.late.sessionsWith} de 200 sesiones (${pct(long.late.sessionsWith, 200)}); antes de la carta 35: ${long.late.before35}; primera aparición media en la carta ${avg(long.late.pos)}${long.late.pos.length ? ` (mín ${Math.min(...long.late.pos)}, máx ${Math.max(...long.late.pos)})` : ''}.`, '- Sin pausa de continuidad: el contador de Intimidad nunca se interrumpe.');
 /* cadenas íntimas por target */
 { let chains = { 'pene→glande→testículos': 0, 'vulva→clítoris→vagina': 0, 'tres íntimas seguidas (cualquier orden)': 0, 'dos íntimas seguidas': 0 }; let recvCards = 0;
   const G = { penis: 'P', glans: 'G', testicles: 'T', vulva: 'V', clitoris: 'C', vagina: 'N' };
   for (let s = 0; s < 200; s++) { const pair = PAIRS[s % PAIRS.length], e = mk(pair, 9000 + s); e.clothing = [fullAccess(pair[0]), fullAccess(pair[1])]; const seqs = { 0: [], 1: [] };
-    for (let i = 0; i < 50; i++) { if (e.pauseDue()) e.continueGuided(); const r = e.roll(); if (r.transition || r.interactionType === 'UNDRESS') continue; recvCards++; const g = r.parts.map(p => G[p]).filter(Boolean)[0] || '-'; seqs[r.receiver].push(g); }
+    for (let i = 0; i < 50; i++) { const r = e.roll(); if (r.transition || r.interactionType === 'UNDRESS') continue; recvCards++; const g = r.parts.map(p => G[p]).filter(Boolean)[0] || '-'; seqs[r.receiver].push(g); }
     for (const p of [0, 1]) { const q = seqs[p].join(''); chains['pene→glande→testículos'] += (q.match(/PGT/g) || []).length; chains['vulva→clítoris→vagina'] += (q.match(/VCN/g) || []).length; chains['tres íntimas seguidas (cualquier orden)'] += (q.match(/(?=[PGTVCN]{3})/g) || []).length; chains['dos íntimas seguidas'] += (q.match(/(?=[PGTVCN]{2})/g) || []).length; } }
   L.push('', '## 9 · Secuencias íntimas (200 sesiones largas, acceso completo, por receptor)', '', `${recvCards} cartas de interacción.`, ...Object.entries(chains).map(([k, v]) => `- ${k}: ${v}`)); }
 

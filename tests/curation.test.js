@@ -89,7 +89,7 @@ test('UNDRESS conserva exactamente su probabilidad por ronda (la capa solo repar
 });
 test('ninguna carta sale antes de que la ropa lo permita (la diversidad nunca rescata una carta no elegible)', () => {
   for (const { e } of sessions(30, { clothing: () => [DRESSED(), DRESSED()], cards: 0 })) {
-    for (let i = 0; i < 40; i++) { const before = new Set(e.deck(e.nextActor()).eligible.map(x => x.card.id)); if (e.pauseDue()) e.continueGuided(); const r = e.roll(); assert.ok(!e.lastDebug.rejected.some(x => x.id === r.cardId), `${r.cardId} rechazada y aun así salió`); if (r.undress) for (const p of r.undress.players) { const g = r.undress.garment === 'ANY' ? e.removable(p)[0] : r.undress.garment; if (g) e.recordUndress(p, g); } void before; }
+    for (let i = 0; i < 40; i++) { const before = new Set(e.deck(e.nextActor()).eligible.map(x => x.card.id)); const r = e.roll(); assert.ok(!e.lastDebug.rejected.some(x => x.id === r.cardId), `${r.cardId} rechazada y aun así salió`); if (r.undress) for (const p of r.undress.players) { const g = r.undress.garment === 'ANY' ? e.removable(p)[0] : r.undress.garment; if (g) e.recordUndress(p, g); } void before; }
   }
 });
 test('recién desbloqueadas por ropa: prioridad temporal (×1,5 durante 6 cartas mientras no han salido), sin acapararlo todo', () => {

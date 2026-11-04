@@ -39,6 +39,6 @@ test('U08 APPROVED solo calcetines: sale únicamente con socks ON de quien recib
   const e = mk({ level: 3, seed: 1, clothing: [{ ...NAKED(), socks: 'ON' }, NAKED()] });
   assert.ok(ids(e, 1).has('U08'), 'Ana con calcetines: elegible cuando Leo actúa'); assert.ok(!ids(e, 0).has('U08'), 'Leo descalzo: no');
   assert.ok(e.recordUndress(0, 'socks')); assert.equal(e.clothing[0].socks, 'OFF'); assert.ok(!ids(e, 1).has('U08'), 'recalculada al momento');
-  const seen = new Set(); for (let s = 1; s <= 30; s++) { const x = mk({ level: 3, seed: s, clothing: [DRESSED(), DRESSED()] }); for (let i = 0; i < 30; i++) { const r = x.roll(); if (r.cardId === 'U08') { seen.add(r.undress.garment); assert.equal(r.undress.garment, 'socks'); } if (r.undress) for (const p of r.undress.players) { const g = r.undress.garment === 'ANY' ? x.removable(p)[0] : r.undress.garment; if (g) x.recordUndress(p, g); } if (x.pauseDue()) x.continueGuided(); } }
+  const seen = new Set(); for (let s = 1; s <= 30; s++) { const x = mk({ level: 3, seed: s, clothing: [DRESSED(), DRESSED()] }); for (let i = 0; i < 30; i++) { const r = x.roll(); if (r.cardId === 'U08') { seen.add(r.undress.garment); assert.equal(r.undress.garment, 'socks'); } if (r.undress) for (const p of r.undress.players) { const g = r.undress.garment === 'ANY' ? x.removable(p)[0] : r.undress.garment; if (g) x.recordUndress(p, g); } } }
   assert.deepEqual([...seen], ['socks']);
 });

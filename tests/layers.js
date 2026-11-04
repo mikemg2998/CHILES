@@ -25,7 +25,6 @@ function run(cards, seed, title) {
   const summary = p => { const el = elig(p); return `elegibles ${el.length} · THROUGH ${el.filter(isThrough).map(c => c.id).join(' ') || '—'} · acceso directo ${el.filter(c => isDirect(c) && (lower(c) || chest(c))).map(c => c.id).join(' ') || '—'}`; };
   L.push(`## ${title} (semilla ${seed})`, '', '| # | Quién | Carta | Frase | Ana lleva | Leo lleva |', '|---|---|---|---|---|---|');
   for (let i = 0; i < 40; i++) {
-    if (e.pauseDue()) e.continueGuided();
     const r = e.roll(); if (!r) break;
     L.push(`| ${i + 1} | ${r.actorName}→${r.receiverName} | ${r.cardId} | ${r.phrase.replace(/\|/g, '/')} | ${dress(e.clothing[0])} | ${dress(e.clothing[1])} |`);
     if (r.undress) for (const p of r.undress.players) {
@@ -38,7 +37,7 @@ function run(cards, seed, title) {
   L.push('');
 }
 /* elige semillas donde Ana se quita el pantalón y luego las panties, y la camiseta y luego el brasier */
-function pick(cards, want) { for (let s = 1; s < 400; s++) { const e = new GameEngine({ prefs: { names: ['Ana', 'Leo'], bodyParts: [['vulva', 'senos'], ['pene']] }, seed: s, level: 3 }); for (let i = 0; i < 40; i++) { if (e.pauseDue()) e.continueGuided(); const r = e.roll(); if (!r) break; if (r.undress) for (const p of r.undress.players) { const g = r.undress.garment === 'ANY' ? e.removable(p)[0] : r.undress.garment; if (g) e.recordUndress(p, g); } } const log = e.history.recentClothingChanges.slice().reverse().filter(c => c.garment).map(c => `${c.player}:${c.garment}`); if (want.every(w => log.includes(w))) return s; } return 1; }
+function pick(cards, want) { for (let s = 1; s < 400; s++) { const e = new GameEngine({ prefs: { names: ['Ana', 'Leo'], bodyParts: [['vulva', 'senos'], ['pene']] }, seed: s, level: 3 }); for (let i = 0; i < 40; i++) { const r = e.roll(); if (!r) break; if (r.undress) for (const p of r.undress.players) { const g = r.undress.garment === 'ANY' ? e.removable(p)[0] : r.undress.garment; if (g) e.recordUndress(p, g); } } const log = e.history.recentClothingChanges.slice().reverse().filter(c => c.garment).map(c => `${c.player}:${c.garment}`); if (want.every(w => log.includes(w))) return s; } return 1; }
 run(CARDS, pick(CARDS, ['1:bottoms', '1:boxers', '0:bottoms', '0:panties']), 'Secuencia 1 · catálogo real: pantalón → ropa interior → acceso directo');
 run(CARDS, pick(CARDS, ['0:top', '0:bra']), 'Secuencia 2 · catálogo real: camiseta → brasier (THROUGH_BRA) → acceso directo al pecho');
 const text = L.join('\n'); console.log(text); if (out) writeFileSync(out, text + '\n');
