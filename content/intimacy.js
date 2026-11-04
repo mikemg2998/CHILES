@@ -198,4 +198,57 @@ export const INTIMACY = [
   I({ id: 'I56', family: 'CLOSENESS', similarityGroup: 'GAZE', cooldownGroup: 'ADMIRE_LYING', reciprocalSubject: 'ACTOR', intraLevelIntensity: 'MID', actorRequirements: [{ part: 'body' }], receiverRequirements: [{ part: 'wholeBody' }],
     clothing: { actor: ['FULL_BODY_ACCESS'], receiver: ['ANY'] }, durations: [120],
     copy: ['Acuéstate en la cama con los ojos cerrados. Durante dos minutos, {R} contempla y admira tu cuerpo y, si quiere, te besa.'], notes: 'diseñador (2026-11-03): la misma experiencia con los papeles cambiados: quien actúa se acuesta; {R} contempla, admira y puede besar' }),
+  /* ======== 2026-11-04 · cinco cartas nuevas del diseñador ========
+     Masturbación mirada (I57 / I58) y oral muy húmedo (I59 / I60): una carta por dirección, como I55 / I56. Cada par comparte
+     cooldownGroup (cooldown de 10 cartas común: las dos direcciones nunca a 10 cartas o menos) y reciprocalSubject (quién hace la
+     acción principal: quien se masturba · quien recibe el oral). La anatomía de quien tiene el turno se exige con la herramienta
+     (pene / vulva); la de {R}, con la variante. Cada variante fija los requisitos de una anatomía y lleva la misma frase. */
+  I({ id: 'I57', family: 'MANUAL', similarityGroup: 'SELF_TOUCH', cooldownGroup: 'WATCHED_SELF_TOUCH', reciprocalSubject: 'ACTOR', intraLevelIntensity: 'HIGH', actorRequirements: [{ part: 'oneHand' }], receiverRequirements: [{ part: 'wholeBody' }],
+    clothing: { actor: ['SKIN_ACCESS', 'UNDERWEAR_OFF'], receiver: ['ANY'] }, durations: [60], tags: ['intimo'],
+    variants: [
+      { id: 'vulva', status: 'APPROVED', actorRequirements: [{ part: 'vulva' }], copy: ['Mastúrbate lento mientras {R} te mira. Si quiere, {R} también puede tocarse.'] },
+      { id: 'pene', status: 'APPROVED', actorRequirements: [{ part: 'penis' }], copy: ['Mastúrbate lento mientras {R} te mira. Si quiere, {R} también puede tocarse.'] },
+    ],
+    notes: 'diseñador (2026-11-04): se masturba quien tiene el turno; {R} mira y puede tocarse si quiere. Ropa interior fuera solo en quien se masturba.' }),
+  I({ id: 'I58', family: 'MANUAL', similarityGroup: 'SELF_TOUCH', cooldownGroup: 'WATCHED_SELF_TOUCH', reciprocalSubject: 'RECEIVER', intraLevelIntensity: 'HIGH', actorRequirements: [{ part: 'body' }], receiverRequirements: [{ part: 'vulva' }],
+    clothing: { actor: ['ANY'], receiver: ['SKIN_ACCESS', 'UNDERWEAR_OFF'] }, durations: [60], tags: ['intimo'],
+    variants: [
+      { id: 'vulva', status: 'APPROVED', anatomy: 'vulva', receiverRequirements: [{ part: 'vulva' }], copy: ['{R} se masturba lento mientras tú le miras. Si quieres, tú también puedes tocarte.'] },
+      { id: 'pene', status: 'APPROVED', anatomy: 'pene', receiverRequirements: [{ part: 'penis' }], copy: ['{R} se masturba lento mientras tú le miras. Si quieres, tú también puedes tocarte.'] },
+    ],
+    notes: 'diseñador (2026-11-04): la misma experiencia con los papeles cambiados: se masturba {R}; quien tiene el turno mira y puede tocarse si quiere.' }),
+  I({ id: 'I59', family: 'ORAL', similarityGroup: 'ORAL', cooldownGroup: 'WET_ORAL', reciprocalSubject: 'RECEIVER', intraLevelIntensity: 'HIGH', actorRequirements: [{ part: 'mouth' }], receiverRequirements: [{ part: 'vulva' }],
+    clothing: { receiver: ['SKIN_ACCESS', 'UNDERWEAR_OFF'] }, durations: [45, 60, 75], tags: ['intimo', 'boca'],
+    variants: [
+      { id: 'vulva', status: 'APPROVED', anatomy: 'vulva', receiverRequirements: [{ part: 'vulva' }], copy: ['Hazle a {R} un oral muy húmedo.'] },
+      { id: 'pene', status: 'APPROVED', anatomy: 'pene', receiverRequirements: [{ part: 'penis' }], copy: ['Hazle a {R} un oral muy húmedo.'] },
+    ],
+    notes: 'diseñador (2026-11-04): quien tiene el turno hace el oral; 45–75 s.' }),
+  I({ id: 'I60', family: 'ORAL', similarityGroup: 'ORAL', cooldownGroup: 'WET_ORAL', reciprocalSubject: 'ACTOR', intraLevelIntensity: 'HIGH', actorRequirements: [{ part: 'body' }], receiverRequirements: [{ part: 'wholeBody' }],
+    clothing: { actor: ['SKIN_ACCESS', 'UNDERWEAR_OFF'], receiver: ['ANY'] }, durations: [45, 60, 75], tags: ['intimo', 'boca'],
+    variants: [
+      { id: 'vulva', status: 'APPROVED', actorRequirements: [{ part: 'vulva' }], copy: ['{R} te hace un oral muy húmedo.'] },
+      { id: 'pene', status: 'APPROVED', actorRequirements: [{ part: 'penis' }], copy: ['{R} te hace un oral muy húmedo.'] },
+    ],
+    notes: 'diseñador (2026-11-04): la misma experiencia con los papeles cambiados: {R} hace el oral a quien tiene el turno; 45–75 s.' }),
+  /* I61 · roce con las manos tomadas (diseñador, 2026-11-04). La posición la fija la anatomía, nunca el turno: la persona con pene
+     se acuesta y la persona con vulva se sienta encima y marca el ritmo. Una variante por reparto de anatomías, cada una con su frase. */
+  I({ id: 'I61', family: 'BODY', interactionType: 'POSITIONAL', similarityGroup: 'BODY_CONTACT', intraLevelIntensity: 'HIGH', actorRequirements: [{ part: 'vulva' }], receiverRequirements: [{ part: 'penis' }], requiredOrientation: 'LYING',
+    clothing: { actor: ['SKIN_ACCESS', 'UNDERWEAR_OFF'], receiver: ['SKIN_ACCESS', 'UNDERWEAR_OFF'] }, durations: [45, 60], tags: ['intimo'],
+    variants: [
+      { id: 'encima-quien-juega', status: 'APPROVED', anatomy: 'pene', actorRequirements: [{ part: 'vulva' }], receiverRequirements: [{ part: 'penis' }],
+        copy: ['{R} se acuesta. Siéntate sobre {R} y, tomados de las manos, roza tu vulva contra su pene a tu propio ritmo.'] },
+      { id: 'encima-R', status: 'APPROVED', anatomy: 'vulva', actorRequirements: [{ part: 'penis' }], receiverRequirements: [{ part: 'vulva' }],
+        copy: ['Acuéstate. {R} se sienta sobre ti y, tomados de las manos, roza su vulva contra tu pene a su propio ritmo.'] },
+    ], notes: 'diseñador (2026-11-04): con pene acostado, con vulva encima; tomados de las manos (obligatorio). Ambos con la ropa interior fuera.' }),
+  /* I62 · masturbación mutua con los ojos cerrados (diseñador, 2026-11-04). Simultánea: una sola carta, sin dirección. Una variante por
+     combinación de anatomías (quien tiene el turno × {R}), todas con la misma frase; los dos con la ropa interior fuera. */
+  I({ id: 'I62', family: 'MANUAL', interactionType: 'MUTUAL', similarityGroup: 'INTIMATE_TOUCH', intraLevelIntensity: 'HIGH', actorRequirements: [{ part: 'oneHand' }, { part: 'penis' }], receiverRequirements: [{ part: 'penis' }],
+    clothing: { actor: ['SKIN_ACCESS', 'UNDERWEAR_OFF'], receiver: ['SKIN_ACCESS', 'UNDERWEAR_OFF'] }, durations: [45, 50, 60], tags: ['intimo'],
+    variants: [
+      { id: 'vulva-vulva', status: 'APPROVED', anatomy: 'vulva', actorRequirements: [{ part: 'oneHand' }, { part: 'vulva' }], receiverRequirements: [{ part: 'vulva' }], copy: ['Cerrad los ojos y masturbaos mutuamente; que cada uno se concentre en la sensación de la mano de su pareja.'] },
+      { id: 'vulva-pene', status: 'APPROVED', anatomy: 'pene', actorRequirements: [{ part: 'oneHand' }, { part: 'vulva' }], receiverRequirements: [{ part: 'penis' }], copy: ['Cerrad los ojos y masturbaos mutuamente; que cada uno se concentre en la sensación de la mano de su pareja.'] },
+      { id: 'pene-vulva', status: 'APPROVED', anatomy: 'vulva', actorRequirements: [{ part: 'oneHand' }, { part: 'penis' }], receiverRequirements: [{ part: 'vulva' }], copy: ['Cerrad los ojos y masturbaos mutuamente; que cada uno se concentre en la sensación de la mano de su pareja.'] },
+      { id: 'pene-pene', status: 'APPROVED', anatomy: 'pene', actorRequirements: [{ part: 'oneHand' }, { part: 'penis' }], receiverRequirements: [{ part: 'penis' }], copy: ['Cerrad los ojos y masturbaos mutuamente; que cada uno se concentre en la sensación de la mano de su pareja.'] },
+    ], notes: 'diseñador (2026-11-04): los dos cierran los ojos y se masturban mutuamente; simultánea; 45–60 s.' }),
 ];

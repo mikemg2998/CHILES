@@ -83,6 +83,7 @@ export const BODY_PARTS_LIST = [
 export const BODY_PARTS = Object.fromEntries(BODY_PARTS_LIST.map(p => [p.id, p]));
 
 const A = (id, label, o = {}) => Object.assign({ id, label, kind: 'hand', anatomy: null, lateral: false, coveredBy: [] }, o);
+/* 2026-11-04: `vulva` como herramienta de quien tiene el turno (I57, I60, I61, I62), igual que `penis`. */
 export const ACTOR_TOOLS_LIST = [
   A('oneHand', 'una mano', { lateral: true }), A('bothHands', 'las dos manos'), A('fingers', 'los dedos', { lateral: true }), A('fingertips', 'las yemas de los dedos', { lateral: true }),
   A('oneFinger', 'un dedo'), A('twoFingers', 'dos dedos'), A('threeFingers', 'tres dedos'), A('thumbs', 'los pulgares'), A('nails', 'las uñas'), A('palm', 'la palma'),
@@ -91,7 +92,7 @@ export const ACTOR_TOOLS_LIST = [
   A('arms', 'los brazos', { kind: 'arms' }), A('chest', 'el pecho', { kind: 'torso', coveredBy: ['top'] }), A('hips', 'las caderas', { kind: 'pelvis' }),
   A('thigh', 'el muslo', { kind: 'leg', lateral: true }), A('legs', 'las piernas', { kind: 'leg' }), A('feet', 'los pies', { kind: 'leg', lateral: true, coveredBy: ['socks'] }),
   A('body', 'el cuerpo', { kind: 'body' }),
-  A('penis', 'el pene', { kind: 'pelvis', anatomy: 'pene', coveredBy: ['bottoms', 'underwear'] }), A('glans', 'el glande', { kind: 'pelvis', anatomy: 'pene', coveredBy: ['bottoms', 'underwear'] }),
+  A('penis', 'el pene', { kind: 'pelvis', anatomy: 'pene', coveredBy: ['bottoms', 'underwear'] }), A('vulva', 'la vulva', { kind: 'pelvis', anatomy: 'vulva', coveredBy: ['bottoms', 'underwear'] }), A('glans', 'el glande', { kind: 'pelvis', anatomy: 'pene', coveredBy: ['bottoms', 'underwear'] }),
   A('breasts', 'los senos', { kind: 'torso', anatomy: 'senos', coveredBy: ['top', 'bra'] }),
 ];
 export const ACTOR_TOOLS = Object.fromEntries(ACTOR_TOOLS_LIST.map(t => [t.id, t]));

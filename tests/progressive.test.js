@@ -147,8 +147,8 @@ test('reciprocidad: quien ya se acostó pesa ×0,2 para repetir; la otra persona
   assert.equal(reciprocalKey(CARD.I55, 0), 'ADMIRE_LYING:1'); assert.equal(reciprocalKey(CARD.I56, 0), 'ADMIRE_LYING:0'); assert.equal(reciprocalKey(CARD.I01, 0), null);
   const e = mk({ level: 3, seed: 21, clothing: [NAKED(), NAKED()] }); e.reciprocal.add('ADMIRE_LYING:0'); // el jugador 0 ya se acostó
   play(e, 11); // pasa cualquier cooldown
-  for (let i = 0; i < 30; i++) { if (e.pauseDue()) e.continueGuided(); e.roll(); const a = e.lastDebug.actor;
-    for (const c of e.lastDebug.candidates) if (['I55', 'I56'].includes(c.id)) { const lier = c.id === 'I55' ? 1 - a : a; assert.equal(c.factors.reciprocal, lier === 0 ? RECIPROCAL_REPEAT : 1, `${c.id} actor ${a}`); } }
+  for (let i = 0; i < 30; i++) { if (e.pauseDue()) e.continueGuided(); const before = new Set(e.reciprocal); e.roll(); const a = e.lastDebug.actor;
+    for (const c of e.lastDebug.candidates) if (['I55', 'I56'].includes(c.id)) { const lier = c.id === 'I55' ? 1 - a : a; assert.equal(c.factors.reciprocal, before.has(`ADMIRE_LYING:${lier}`) ? RECIPROCAL_REPEAT : 1, `${c.id} actor ${a}`); } } // el peso sigue al estado real antes de la carta: quien ya se acostó en la sesión
   let same = 0, both = 0; for (let s = 0; s < 400; s++) { const x = mk({ level: 3, seed: 8000 + s, clothing: [NAKED(), NAKED()] }); const rs = play(x, 40).filter(r => ['I55', 'I56'].includes(r.cardId)); const l = rs.map(lier); for (let k = 1; k < l.length; k++) if (l[k] === l[k - 1]) same++; if (new Set(l).size === 2) both++; }
   assert.ok(both > same, `ambas direcciones ${both} · misma persona seguida ${same}`);
   e.newSession(3); assert.equal(e.reciprocal.size, 0);

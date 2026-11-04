@@ -76,7 +76,7 @@ export const FAMILIES = {
 /* Grupos de similitud (Conexión V2): la idea que la pareja percibe como «otra vez lo mismo» aunque la familia cambie.
    El selector baja temporalmente el peso del grupo reciente; nunca lo bloquea. VERBAL agrupa APPRECIATION y MEMORY. */
 export const SIMILARITY_GROUPS = ['EMBRACE', 'MASSAGE', 'HAND_CONTACT', 'FACE_CONTACT', 'LIGHT_KISSING', 'HAIR_TOUCH', 'BODY_REST', 'BREATHING', 'PLAYFUL', 'CHOICE', 'GUIDED', 'APPRECIATION', 'MEMORY', 'MUSIC', 'DANCE', 'SENSORY_TOUCH',
-  'BITE', 'ORAL', 'INTIMATE_TOUCH', 'BREATH', 'UNDRESS', 'BODY_CONTACT', 'CLOTHED_TEASE', 'GAZE'];
+  'BITE', 'ORAL', 'INTIMATE_TOUCH', 'BREATH', 'UNDRESS', 'BODY_CONTACT', 'CLOTHED_TEASE', 'GAZE', 'SELF_TOUCH'];
 export const VERBAL_GROUPS = ['APPRECIATION', 'MEMORY'];
 
 const DEFAULTS = {
